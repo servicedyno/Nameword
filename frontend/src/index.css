@@ -7,9 +7,28 @@
 @theme {
   --color-primary: #191339;
   --color-secondary: #79768a;
-  --color-darkbtn: #34228e;
-  --color-darkbtn-hover: #361ead;
-  --color-darkbtn-active: #2d169e;
+  /* Option A — action color remapped to a confident indigo/violet */
+  --color-darkbtn: #4f46e5;
+  --color-darkbtn-hover: #4338ca;
+  --color-darkbtn-active: #3730a3;
+
+  /* ===== Option A design tokens: "Trust indigo + warm neutral" ===== */
+  --color-brand: #4f46e5;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-ink: #0f172a;
+  --color-ink-soft: #475569;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-line: #e6e8ef;
+  --color-accent: #f59e0b;
+  --color-accent-50: #fffbeb;
+  --color-success: #0d9488;
+  --color-success-50: #f0fdfa;
   --color-darkbtn-100: #efedf8;
   --color-darkbtn-200: #a197d2;
   --color-lightgray: #eae8f4;
@@ -962,4 +981,73 @@ input[type="checkbox"]:checked {
 
 .content-section ul {
   @apply text-primary dark:text-white;
+}
+
+/* ==================================================================
+   Option A redesign — shared component utilities (nw-*)
+   ================================================================== */
+@layer components {
+  .nw-container {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8;
+  }
+  .nw-section {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+  .nw-eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700 dark:bg-brand/15 dark:text-brand-200;
+  }
+  .nw-h2 {
+    @apply text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white;
+  }
+  .nw-lead {
+    @apply text-base sm:text-lg text-ink-soft dark:text-gray-400;
+  }
+
+  .nw-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .nw-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed bg-brand text-white hover:bg-brand-700 shadow-sm;
+  }
+  .nw-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed border border-line bg-white text-primary hover:bg-surface-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700;
+  }
+  .nw-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-ink-soft hover:bg-surface-2 hover:text-primary dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
+  }
+  .nw-btn-sm {
+    @apply px-3.5 py-2 text-13 rounded-lg;
+  }
+
+  .nw-card {
+    @apply rounded-2xl border border-line bg-white p-6 transition-all duration-200 dark:border-gray-800 dark:bg-gray-900;
+  }
+  .nw-card-hover {
+    @apply hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:border-gray-700 dark:hover:shadow-black/40;
+  }
+
+  .nw-input {
+    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-primary placeholder:text-slate-400 focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500;
+  }
+
+  .nw-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .nw-badge-brand {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200;
+  }
+  .nw-badge-accent {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300;
+  }
+  .nw-badge-success {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-success-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300;
+  }
+
+  .nw-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-medium text-ink-soft dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300;
+  }
+
+  .nw-link {
+    @apply text-ink-soft transition-colors hover:text-brand dark:text-gray-400 dark:hover:text-white;
+  }
 }
