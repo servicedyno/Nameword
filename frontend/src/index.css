@@ -594,11 +594,11 @@ select {
 }
 
 .sidebar-link li a {
-  @apply flex w-full px-4 py-2.5 text-15 font-medium text-primary rounded-md hover:bg-menu-hover dark:text-gray-400 hover:dark:text-primary mt-2;
+  @apply flex w-full px-4 py-2.5 text-15 font-medium text-primary rounded-lg hover:bg-brand-50 hover:text-brand-700 dark:text-gray-400 hover:dark:bg-gray-800 hover:dark:text-white mt-2 transition-colors;
 }
 
 .sidebar-link li a.active {
-  @apply bg-menu-hover dark:text-gray-400 dark:text-primary;
+  @apply bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200;
 }
 
 .right-link {
@@ -1049,5 +1049,17 @@ input[type="checkbox"]:checked {
 
   .nw-link {
     @apply text-ink-soft transition-colors hover:text-brand dark:text-gray-400 dark:hover:text-white;
+  }
+}
+/* App shell (authed) utilities */
+@layer components {
+  .app-rail-item {
+    @apply relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
+  }
+  .app-rail-item-active {
+    @apply bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200;
+  }
+  .header-icon-btn {
+    @apply flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-primary dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
   }
 }

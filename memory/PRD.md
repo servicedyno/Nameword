@@ -92,3 +92,13 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 - Routes added in `routes/Router.jsx`; nav mega-menu, footer, and homepage product cards now link SSL->/ssl, Email->/email (were pointing to /hosting).
 - Verified desktop light. Lint clean.
 - STILL TODO: restyle existing product pages (Domain/Hosting/VPS/RDP via ServersPage & Hosting.jsx) to Option A; Pricing/Transfer/Contact/FAQ/legal; then the authed app shell (sidebar+topbar+dashboard) and per-screen app redesigns.
+
+## Redesign — increment 3 (App Shell for signed-in area) — IN PROGRESS
+- Built modern authed shell in `layouts/FrontLayout.jsx`: slim collapsible ICON RAIL (`components/front-admin/admin-common/AppRail.jsx`; Overview/Domains/Hosting/VPS/RDP/Billing/Settings + Help; collapse persisted in localStorage `nw_sidebar_collapsed`) + existing contextual `<Sidebar/>` kept as the 280px secondary panel (preserves domain/hosting switching). Top bar: global search button that opens Command Palette, wallet balance chip (walletAPI.getWallet -> data.balance.USD), reward-points chip (user.rewardPoints), notifications bell (empty-state, no backend), language + theme + cart + UserDropdownMenu. Mobile: slide-in drawer (rail + Sidebar) + fixed bottom tab bar (Home/Domains/Hosting/Wallet/Account).
+- New `components/common/CommandPalette.jsx`: Cmd/Ctrl+K launcher, keyboard nav (arrows/enter/esc), fuzzy filter over destinations + quick actions.
+- Restyled sidebar link active/hover to brand palette in index.css; added `.app-rail-item(.-active)` and `.header-icon-btn` utilities.
+- Dashboard unchanged content-wise; now sits inside the new shell.
+- VERIFICATION: lint clean on all new files. Login verified via API (POST /api/v1/auth/login returns token). Seeded demo user for testing: demo@nameword.local / Demo@12345 (see test_credentials.md; re-seed via /app/backend/tmp_seed_user.js). Full IN-BROWSER visual verification of the authed shell was NOT completed this session — the screenshot tool struggled to log in because the SignIn form renders duplicate email/password inputs (hidden + visible) and the tool locks viewport to 1920. Recommend verifying by logging in with the demo creds, or via auto_frontend_testing_agent.
+- STILL PENDING from user's 3-item request (only App Shell tackled this session):
+  1) Product Pages restyle to Option A: Domains (/domain, /home results), Hosting (Hosting.jsx), VPS/RDP (components/servers/ServersPage.jsx). NOT started.
+  2) Pricing page: dedicated /pricing with full per-TLD table + hosting/VPS/RDP tiers + monthly/annual savings toggle. NOT started (homepage has a TLD pricing SECTION only).
