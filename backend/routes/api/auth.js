@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { loginRules , registerRules, emailRules, passwordResetRules, telegramRegisterRules, updateUserRules, 
+const { loginRules , registerRules, registerSimpleRules, emailRules, passwordResetRules, telegramRegisterRules, updateUserRules, 
     verifyEmailRules, changePasswordRules, updateUserDetailsRules, accountReactivateRules, 
     sendMobileOtpRules,
     verifyMobileOtpRules,
@@ -20,7 +20,7 @@ const UserController = require("../../app/controllers/auth/UserController");
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
-router.post("/register", upload.single('profileImg'), registerRules, validateRequest, RegisterController.register);
+router.post("/register", upload.single('profileImg'), registerSimpleRules, validateRequest, RegisterController.register);
 router.post("/register-telegram-user", telegramRegisterRules, validateRequest, RegisterController.registerTelegramUser)
 router.post("/login", loginRules, validateRequest, LoginController.login);
 router.get("/me", currentUser, requireAuth, LoginController.currentUser);

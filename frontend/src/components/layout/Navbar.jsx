@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { logo, USA, ES, FR } from "../common/icons";
 import useDropdown from "../../hooks/useDropdown";
 import { useAuth } from "../../hooks/useAuth";
@@ -141,9 +142,11 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {/* Mobile drawer — portaled to document.body so the header's
+          backdrop-blur (which becomes a containing block for fixed children)
+          can't clip/cover the full-screen overlay. */}
+      {mobileOpen && createPortal(
+        <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <div className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col overflow-y-auto bg-white p-5 shadow-2xl dark:bg-gray-950 dark:border-l dark:border-white/[0.06]">
             <div className="mb-6 flex items-center justify-between">
@@ -195,7 +198,8 @@ const Navbar = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
@@ -38,7 +39,15 @@ function ResultCard({ domain, available, price_usd, registrar, onRegister }) {
       <div className="flex items-center gap-3 shrink-0">
         {available && <span className="font-bold text-primary dark:text-white">{money(price_usd)}<span className="text-secondary text-xs font-normal">/yr</span></span>}
         {available && (
-          <button onClick={() => onRegister(domain, price_usd)} className="nw-btn-primary nw-btn-sm">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onRegister(domain, price_usd);
+            }}
+            className="nw-btn-primary nw-btn-sm"
+          >
             <FiShoppingCart size={15} /> Register
           </button>
         )}
@@ -283,9 +292,10 @@ export default function DomainsNomadly() {
         </section>
       </main>
 
-      {/* Register modal */}
-      {reg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeRegister}>
+      {/* Register modal — rendered via a portal to document.body so no ancestor
+          stacking/overflow context can hide the overlay. */}
+      {reg && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50" onClick={closeRegister}>
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
               <h3 className="text-lg font-semibold text-primary dark:text-white">Register {reg.domain}</h3>
@@ -350,7 +360,8 @@ export default function DomainsNomadly() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <Footer />

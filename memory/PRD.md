@@ -141,3 +141,25 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 - Authed mobile nav is implemented in layouts/FrontLayout.jsx (verified in code): fixed bottom tab bar (Home/Domains/Hosting/Wallet/Account, `xl:hidden`), top-left hamburger opening a left slide-in drawer (AppRail + Sidebar), desktop icon-rail `hidden xl:flex`, contextual 280px panel `hidden xl:block`. Tablet (<1280) intentionally uses the hamburger drawer + bottom bar pattern. NOTE: automated agent could NOT log in to visually confirm authed mobile nav due to Cloudflare bot-protection 429 on the preview — recommend a quick manual check on a phone/narrow window.
 - NOTE: /pricing fires 3 reseller calls on mount (suggest = 12 upstream lookups + vps + rdp plans); renders fine for real users (screenshot-verified) but can time out under automated hammering/Cloudflare 429. Optional future: cache suggest server-side.
 - Screenshot tool CANNOT emulate mobile (locks 1920) — use auto_frontend_testing_agent for responsive checks.
+
+---
+
+## Changelog / Session Log (latest first)
+
+### Setup + bug-fix session
+**App is LIVE.** Node/Express backend on :8001 (supervisor `bash /app/backend/start.sh`), React/Vite frontend on :3000, connected to REAL Railway MongoDB (`nozomi.proxy.rlwy.net:54383/nameword`). Preview URL for this pod: `https://4d2c6cd3-6d28-4732-8542-5a3a189ea1e0.preview.emergentagent.com`. Nomadly Reseller API is LIVE (real key). All other integrations (Google OAuth, Brevo mail, Telnyx, DynoPay, WHM/Plesk/Cloudflare) are PLACEHOLDER.
+
+**Fixed + verified by testing agents:**
+- Resilient signup: `POST /auth/register` wraps the verification email in try/catch → returns 201 (not 500) when Brevo fails.
+- Smart domain search: `GET /reseller/domains/search` defaults a bare keyword (no dot) to `.com`.
+- `/domains` Register modal: rendered via `createPortal(document.body)` + hardened trigger button.
+- Mobile hamburger drawer: portaled out of the `backdrop-blur` header (which was clipping the fixed overlay).
+- Legacy `/domain` & `/websites` redirect to Home (SPA catch-all) — confirmed working.
+
+**In progress (PARTIAL — not complete):** Onboarding simplification to email+password only.
+- Backend: `registerSimpleRules` added + wired; `RegisterController` auto-generates username + default name. Verified email+password-only registration returns 201.
+- Pending: register should issue a JWT/session; drop the `!isProfileVerified` login gate (backend `LoginController` + frontend `AuthContext.login`); simplify `CreateAccount.jsx` UI and skip the `/otp-code` step.
+
+**Not started (requested):** remove Transfer end-to-end; audit loyalty/billing/wallet; persist every user order per-user in DB; DynoPay embedded checkout (playbook UNVERIFIED; provided API key looks CryptoJS-encrypted — inspect existing DynoPay integration first).
+
+See `/app/test_result.md` (latest agent_communication entry) for the detailed handoff.

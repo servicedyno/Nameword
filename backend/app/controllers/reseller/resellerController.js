@@ -54,8 +54,20 @@ const getRdpCredentials = (req, res) =>
   forward(res, nomadly.get(`/rdp/${enc(req.params.id)}/credentials`));
 
 // ---------- Domains ----------
-const searchDomain = (req, res) =>
-  forward(res, nomadly.get("/domains/search", { params: req.query }));
+// Default TLD applied when a caller searches a bare keyword (no dot). This lets
+// "coolstartup2026" resolve to "coolstartup2026.com" instead of the upstream
+// returning a 400 invalid_domain. Alternative TLDs ("friends") are surfaced by
+// the /domains/suggest endpoint below.
+const DEFAULT_TLD = "com";
+const searchDomain = (req, res) => {
+  const params = { ...req.query };
+  const raw = String(params.domain || "").trim().toLowerCase();
+  if (raw && !raw.includes(".")) {
+    const label = raw.replace(/[^a-z0-9-]/g, "");
+    params.domain = label ? `${label}.${DEFAULT_TLD}` : raw;
+  }
+  return forward(res, nomadly.get("/domains/search", { params }));
+};
 
 // Curated set of popular TLDs used to build live alternative suggestions.
 const POPULAR_TLDS = [

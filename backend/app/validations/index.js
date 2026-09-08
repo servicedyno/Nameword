@@ -21,6 +21,25 @@ module.exports.registerRules = [
         .custom(checkIfPasswordMatch),
 ];
 
+// Frictionless onboarding: only email + password are required. Optional fields
+// (username/mobile/name/passwordConfirmation) are still validated IF provided,
+// but users can complete their profile later from Account Settings.
+module.exports.registerSimpleRules = [
+    body('email').trim().notEmpty().withMessage((_, { path }) => `The ${path} field is required.`)
+        .isEmail().withMessage("The email field must be a valid email address.")
+        .custom(checkIfEmailExists),
+    body('password').trim().notEmpty().withMessage((_, { path }) => `The ${path} field is required.`)
+        .isLength({ min: 8 }).withMessage(() => `Password should be at least 8 character long.`)
+        .isLength({ max: 64 }).withMessage("Password exceeds the maximum length of 64 characters."),
+    body('username').optional({ checkFalsy: true }).trim()
+        .custom(checkIfUserNameExists),
+    body('mobile').optional({ checkFalsy: true }).trim()
+        .isMobilePhone('any').withMessage("The mobile field must be a valid number.")
+        .custom(checkIfMobileExists),
+    body('passwordConfirmation').optional({ checkFalsy: true }).trim()
+        .custom(checkIfPasswordMatch),
+];
+
 module.exports.telegramRegisterRules = [
     body('telegramId').trim().notEmpty().withMessage((_, { path }) => `The ${path} field is required.`),
     body('email').trim().notEmpty().withMessage((_, { path }) => `The ${path} field is required.`)

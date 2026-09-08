@@ -14,6 +14,22 @@ const {
 } = require("../../errors/RequestValidationError");
 const fs = require("fs");
 const BadRequestError = require("../../errors/BadRequestError");
+const { saveUserSession } = require("../../services/userSession");
+const { generateJwtToken } = require("../../helpers/generateJwt");
+
+// Build a unique username from an email local-part when the user didn't supply one.
+async function generateUniqueUsername(email) {
+	const base =
+		String(email || "").split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20) ||
+		"user";
+	let candidate = base;
+	for (let i = 0; i < 6; i++) {
+		const exists = await User.findOne({ username: candidate });
+		if (!exists) return candidate;
+		candidate = base + Math.floor(1000 + Math.random() * 9000);
+	}
+	return base + Date.now().toString().slice(-6);
+}
 
 class RegisterController {
 	async register(req, res, next) {
@@ -37,9 +53,21 @@ class RegisterController {
 				fs.unlinkSync(req.file.path);
 			}
 
+			// Frictionless onboarding: only email + password are required. Fill in
+			// sensible defaults for the fields the DB still needs (name) and a unique
+			// username so the account can be created; users edit these later in
+			// Account Settings.
+			const body = { ...req.body };
+			if (!body.username || !String(body.username).trim()) {
+				body.username = await generateUniqueUsername(body.email);
+			}
+			if (!body.name || !String(body.name).trim()) {
+				body.name = String(body.email || "").split("@")[0] || "User";
+			}
+
 			// Create user with profile image
 			const userPayload = {
-				...req.body,
+				...body,
 				...(profileImgPath && { profileImg: profileImgPath }),
 			};
 			let user = await User.create(userPayload);
@@ -104,18 +132,40 @@ class RegisterController {
 			});
 			const profileUrl = await getSignedURL(profileImgPath);
 			user.profileImg = profileUrl;
-			const { shouldSendEmail } = require("../../utils/notificationHelper");
-			const canSendEmail = await shouldSendEmail(user, 'accountAndSecurity');
-			if (canSendEmail) {
-				let html = nunjucks.render("mails/verification_code.html", { otp, name: user.name || user.email, logoUrl: env.FRONTEND_URL });
-				const info = await transporter.sendMail({
-					from: env.MAIL_FROM_ADDRESS,
-					to: user.email,
-					subject: "Verify your Nameword account",
-					html: html, // html body
-				});
+			// Send the verification email best-effort. A mail-provider failure
+			// (e.g. Brevo returning 401 for a placeholder key) must NOT roll back
+			// the freshly created account or turn the whole request into a 500.
+			// The OTP is already persisted (VerificationCode) so verification can
+			// still proceed via /auth/send-email-code once mail is configured.
+			let emailSent = false;
+			try {
+				const { shouldSendEmail } = require("../../utils/notificationHelper");
+				const canSendEmail = await shouldSendEmail(user, 'accountAndSecurity');
+				if (canSendEmail) {
+					let html = nunjucks.render("mails/verification_code.html", { otp, name: user.name || user.email, logoUrl: env.FRONTEND_URL });
+					await transporter.sendMail({
+						from: env.MAIL_FROM_ADDRESS,
+						to: user.email,
+						subject: "Verify your Nameword account",
+						html: html, // html body
+					});
+					emailSent = true;
+				}
+			} catch (mailErr) {
+				console.error(
+					"Verification email could not be sent (registration still succeeded):",
+					mailErr?.message || mailErr
+				);
 			}
-			return res.status(201).json({ data: user, message: "OTP sent successfully.", success: true, expiresAt });
+			return res.status(201).json({
+				data: user,
+				message: emailSent
+					? "OTP sent successfully."
+					: "Account created. We could not send the verification email right now — you can request a new code shortly.",
+				success: true,
+				emailSent,
+				expiresAt,
+			});
 		} catch (err) {
 			next(err);
 		}
