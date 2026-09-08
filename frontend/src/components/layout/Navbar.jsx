@@ -12,8 +12,8 @@ import { useLanguage } from "../../hooks/useLanguage";
 
 // Kept product surface: Domains · DNS · cPanel Hosting · VPS · RDP · Private Email · API
 const PRODUCT_KEYS = [
-  { key: "domains", to: "/domain", icon: LuGlobe },
-  { key: "dns", to: "/dns-management", icon: LuNetwork },
+  { key: "domains", to: "/domains", icon: LuGlobe },
+  { key: "dns", to: "/dns-manager", icon: LuNetwork },
   { key: "hosting", to: "/hosting", icon: LuServer },
   { key: "vps", to: "/vps", icon: LuCloud },
   { key: "rdp", to: "/rdp", icon: LuMonitor },
@@ -42,11 +42,9 @@ const Navbar = () => {
     navigate("/pricing");
   };
 
-  // DNS is a signed-in tool: send guests to sign-in and remember where they wanted to go.
-  const productTo = (p) => (p.key === "dns" && !user ? "/sign-in" : p.to);
-  const rememberPath = (p) => {
-    if (p.key === "dns" && !user) localStorage.setItem("path", p.to);
-  };
+  // Product links go straight to their storefront/manager pages.
+  const productTo = (p) => p.to;
+  const rememberPath = () => {};
 
   const deskLink =
     "rounded-lg px-3 py-2 text-15 font-medium text-primary hover:bg-surface-2 dark:text-gray-200 dark:hover:bg-white/[0.06] dark:hover:text-white transition-colors";

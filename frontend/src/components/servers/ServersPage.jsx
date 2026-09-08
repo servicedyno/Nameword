@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 import { resellerProduct, resellerAPI } from "../../api/reseller";
+import WalletNudge from "../reseller/WalletNudge";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
@@ -470,6 +471,7 @@ export default function ServersPage({ product = "vps" }) {
                   {!meta.osChoices && (
                     <p className="text-sm text-secondary dark:text-gray-400">Operating system: <span className="text-primary dark:text-white font-medium">Windows</span></p>
                   )}
+                  <WalletNudge balance={account?.wallet_balance_usd} price={deployPlan.price_usd} />
                 </>
               )}
 

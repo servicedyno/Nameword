@@ -23,6 +23,8 @@ import RDP from "../pages/RDP";
 import Email from "../pages/Email";
 import Api from "../pages/Api";
 import Pricing from "../pages/Pricing";
+import DomainsNomadly from "../pages/DomainsNomadly";
+import DnsManagerNomadly from "../pages/DnsManagerNomadly";
 import ProtectedRoute from "../hocs/Protected";
 import UnprotectedRoute from "../hocs/UnProtected";
 
@@ -111,6 +113,8 @@ function Router() {
       {/* <Route path="/no-domain" element={<NoDomain />} /> */}
       {/* <Route path="/add-to-cart" element={<AddtoCart />} /> */}
       <Route path="/hosting" element={<Hosting />} />
+      <Route path="/domains" element={<DomainsNomadly />} />
+      <Route path="/dns-manager" element={<DnsManagerNomadly />} />
       <Route path="/vps" element={<VPS />} />
       <Route path="/rdp" element={<RDP />} />
       <Route path="/email" element={<Email />} />

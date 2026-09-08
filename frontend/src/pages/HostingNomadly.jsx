@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import resellerAPI from "../api/reseller";
+import WalletNudge from "../components/reseller/WalletNudge";
 import { useAlert } from "../context/AlertContext";
 import { usePageMeta } from "../hooks/usePageMeta";
 import {
@@ -515,6 +516,7 @@ export default function HostingNomadly() {
                       </span>
                     </label>
                   )}
+                  <WalletNudge balance={account?.wallet_balance_usd} price={buyPlan.price_usd} />
                 </>
               )}
 
