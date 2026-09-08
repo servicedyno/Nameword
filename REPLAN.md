@@ -25,7 +25,7 @@ Customer ──buys──▶  Nameword (retail: per-user USD wallet, markup, ord
 ## 1. Confirmed decisions (from you)
 | # | Decision | Impact |
 |---|----------|--------|
-| 1 | **Crypto = DynoPay** | Wallet top-up via DynoPay checkout + webhook. ⚠️ Needs **live** `DYNO_PAY_BASE_URL / JWT / COMPANY_ID / WEBHOOK_SECRET` (currently blank). |
+| 1 | **Crypto = DynoPay** | ✅ **Key validated LIVE** (new API `https://dynopay.com/api/user`, `x-api-key`; createPayment → `data.redirect_url`). ⚠️ Backend code must be re-pointed from the dead JWT/company_id flow to the new `/createPayment` endpoint. Webhook secret optional (verify via `getPaymentStatus`). |
 | 2 | **Email = Brevo (live key applied)** | ✅ Signup/verify/reset unblocked. Products can move behind login. ⚠️ Verify sender `hi@dynopay.com` in Brevo. |
 | 3 | **Wallet = USD-only** | No FX/multi-currency work now; single currency across UI + ledger. |
 | 4 | **Nomadly = go-live** | Real provisioning + real charges. ⚠️ Depends on Nomadly flipping the key to live **and** the reseller wallet being funded (now $5). |
@@ -115,7 +115,7 @@ Move `/vps` `/rdp` (and new domains/hosting buy+manage) **behind `ProtectedRoute
 ## 5. Consolidated backlog (phased) — What · Why · Done-when
 
 ### Phase 0 — Enablers / unblock (do first)
-- **E1 DynoPay live creds** — *Why:* wallet top-up is the money-in path. *Done:* real checkout link + webhook credits a test wallet. *(needs your creds)*
+- **E1 DynoPay** — ✅ **DONE (key live & validated).** New API confirmed working (`POST /createPayment` → `data.redirect_url`; supported coins incl. BTC/ETH/USDT). Remaining build work: re-point backend to the new endpoint + wire webhook/`getPaymentStatus` to credit the user wallet.
 - **E2 Brevo sender verify** — *Why:* verification emails actually deliver. *Done:* signup email lands. *(applied key; verify sender)*
 - **E3 Nomadly go-live + fund reseller wallet** — *Why:* real provisioning. *Done:* `/reseller/health` → `live`; a paid VPS returns a real IP. *(needs Nomadly-side flip + float top-up)*
 - **E4 Rotate leaked credentials** — repo was backdoored; treat all as compromised.
@@ -145,7 +145,7 @@ Move `/vps` `/rdp` (and new domains/hosting buy+manage) **behind `ProtectedRoute
 ---
 
 ## 6. Dependencies & risks (please note)
-1. **DynoPay** was previously **dead** (base URL NXDOMAIN, company_id "Application not found"). Keeping DynoPay needs **working live creds**; otherwise top-up can't be built/tested. → provide creds, or we build the wallet with DynoPay behind a flag and test once creds arrive.
+1. **DynoPay** — ✅ resolved: key is live on the new API (`dynopay.com/api/user`). Build work = re-point code to `/createPayment` + webhook/`getPaymentStatus` crediting. (Old `api.dynopay.com` JWT/company_id flow stays retired.)
 2. **Go-live now** means real money: the shared Nomadly reseller wallet is **$5** — real orders will fail with `insufficient_wallet_balance` until funded. Provider must also **flip the key to live** their side. Recommend: build in dry_run, flip to live only after E1+E3.
 3. **Brevo sender** `hi@dynopay.com` must be verified in the Brevo account or sends bounce.
 4. **Nomadly domain/dns/hosting** endpoint shapes need confirming against their API (we've proven vps/rdp; will validate the rest before wiring UI).
