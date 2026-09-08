@@ -53,6 +53,39 @@ const deleteRdp = (req, res) =>
 const getRdpCredentials = (req, res) =>
   forward(res, nomadly.get(`/rdp/${enc(req.params.id)}/credentials`));
 
+// ---------- Domains ----------
+const searchDomain = (req, res) =>
+  forward(res, nomadly.get("/domains/search", { params: req.query }));
+const listDomains = (req, res) => forward(res, nomadly.get("/domains"));
+const registerDomain = (req, res) =>
+  forward(res, nomadly.post("/domains/register", req.body || {}));
+
+// ---------- DNS (free) ----------
+const listDnsRecords = (req, res) =>
+  forward(res, nomadly.get(`/dns/${enc(req.params.domain)}/records`));
+const addDnsRecord = (req, res) =>
+  forward(res, nomadly.post(`/dns/${enc(req.params.domain)}/records`, req.body || {}));
+const updateDnsRecord = (req, res) =>
+  forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/records`, req.body || {}));
+const deleteDnsRecord = (req, res) =>
+  forward(res, nomadly.delete(`/dns/${enc(req.params.domain)}/records`, { data: req.body || {} }));
+const setNameservers = (req, res) =>
+  forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/nameservers`, req.body || {}));
+
+// ---------- cPanel Hosting ----------
+const getHostingPlans = (req, res) => forward(res, nomadly.get("/hosting/plans"));
+const createHosting = (req, res) =>
+  forward(res, nomadly.post("/hosting", req.body || {}));
+const listHosting = (req, res) => forward(res, nomadly.get("/hosting"));
+const suspendHosting = (req, res) =>
+  forward(res, nomadly.post(`/hosting/${enc(req.params.user)}/suspend`, req.body || {}));
+const unsuspendHosting = (req, res) =>
+  forward(res, nomadly.post(`/hosting/${enc(req.params.user)}/unsuspend`, req.body || {}));
+const terminateHosting = (req, res) =>
+  forward(res, nomadly.delete(`/hosting/${enc(req.params.user)}`));
+const hostingLogin = (req, res) =>
+  forward(res, nomadly.get(`/hosting/${enc(req.params.user)}/login`));
+
 module.exports = {
   getHealth,
   getAccount,
@@ -70,4 +103,19 @@ module.exports = {
   rdpAction,
   deleteRdp,
   getRdpCredentials,
+  searchDomain,
+  listDomains,
+  registerDomain,
+  listDnsRecords,
+  addDnsRecord,
+  updateDnsRecord,
+  deleteDnsRecord,
+  setNameservers,
+  getHostingPlans,
+  createHosting,
+  listHosting,
+  suspendHosting,
+  unsuspendHosting,
+  terminateHosting,
+  hostingLogin,
 };

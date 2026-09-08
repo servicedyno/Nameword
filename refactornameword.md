@@ -123,3 +123,33 @@
 3. **B2 / B5** (domain results + hosting plan names) — mostly resolved alongside A1/A2.
 4. **A4** (auth + wallet) once a mail key exists.
 5. **B3 / B4** (domain switcher, a11y), then **A5 / A6 / B6 / B7 / B8** polish.
+
+
+---
+
+## Session Log — Env setup + Reseller backend expansion
+
+### Done
+- **App online**: recreated `backend/.env` + `frontend/.env` from provided creds; URL vars pointed at the real pod preview URL (`49dcdd71-…`, not the stale `5c680fc7-…` in the pasted env); `yarn install` (backend); supervisor rewritten to run Node backend (:8001) + Vite (:3000). Both RUNNING; homepage renders.
+- **Integrations validated LIVE**:
+  - MongoDB (Railway proxy `nozomi.proxy.rlwy.net`) — connected; already seeded (plans/tiers/badges/1 admin).
+  - Nomadly Reseller API — key live, mode `dry_run`, products: domains, dns, vps, rdp, hosting.
+  - Brevo email — real key applied & validated (acct Moxx Technologies LLC, ~4878 credits; sender `hi@dynopay.com` — still needs sender verification in Brevo).
+  - DynoPay crypto — NEW API `https://dynopay.com/api/user` + `x-api-key` (old `api.dynopay.com` JWT/company_id flow retired). Validated: getSupportedCurrency / getBalance / createPayment AND **embedded checkout session** (`POST /embed/session` → `client_secret` + `checkout_url`) all 200.
+- **Master plan**: `/app/REPLAN.md` (architecture + UI/UX + phased backlog). Decisions locked: **markup 0%** (resell at API cost), **build in dry_run then flip live**, **public catalog + gated checkout**.
+- **Backend — reseller proxy expanded** (mirrors VPS/RDP `forward()` pattern):
+  - Domains: `GET /reseller/domains/search`, `GET /reseller/domains`, `POST /reseller/domains/register`
+  - DNS (free): records GET/POST/PUT/DELETE + `PUT /reseller/dns/:domain/nameservers`
+  - Hosting: `GET /reseller/hosting/plans`, `POST /reseller/hosting`, `GET /reseller/hosting`, `POST .../:user/suspend|unsuspend`, `DELETE .../:user`, `GET .../:user/login`
+  - Files: `backend/app/controllers/reseller/resellerController.js`, `backend/routes/api/reseller.js`. Smoke-tested live (dry_run): domain search returns availability+price (.com $39 / .net $51 / .io $244 via OpenProvider); hosting plans return real tiers/prices ($30/$75/$100…).
+- **Frontend — reseller API client extended**: `frontend/src/api/reseller.js` now has searchDomain/listDomains/registerDomain, DNS CRUD + nameservers, hosting plans/create/list.
+
+### Nomadly API contract (for UI/checkout build)
+- Search → `{domain, available, price_usd, registrar, message}`
+- Register (wallet-billed) → body `{domain, ns_choice?, nameservers?}` → `{charged_usd, wallet_balance_usd, result:{success, domain, registrar, nameservers}}`
+- Billing: charged atomically BEFORE provisioning; `402 insufficient_wallet_balance`; `502 provisioning_failed` with `"refunded": true`; dry_run returns `would_provision` and never charges.
+
+### In progress / Next
+- Frontend **Domain Search catalog page** (live search + availability + price; skeleton/empty/error; replace the full-screen `<Loader/>`) — component build started. Brand tokens: primary `#191339`, darkbtn `#34228e`, tealdark `#16979a`, lightgray `#eae8f4`.
+- Then: retail **order + wallet** spine (debit user wallet → Nomadly register → auto-refund on fail; markup 0%), **auth + wallet gating** at checkout, **DynoPay embedded top-up**, then **Hosting** + **DNS** management UIs.
+- NOTE: the new backend proxy has NOT yet been run through the formal `deep_testing_backend_v2` agent.

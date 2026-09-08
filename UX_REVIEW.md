@@ -144,3 +144,12 @@
 - `/sign-in`, `/create-account` — clean single-column auth with floating labels & social login.
 - `/domain?value=…` — **infinite full-screen loader** over greyed content (search dead-end).
 - `/hosting` — **infinite full-screen loader**; "Choose Your Hosting Plan" + Monthly/Annually visible behind spinner.
+
+
+---
+
+## Status Update (env + reseller-backend session)
+- **Data source fixed at the source:** Domains, DNS and Hosting now have a **live backend** via the Nomadly reseller proxy (`/api/v1/reseller/domains|dns|hosting/*`) — previously these hit dead legacy providers. This unblocks every P0 domain/hosting fix below.
+- **Still OPEN (frontend not yet changed):** full-screen blocking loaders on `/domain` `/hosting`; fake "status" buttons; `$0.00` guard; unwired `FiInfo` tooltips; 2000ms suggestion debounce; provider-name leakage on hosting cards; native `<select>` domain switcher; DNS-vs-nameserver naming; `window.confirm` deletes; tablet (`md`–`xl`) sidebar gap; icon-button `aria-label`s + focus rings; checkout 20% tax flicker; production `console.log`s.
+- **Locked approach for the fixes:** reuse the shared **skeleton / empty / error** pattern already shipped on `/vps` `/rdp`; **public catalog + gated checkout**; **wallet-first** checkout with **DynoPay embedded** top-up (no off-site redirect); pricing straight from the API (markup 0%).
+- **In progress:** live Domain Search catalog page (replacing the full-screen loader with real availability + price + async states).

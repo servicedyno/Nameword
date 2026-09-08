@@ -29,7 +29,7 @@ Customer ──buys──▶  Nameword (retail: per-user USD wallet, markup, ord
 | 2 | **Email = Brevo (live key applied)** | ✅ Signup/verify/reset unblocked. Products can move behind login. ⚠️ Verify sender `hi@dynopay.com` in Brevo. |
 | 3 | **Wallet = USD-only** | No FX/multi-currency work now; single currency across UI + ledger. |
 | 4 | **Nomadly = go-live** | Real provisioning + real charges. ⚠️ Depends on Nomadly flipping the key to live **and** the reseller wallet being funded (now $5). |
-| 5 | **Deliverable = this plan; wait for approval** | No code until you approve. |
+| 5 | **Deliverable = this plan; wait for approval** | ✅ **APPROVED — build started.** Final calls: **markup 0%** (resell at API cost) · **build in dry_run then flip live** · **public catalog + gated checkout**. |
 
 ---
 

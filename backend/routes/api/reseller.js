@@ -26,4 +26,25 @@ router.post("/rdp/:id/action", c.rdpAction);
 router.get("/rdp/:id", c.getRdp);
 router.delete("/rdp/:id", c.deleteRdp);
 
+// ---------- Domains ----------
+router.get("/domains/search", c.searchDomain);
+router.get("/domains", c.listDomains);
+router.post("/domains/register", c.registerDomain);
+
+// ---------- DNS (free) — specific paths must precede generic ----------
+router.get("/dns/:domain/records", c.listDnsRecords);
+router.post("/dns/:domain/records", c.addDnsRecord);
+router.put("/dns/:domain/records", c.updateDnsRecord);
+router.delete("/dns/:domain/records", c.deleteDnsRecord);
+router.put("/dns/:domain/nameservers", c.setNameservers);
+
+// ---------- cPanel Hosting — specific paths must precede :user ----------
+router.get("/hosting/plans", c.getHostingPlans);
+router.get("/hosting", c.listHosting);
+router.post("/hosting", c.createHosting);
+router.post("/hosting/:user/suspend", c.suspendHosting);
+router.post("/hosting/:user/unsuspend", c.unsuspendHosting);
+router.get("/hosting/:user/login", c.hostingLogin);
+router.delete("/hosting/:user", c.terminateHosting);
+
 module.exports = router;
