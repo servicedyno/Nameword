@@ -146,6 +146,18 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Domain search UX overhaul + same-origin API fix (2026-09-08)
+- FIXED "no results on preview": the frontend pinned API calls to a hardcoded VITE_API_BASE_URL (140bde5b host). When the user opened the app on a DIFFERENT preview origin, calls went cross-origin and were blocked -> no results. Changed `/app/frontend/src/config/api.js` to use SAME-ORIGIN (`window.location.origin`)/api/v1 so it works from any preview/custom URL. (User confirmed working.)
+- Landing-page domain search is now INLINE (no navigation): new components `components/domain/DomainSearchResults.jsx` (exact match renders instantly, alt-TLD suggestions stream in independently) + `components/domain/RegisterDomainModal.jsx` (portaled, reusable; currently NOT used on landing). HomeRedesign Hero + FinalCta render results inline below the search box and smooth-scroll to them. Legacy /home & /domain routes still redirect to /domains hub.
+- Landing page is now a DISCOVERY surface only: removed the reseller "Test mode" banner and the reseller $5 wallet display from the public flow. Register CTA is auth-aware — logged-out shows "Sign in to register" -> stores `path=/domains?value=<domain>` and routes to /sign-in; logged-in routes to /domains?value=<domain>. VERIFIED via screenshot (no Test mode banner; CTA routes to /sign-in).
+
+- KEY MODEL CLARIFIED BY USER (for next session): there are TWO wallets — (1) in-app user `Wallet` (models/Wallet, balance Map USD, per userId; used by RDP/hosting/subscription purchases) which is the REAL user-facing balance that must gate purchases; (2) the Nomadly RESELLER wallet ($5, from GET /reseller/account) which is the OWNER's upstream balance and must NOT be shown to end users. The `mode: dry_run` on GET /reseller/health is set SERVER-SIDE by Nomadly (the app only mirrors it; resellerController.js is a pure pass-through) — user says the key is live but Nomadly still reports dry_run; only Nomadly can flip dry_run->live.
+
+- PENDING / NEXT (Phase 2 — NOT built yet, confirm before building): make the AUTHENTICATED checkout charge the IN-APP user wallet:
+  * Move the `/domains` hub (DomainsNomadly: search + Your domains + Manage DNS) INTO the signed-in dashboard shell (FrontLayout + AppRail already has a "Domains" item) and stop showing reseller wallet/test-mode there.
+  * New AUTH endpoint e.g. `POST /api/v1/reseller/domains/purchase`: verify user, get/create Wallet, check balance >= price (price via reseller search), deduct in-app wallet, call Nomadly register, create Domain + Transaction records. Show user's in-app balance + a "Top up wallet" CTA on shortfall.
+  * OPEN DECISION: in dry_run, do NOT charge the in-app wallet — show a "test mode, not charged" preview; charge for real only once Nomadly reports live.
+
 ### Re-setup (2026-09-08, pod reconciled again) — APP IS LIVE
 - Pod was reconciled: both `.env` files wiped, backend `node_modules` gone, supervisor reset to the default uvicorn/`yarn start` template. Frontend `node_modules` survived (PVC).
 - NEW pod preview URL: `https://140bde5b-3a12-4b2b-a12b-eb68961239e3.preview.emergentagent.com` (old `5c680fc7-...` is stale; kept in CORS only).

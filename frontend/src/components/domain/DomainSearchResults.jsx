@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FiGlobe, FiCheckCircle, FiShoppingCart, FiAlertTriangle } from "react-icons/fi";
+import { useNavigate } from "react-router";
+import { FiGlobe, FiCheckCircle, FiShoppingCart, FiLogIn } from "react-icons/fi";
 import resellerAPI from "../../api/reseller";
-import RegisterDomainModal from "./RegisterDomainModal";
+import { useAuth } from "../../hooks/useAuth";
 
 const money = (n) =>
-  n === null || n === undefined || isNaN(Number(n)) ? "—" : `$${Number(n).toFixed(2)}`;
+  n === null || n === undefined || isNaN(Number(n)) ? "\u2014" : `$${Number(n).toFixed(2)}`;
 
 const MAX_SUGGESTIONS = 8;
 
-function ResultCard({ domain, available, price_usd, registrar, onRegister }) {
+function ResultCard({ domain, available, price_usd, registrar, ctaLabel, ctaIcon, onRegister }) {
+  const Icon = ctaIcon || FiShoppingCart;
   return (
     <div className="nw-card !p-4 flex items-center justify-between gap-4">
       <div className="min-w-0">
@@ -30,7 +32,7 @@ function ResultCard({ domain, available, price_usd, registrar, onRegister }) {
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRegister(domain, price_usd); }}
             className="nw-btn-primary nw-btn-sm"
           >
-            <FiShoppingCart size={15} /> Register
+            <Icon size={15} /> {ctaLabel}
           </button>
         )}
       </div>
@@ -41,26 +43,19 @@ function ResultCard({ domain, available, price_usd, registrar, onRegister }) {
 // Inline domain search results for the public landing page. Fetches the exact
 // match and alternative-TLD suggestions INDEPENDENTLY so the fast exact result
 // renders immediately while the slower suggestions stream in afterwards.
+//
+// This is a DISCOVERY surface only: no wallet / reseller state is shown here.
+// Clicking "Register" starts the registration flow — logged-out visitors are
+// sent to sign in / create an account (with the domain remembered), and the
+// actual purchase (gated by the in-app wallet) happens in the authenticated area.
 export default function DomainSearchResults({ query }) {
-  const [mode, setMode] = useState(null);
-  const [account, setAccount] = useState(null);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [exact, setExact] = useState(null);
   const [exactLoading, setExactLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [sugLoading, setSugLoading] = useState(false);
-  const [reg, setReg] = useState(null);
   const reqIdRef = useRef(0);
-
-  // Wallet balance + dry_run banner (fetched once).
-  useEffect(() => {
-    let alive = true;
-    Promise.allSettled([resellerAPI.getHealth(), resellerAPI.getAccount()]).then(([h, a]) => {
-      if (!alive) return;
-      if (h.status === "fulfilled") setMode(h.value?.mode || null);
-      if (a.status === "fulfilled") setAccount(a.value || null);
-    });
-    return () => { alive = false; };
-  }, []);
 
   // Re-run whenever the submitted query changes.
   useEffect(() => {
@@ -89,12 +84,25 @@ export default function DomainSearchResults({ query }) {
       .finally(() => { if (reqIdRef.current === myId) setSugLoading(false); });
   }, [query]);
 
-  const openRegister = (domain, price_usd) => setReg({ domain, price_usd });
+  // Start the registration flow. The real purchase (in-app wallet) lives in the
+  // authenticated area, so logged-out visitors sign in first (domain remembered).
+  const handleRegister = (domain) => {
+    const dest = `/domains?value=${encodeURIComponent(domain)}`;
+    if (!isAuthenticated) {
+      try { localStorage.setItem("path", dest); } catch (e) { /* ignore */ }
+      navigate("/sign-in");
+      return;
+    }
+    navigate(dest);
+  };
 
   if (!String(query || "").trim()) return null;
 
-  // Drop any suggestion that duplicates the exact match (e.g. searching a bare
-  // keyword resolves to ".com", which the suggestions list also returns).
+  const ctaLabel = isAuthenticated ? "Register" : "Sign in to register";
+  const ctaIcon = isAuthenticated ? FiShoppingCart : FiLogIn;
+
+  // Drop any suggestion that duplicates the exact match (e.g. a bare keyword
+  // resolves to ".com", which the suggestions list also returns).
   const exactDomain = String(exact?.domain || "").toLowerCase();
   const visibleSuggestions = suggestions.filter(
     (s) => String(s.domain || "").toLowerCase() !== exactDomain
@@ -104,15 +112,6 @@ export default function DomainSearchResults({ query }) {
 
   return (
     <div className="rounded-3xl border border-line bg-white/70 p-5 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/70 dark:shadow-black/40 sm:p-7">
-      {mode === "dry_run" && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 mb-6" data-testid="dry-run-banner">
-          <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
-          <p className="text-sm text-amber-800 dark:text-amber-200">
-            <span className="font-semibold">Test mode.</span> Registrations are validated and priced but no domain is registered and your wallet is never charged.
-          </p>
-        </div>
-      )}
-
       <h2 className="text-xl font-semibold text-primary dark:text-white mb-5">Search results</h2>
 
       <div className="space-y-3">
@@ -120,7 +119,7 @@ export default function DomainSearchResults({ query }) {
         {exactLoading ? (
           <div className="h-16 rounded-xl border border-lightgray dark:border-gray-800 animate-pulse" />
         ) : exact && exact.available ? (
-          <ResultCard domain={exact.domain} available={true} price_usd={exact.price_usd} registrar={exact.registrar} onRegister={openRegister} />
+          <ResultCard domain={exact.domain} available={true} price_usd={exact.price_usd} registrar={exact.registrar} ctaLabel={ctaLabel} ctaIcon={ctaIcon} onRegister={handleRegister} />
         ) : exact && !exact.available ? (
           <ResultCard domain={exact.domain || query} available={false} />
         ) : null}
@@ -133,7 +132,7 @@ export default function DomainSearchResults({ query }) {
           <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-xl border border-lightgray dark:border-gray-800 animate-pulse" />)}</div>
         ) : (
           visibleSuggestions.map((s) => (
-            <ResultCard key={s.domain} domain={s.domain} available={s.available} price_usd={s.price_usd} registrar={s.registrar} onRegister={openRegister} />
+            <ResultCard key={s.domain} domain={s.domain} available={s.available} price_usd={s.price_usd} registrar={s.registrar} ctaLabel={ctaLabel} ctaIcon={ctaIcon} onRegister={handleRegister} />
           ))
         )}
 
@@ -152,8 +151,6 @@ export default function DomainSearchResults({ query }) {
           </p>
         )}
       </div>
-
-      <RegisterDomainModal reg={reg} account={account} onClose={() => setReg(null)} />
     </div>
   );
 }
