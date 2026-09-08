@@ -1,85 +1,136 @@
-# Nameword — UI/UX Redesign Recommendation
+# Plan: Reposition Nameword as an Offshore, Privacy-First Hosting Platform (focused product)
 
-## Objective
-Nameword is a domain + hosting reseller platform (domain search/registration, DNS, hosting with cPanel/Plesk, VPS, RDP, SSL, wallet/billing, and account management). The current experience — both the marketing site and the signed‑in app — looks dated and inconsistent. This effort produces an approved design recommendation that modernizes the whole product: clean layouts, clear hierarchy, simple flows, and full responsiveness on desktop, tablet, and mobile. The recommendation must ensure every product feature has a complete, navigable interface even where that feature's backend is not yet connected.
+## Goal
+Two changes, delivered together:
+1. **Narrow the product** to the core areas below and remove everything else from the customer-facing app.
+2. **Rebrand end to end** — new copy and a new colour system that read, at a glance, as **offshore and privacy-first** — across the public site, sign-in/sign-up, and the signed-in app.
 
-## What gets delivered
-Three documents, each with a distinct job:
+No new product functionality is built in this pass; existing screens for the kept areas are restyled and re-worded, and the nav is rebuilt around them.
 
-1. **UX_REVIEW.md** — the analysis. Current‑state problems screen by screen, a heuristic evaluation (clarity, consistency, hierarchy, feedback, accessibility), and the competitor research below.
-2. **refactornameword.md** — the redesign specification. A design system (color, type, spacing, components, states) plus a screen‑by‑screen redesign direction and the responsive + accessibility rules.
-3. **REPLAN.md** — the rollout roadmap. The redesign broken into prioritized milestones with clear "done" criteria for each, so implementation can be approved and executed in order.
+---
 
-## Scope of this task (please confirm)
-This task delivers the **written recommendation** in the three files above — not the rebuilt screens. Actually coding the redesign is the follow‑on phase and will live as the roadmap inside REPLAN.md, to be approved separately.
+## 0. Product scope — what stays, what goes
 
-> If you would rather this task also **build** the redesigned experience (e.g. start with a new homepage + app dashboard shell) alongside the documents, say so and that will be added to scope.
+### Stays
+| Area | Customer-facing surfaces kept |
+|---|---|
+| **Domain registration** | Domain search + results, cart → checkout, domain portfolio, domain overview, WHOIS contacts, transfer-in |
+| **DNS management** | DNS records manager for owned domains |
+| **VPS ordering & management** | VPS catalogue, deploy, instance list/actions/credentials; reachable from the signed-in nav |
+| **RDP ordering & management** | RDP catalogue, deploy, instance list/actions/credentials; reachable from the signed-in nav |
+| **cPanel hosting ordering & management** | Hosting plans + order, "Websites" management (setup, manage, upgrade, renew) — **cPanel only** |
+| **Email hosting** | Email product page (re-worded as *Private Email*), links from menu/footer/homepage |
+| **Wallet, top-up, checkout** | Wallet, add funds, payment history, subscriptions, cart → **upsell step** → payment checkout |
+| **Rewards & loyalty** | Reward-points balance chip, membership tiers and badges, homepage loyalty band — re-worded to fit the brand ("earn back on every renewal, spend from your wallet") |
+| **API** | New public **API** page (what the API does, how to get a key, auth basics, endpoint groups) + existing API-key management in account settings |
 
-## What the competitor research shows (and how it shapes the direction)
-- **Netim** (your example): transparent per‑TLD pricing grid with discount badges and struck‑through prices, a simple "3 steps to get online" story (domain → email → website), a strong "control panel" product narrative, prominent security (2FA, login alerts), reseller/API positioning, and visible trust signals (Trustpilot reviews). Takeaway: lead with **price clarity and trust**, and tell a simple getting‑started story.
-- **Porkbun / Cloudflare**: minimalist, ad‑free, highly scannable domain lists; **renewal price shown upfront**; free WHOIS privacy/SSL/DNS surfaced as value. Takeaway: **no hidden pricing, low clutter**.
-- **Namecheap**: strong bulk management (filtering, grouping, bulk actions) for large portfolios. Takeaway: **tables must support bulk operations and filtering**.
-- **Hostinger (hPanel)**: modern card‑based dashboard, a **persistent nested sidebar consistent across every service**, global search, one‑click security toggles. Takeaway: **one consistent app shell** for domains, hosting, VPS and RDP.
-- **2026 dashboard norms**: persistent left sidebar (~256px, collapsible to an icon rail), a 4–6 card KPI strip, dense/clean tables over "widget walls", subtle borders instead of heavy shadows, a Cmd/Ctrl‑K command palette, skeleton loaders, and dark mode with a manual toggle.
+Also kept, because they support the above: sign in with **email + password, Google sign-in, 2FA**, create account, password reset, account information & settings, help & support page, Privacy Policy and Terms, pricing page (domains, hosting, VPS, RDP).
 
-## Current problems (summary to be expanded in UX_REVIEW.md)
-- Inconsistent visual language: competing accent colors, uneven spacing, weak typographic hierarchy.
-- Marketing hero is busy and the value proposition/pricing is not immediately clear or scannable.
-- The signed‑in app lacks a single consistent shell; pages feel form/table‑heavy without clear page scaffolding, empty states, or loading states.
-- Responsiveness is unreliable across tablet and mobile (navigation, tables, and long forms in particular).
-- Feature discoverability is poor — many capabilities exist (DNS, transfers, VPS/RDP, wallet) but are hard to find and navigate between.
+### Removed from the customer-facing app
+- **SSL certificates** product page and every link/card/menu entry to it.
+- **Plesk** hosting option — hosting is cPanel only (Plesk plans, toggles and wording go).
+- **Telegram sign-in** button.
+- **Live chat** widget and any references to it (already switched off).
+- Any homepage/footer/menu item that points at a removed area.
 
-## Recommended design direction
+Removal means: pages, routes, navigation entries, homepage sections and links are gone from the app; a visitor cannot reach them. Server-side endpoints behind removed features are left dormant (no customer-visible effect) and can be deleted in a follow-up.
 
-### 1) Visual identity — choose one (Option A recommended)
-- **Option A — "Trust indigo + warm neutral" (recommended):** clean white/off‑white surfaces (deep slate in dark mode), near‑black slate text, a single confident indigo/violet primary for actions and brand, teal/emerald for success, amber for price/attention. Reads modern and trustworthy (Cloudflare/Porkbun feel) while keeping a hint of the brand's current warmth.
-- **Option B — "Refined warm premium":** keep the current cream/beige + navy, but disciplined — one navy primary, a single warm accent, far less color noise. Boutique/premium feel.
-- **Option C — "Bold gradient modern":** deep violet→blue gradients on a dark hero, high contrast, striking. Higher risk of feeling trendy/dated sooner.
+---
 
-Shared foundations regardless of option: one modern sans typeface with a defined type scale, an 8px spacing grid, medium corner radius, subtle 1px borders with soft elevation only where needed.
+## 1. Positioning and messaging
 
-### 2) Navigation & layout
-- **Marketing site:** sticky top header with a product mega‑menu (Domains, Hosting, VPS, RDP, SSL/Email), a focused domain‑search hero, transparent pricing cards with renewal price shown, trust signals (reviews, security, uptime), and a full‑sitemap footer. Mobile collapses to a slide‑in drawer.
-- **Signed‑in app:** one consistent shell — a persistent left sidebar (~256px, collapsible to a 72px icon rail) grouped into Overview, Domains, DNS, Hosting, VPS, RDP, Billing/Wallet, Settings; a top bar with global search + Cmd/Ctrl‑K command palette, wallet balance, notifications, help, and account menu. Every page uses the same scaffold: page header (title, breadcrumb, primary action) → filters/tabs → content (table or cards) → details opened in a side panel or modal rather than a full page jump.
+**Brand promise (one line):** *Offshore hosting, private by default.*
 
-### 3) Responsive behavior (all screens, all sizes)
-- **Desktop (≥1280px):** full sidebar, multi‑column content, dense tables.
-- **Laptop (1024–1279px):** full sidebar, tighter grids.
-- **Tablet (768–1023px):** sidebar collapses to icon rail or drawer; 1–2 column content.
-- **Mobile (<768px):** top bar + drawer, with the 4–5 most‑used destinations also reachable from a bottom tab bar; single‑column content; wide tables reflow into stacked cards; a sticky bottom action bar carries the primary action.
+**Hero headline (recommended):**
+> **Offshore hosting, private by default.**
+> Register domains, run your DNS, and deploy servers, cPanel hosting and private email from privacy-respecting jurisdictions — minimal data collection, WHOIS privacy included, and a prepaid wallet that doesn't follow you around.
 
-### 4) Dark mode
-Full light/dark support with a manual toggle (the app already exposes one) plus respect for the system preference.
+**Five pillars** (each becomes a homepage section and recurs on product pages):
+1. **Offshore by design** — infrastructure in privacy-respecting jurisdictions (EU and Singapore today); the customer chooses where data lives.
+2. **Private by default** — WHOIS privacy on domains, only the data needed to run the service is collected, nothing sold or shared for marketing.
+3. **You hold the keys** — full root/admin access on VPS and RDP, own your DNS, no lock-in; transfer or export at any time.
+4. **Discreet billing that gives back** — prepaid wallet, no surprise renewals, pay with card or crypto, loyalty rewards credited to your wallet.
+5. **Built for operators** — a real API for everything you can do in the dashboard, transparent per-TLD pricing, straight answers on abuse handling.
 
-### 5) Components & states
-A shared kit: buttons, inputs/selects, cards, tables (sortable, filterable, bulk‑select, paginated), tabs, badges/status pills, modals, side panels, toasts, tooltips — each with defined empty, loading (skeleton), error, and success states.
+**Product naming in copy** (nav labels stay short; descriptors appear in menus, heroes and cards):
+- Domains → *Private Domains* · DNS → *DNS Management* · Hosting → *Offshore cPanel Hosting* · VPS → *Offshore VPS* · RDP → *Private RDP* · Email → *Private Email* · API → *Developer API* · Rewards → *Loyalty Rewards*
 
-### 6) "Every UI element present regardless of backend"
-Every feature gets a complete, navigable screen. Where an integration is not connected (e.g. payments, email/OTP, certain domain/hosting providers, Telegram), the screen is still fully designed and navigable using realistic sample/empty data, with a clear, non‑blocking "demo / not connected" indicator. This makes the design complete and reviewable before all integrations go live.
+**Tone:** calm, precise, adult. Speaks to people who value discretion (founders, journalists, agencies, expats, crypto-native users, developers) without fear-mongering.
+- Use: private, discreet, offshore, jurisdiction, encrypted, minimal, yours, transparent.
+- Never use: anonymous, bulletproof, untraceable, "DMCA-ignored", anti-government, "no questions asked". Nothing that reads as an invitation for abuse or as a legal promise the company hasn't made.
 
-## Coverage map — everything the redesign spec will cover
-- **Marketing/public:** Home, Domains landing (search + TLD pricing grid), Hosting, VPS, RDP, SSL/Email, Pricing, Transfer, Contact, FAQ, legal/footer pages.
-- **Auth:** Sign in, Create account, Forgot/Reset password, Email verification, 2FA, Google & Telegram login.
-- **App overview:** dashboard with KPIs (active domains, services, wallet balance, upcoming expirations) and quick actions.
-- **Domains:** search & results, cart, checkout/payment, my‑domains list with bulk actions, and domain detail (overview, nameservers, DNS records, contacts/WHOIS, privacy, lock, auth code, forwarding, transfer in/out + status).
-- **DNS:** records manager, DNSSEC, history/restore, child nameservers.
-- **Hosting:** plans, price calculator, order, my orders, cPanel/Plesk management, SSL install/status, addon domains, server info, renewal.
-- **VPS:** plans, configure/order, my instances, instance detail (power actions, credentials, lifecycle/renewal), disks, billing‑cycle discounts.
-- **RDP:** plans, order, instances, credentials, subscription/renewal.
-- **Billing/Wallet:** wallet overview, add funds, transactions, refunds, invoices, promo codes, tax/VAT.
-- **Account/Settings:** profile, change email/password, delete account, linked logins (Google/Telegram), API keys, active sessions/devices, notification preferences, membership tier & reward points.
-- **Support:** live chat and contact.
-- **Admin:** the existing user‑management area, brought into the same shell.
+**Claims policy:** every statement must be true today or be a policy the owner confirms. Statements needing owner confirmation are listed in section 5; until confirmed, the copy uses safe wording (e.g. "privacy-respecting jurisdictions" rather than a named country, "we collect only what's needed to run your service" rather than a retention period).
 
-## Assumptions (change any of these and the plan adapts)
-- This task produces the three documents; building the redesign is the next, separately‑approved phase (captured in REPLAN.md).
-- Visual direction is **Option A** unless you pick B or C.
-- All current features and products are kept; only their presentation changes. Nothing is removed.
-- The reward‑points concept, language selector, and dark‑mode toggle are retained.
-- Full desktop/tablet/mobile responsiveness is required for every screen.
+---
 
-## Decisions to confirm
-1. **Documentation only now, or also build the redesign** (e.g. new homepage + app shell) as part of this task?
-2. **Visual direction:** A (recommended), B, or C?
-3. **Product breadth on the marketing site:** feature SSL/Email as first‑class products (as Netim does), or keep to Domains/Hosting/VPS/RDP?
-4. **Mobile navigation:** bottom tab bar for top destinations, or a single hamburger drawer only?
+## 2. Colour direction
+
+Privacy is projected by a **dark, low-glare base with one calm accent** — the visual language of vaults, encrypted connections and night. The current indigo + warm beige is retired everywhere.
+
+**Recommended — "Midnight Vault"**
+| Role | Colour |
+|---|---|
+| Page background | deep navy-black (~#0B1020) |
+| Cards / panels | slightly lifted navy (~#121A2F), hairline translucent borders |
+| Primary text | soft white (~#E7ECF5); secondary text cool slate (~#94A3B8) |
+| **Accent** (buttons, links, active nav, "available", padlock/shield icons) | **encrypted green** (~#10B981, hover ~#059669) |
+| Status | success = accent green · warning = muted amber (sparingly) · danger = red · info = slate |
+
+Why this pairing: navy-black reads as discretion and security; a single green accent is the universal "secure connection / padlock" cue, and it passes WCAG AA contrast on the dark base for text and buttons.
+
+**Alternatives (pick one if the recommendation doesn't feel right):**
+- **B. "Deep Sea"** — same navy base, electric cyan accent. Reads more "VPN / tech".
+- **C. "Obsidian"** — near-black charcoal base, violet accent. Closest to today's indigo, smallest visual shift.
+
+**How it's applied**
+- **Dark is the default** for all visitors, on marketing pages and inside the signed-in app. The existing light/dark toggle stays; the light variant becomes cool graphite (white and cool grey, no warm beige) with the same green accent. A saved preference is respected.
+- One accent only; gradients and glow are subtle (thin luminous borders, soft accent halos) — no neon. Reward/tier badges use the same restrained palette (no gold/rainbow gamification look).
+- **Imagery:** current stock photos are replaced with dark, abstract security imagery (server rooms, encrypted patterns, night harbour motifs) or by gradient + iconography where a photo adds nothing. No third-party-branded graphics.
+- **Logo:** the wordmark must be legible on dark. If the current logo asset only works on light backgrounds, the name is rendered as a soft-white text wordmark until a light-version logo is supplied.
+
+---
+
+## 3. Scope of the copy rewrite (end to end, kept areas only)
+
+**Public site**
+- Home: hero + domain search, trust bar, product cards (Domains, DNS, cPanel Hosting, VPS, RDP, Email, API), TLD-pricing intro, how-it-works steps, privacy/security section, loyalty band, final call-to-action.
+- Product pages: Domains search, Hosting, VPS, RDP, Email, Pricing, **API (new)** — hero, feature blocks, plan-card helper text, empty/"not available" states, FAQs.
+- Navigation mega-menu labels and one-line descriptions; footer tagline, column headings, legal line.
+- Sign in (email + Google) / Create account / forgot-password / 2FA screens (headline, helper text, privacy reassurance line).
+- Cart, upsell and payment-checkout messaging; 404 / no-domain page.
+- Page titles, meta descriptions and social-share tags.
+
+**Signed-in app**
+- Dashboard welcome and empty states; rail/sidebar labels (Overview, Domains, DNS, Hosting, VPS, RDP, Wallet, Rewards, API/Settings, Help); wallet/top-up and rewards helper text; DNS and domain-portfolio empty states; hosting/websites management intros; account-settings section intros (API keys featured); notifications empty state; command-palette hints.
+
+**Legal pages**
+- Privacy Policy and Terms: new introductions and section headings matching the privacy-first stance, with clearly marked placeholders where company-specific facts (jurisdiction, retention, abuse contact) must be filled by the owner. Full legal text remains the owner's responsibility.
+
+**Languages**
+- English is the source. Spanish and French are updated to match, so switching language never shows the old positioning or removed products.
+
+**Out of scope (unchanged)**
+- Transactional email templates (email sending is currently non-functional anyway), backend/API error messages, the admin panel, and any product behaviour or pricing logic.
+
+---
+
+## 4. What a visitor will notice when done
+- The site and app present: Domains, DNS, cPanel Hosting, VPS, RDP, Private Email, API — paid through wallet/checkout (with upsell) and rewarded through the loyalty programme. No SSL, Plesk, Telegram or chat anywhere, including menus, footer, dashboard and language variants.
+- Every page opens dark by default in the new palette; no indigo, beige or teal remnants anywhere. Light mode still available and coherent.
+- Every hero, section and menu item speaks to offshore/privacy; no leftover generic hosting boilerplate.
+- Text and buttons are comfortably readable on dark (AA contrast) on desktop and on a 390px phone, with no horizontal overflow.
+- Brand name **Nameword** unchanged.
+
+---
+
+## 5. Assumptions and decisions to confirm
+1. **"Email" in the latest instruction is read as the Email hosting product** — kept as *Private Email*. Email + password sign-in was always staying. Say so if only email sign-in was meant and the Email hosting page should still go.
+2. **Telegram sign-in stays removed** (only Google auth was named). Flip if it should stay.
+3. **Brand name stays "Nameword."**
+4. **Palette = "Midnight Vault" (navy-black + encrypted green), dark by default.** Alternatives B or C available.
+5. **Removal depth**: customer-facing pages/routes/nav removed now; dormant server-side code for removed features pruned in a follow-up.
+6. **API page** describes the platform's existing customer API and key management — no new endpoints are built.
+7. **No new management screens** are built for VPS/RDP; the existing catalogue + deploy + manage views are kept, restyled, and linked from the signed-in nav.
+8. **Facts to confirm before they become claims** (safe wording is used until confirmed): operating company jurisdiction; logging / data-retention statement; crypto payments accepted; WHOIS privacy included free on eligible TLDs; abuse / takedown policy wording; whether sign-up can be email-only (no phone).
+9. Spanish and French copy is translated from the new English source (not left stale).
+10. Stock imagery is replaced with dark abstract security imagery; the owner may later supply brand photography.

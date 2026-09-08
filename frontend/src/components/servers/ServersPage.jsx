@@ -3,6 +3,8 @@ import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 import { resellerProduct, resellerAPI } from "../../api/reseller";
 import { useAlert } from "../../context/AlertContext";
+import { useLanguage } from "../../hooks/useLanguage";
+import { usePageMeta } from "../../hooks/usePageMeta";
 import {
   FiServer,
   FiCpu,
@@ -20,25 +22,23 @@ import {
   FiZap,
 } from "react-icons/fi";
 
-const REGIONS = [
-  { code: "EU", label: "Europe (EU)" },
-  { code: "SG", label: "Asia (Singapore)" },
-];
+// Jurisdictions offered today (labels come from locales/site.*.js -> servers.regions)
+const REGIONS = ["EU", "SG"];
 
+// Product facts that never change with language. Copy lives in locales/site.*.js -> servers.{vps,rdp}
 const PRODUCT_META = {
   vps: {
-    title: "Linux VPS",
-    tagline: "High-performance Linux cloud servers, deployed in seconds.",
+    title: "Offshore VPS",
     user: "root",
     osChoices: ["ubuntu", "debian", "centos", "fedora", "rocky", "almalinux"],
   },
   rdp: {
-    title: "Windows RDP",
-    tagline: "Full Windows desktops you can remote into from anywhere.",
+    title: "Private RDP",
     user: "Administrator",
     osChoices: null,
   },
 };
+const CHIP_ICONS = [FiGlobe, FiLock, FiZap];
 
 const money = (n) =>
   n === null || n === undefined || isNaN(Number(n))
@@ -78,6 +78,9 @@ export default function ServersPage({ product = "vps" }) {
   const meta = PRODUCT_META[product] || PRODUCT_META.vps;
   const api = resellerProduct(product);
   const { showAlert } = useAlert();
+  const { t } = useLanguage();
+  const copy = t.site.servers[product] || t.site.servers.vps;
+  usePageMeta(copy.eyebrow, copy.tagline);
 
   const [region, setRegion] = useState("EU");
   const [mode, setMode] = useState(null);
@@ -245,33 +248,35 @@ export default function ServersPage({ product = "vps" }) {
     <>
       <Navbar />
       {/* Branded hero */}
-      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-brand-50/60 via-white to-white dark:border-gray-800 dark:from-gray-900 dark:via-gray-950 dark:to-gray-950">
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand/10" />
+      <section className="nw-hero border-b border-line dark:border-white/[0.06]">
+        <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
+        <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
         <div className="nw-container relative py-10 sm:py-14">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <span className="nw-eyebrow mb-4">{product === "rdp" ? "Windows RDP" : "Linux VPS"}</span>
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-4xl">
-                {meta.title}
+              <span className="nw-eyebrow mb-4">{copy.eyebrow}</span>
+              <h1 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-4xl">
+                {copy.title}
               </h1>
-              <p className="mt-3 max-w-xl nw-lead">{meta.tagline}</p>
+              <p className="mt-3 max-w-xl nw-lead">{copy.tagline}</p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="nw-chip"><FiZap className="h-4 w-4 text-brand" /> Deploy in seconds</span>
-                <span className="nw-chip"><FiGlobe className="h-4 w-4 text-brand" /> EU &amp; SG regions</span>
-                <span className="nw-chip"><FiLock className="h-4 w-4 text-brand" /> Full root access</span>
+                {copy.chips.map((c, i) => {
+                  const Icon = CHIP_ICONS[i] || FiCheckCircle;
+                  return <span key={c} className="nw-chip"><Icon className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {c}</span>;
+                })}
               </div>
             </div>
             <div className="flex items-center gap-3">
               {account && (
-                <div className="rounded-2xl border border-line bg-white px-4 py-3 text-right shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                  <p className="text-xs text-ink-soft dark:text-gray-400">Wallet</p>
+                <div className="rounded-2xl border border-line bg-white px-4 py-3 text-right shadow-sm dark:border-white/[0.08] dark:bg-gray-900">
+                  <p className="text-xs text-ink-soft dark:text-gray-400">{t.site.servers.wallet}</p>
                   <p className="text-lg font-bold text-primary dark:text-white">
                     {money(account.wallet_balance_usd)}
                   </p>
                 </div>
               )}
               <div>
-                <label className="sr-only" htmlFor="region">Region</label>
+                <label className="sr-only" htmlFor="region">{t.site.servers.regionLabel}</label>
                 <div className="relative">
                   <FiGlobe className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" size={16} />
                   <select
@@ -280,8 +285,8 @@ export default function ServersPage({ product = "vps" }) {
                     onChange={(e) => setRegion(e.target.value)}
                     className="appearance-none rounded-xl border border-line bg-white pl-9 pr-8 py-3 text-sm font-medium text-primary focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   >
-                    {REGIONS.map((r) => (
-                      <option key={r.code} value={r.code}>{r.label}</option>
+                    {REGIONS.map((code) => (
+                      <option key={code} value={code}>{t.site.servers.regions[code] || code}</option>
                     ))}
                   </select>
                 </div>
@@ -294,13 +299,10 @@ export default function ServersPage({ product = "vps" }) {
 
         {/* Mode banner */}
         {mode === "dry_run" && (
-          <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 px-4 py-3 mb-8">
-            <FiAlertTriangle className="text-amber-500 mt-0.5 shrink-0" />
+          <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 mb-8" data-testid="dry-run-banner">
+            <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              <span className="font-semibold">Test mode (dry-run).</span> Prices
-              are live, but deployments are simulated — no server is created and
-              your wallet is never charged. Switch the provider to live mode to
-              provision real servers.
+              <span className="font-semibold">{t.site.servers.dryRun.title}</span> {t.site.servers.dryRun.body}
             </p>
           </div>
         )}
@@ -375,7 +377,7 @@ export default function ServersPage({ product = "vps" }) {
         {/* My servers */}
         <section>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-semibold text-primary dark:text-white">Your {meta.title.split(" ")[0]} servers</h2>
+            <h2 className="text-xl font-semibold text-primary dark:text-white">{t.site.servers.yourServers}</h2>
             <button onClick={loadServers} className="flex items-center gap-2 text-sm text-darkbtn hover:text-darkbtn-hover font-medium">
               <FiRefreshCw size={15} /> Refresh
             </button>
@@ -390,10 +392,9 @@ export default function ServersPage({ product = "vps" }) {
           ) : servers.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-line dark:border-gray-800 py-12 px-6">
               <FiServer className="text-ink-soft mb-3" size={28} />
-              <p className="text-primary dark:text-white font-medium">No servers yet</p>
+              <p className="text-primary dark:text-white font-medium">{t.site.servers.none}</p>
               <p className="text-secondary dark:text-gray-400 text-sm mt-1 max-w-md">
-                Deploy a plan above to get started.
-                {mode === "dry_run" && " In test mode, deployments are simulated and won't appear here."}
+                {mode === "dry_run" && t.site.servers.noneDryRun}
               </p>
             </div>
           ) : (

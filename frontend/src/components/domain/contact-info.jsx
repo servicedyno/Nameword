@@ -1,58 +1,40 @@
-import { eye, support, browser, downtime, quote } from "../common/icons";
 import { useLanguage } from "../../hooks/useLanguage";
+import { LuMapPin, LuEyeOff, LuKeyRound, LuWallet, LuTerminal, LuLock } from "react-icons/lu";
 
+const ICONS = [LuMapPin, LuEyeOff, LuKeyRound, LuWallet, LuTerminal];
+
+/**
+ * Privacy pillars strip. Shown under domain search / hosting results.
+ * (Replaces the old generic "34,224 customers" testimonial block.)
+ */
 const ContactInfo = () => {
-    const { t } = useLanguage();
-    
-    // Split the quote to handle the bold "foundation" word
-    const quoteParts = t.contactInfo.quote.split('{foundation}');
-    
-    return (
-        <div className='mt-12'>
-            <div className='conatct-info p-6 lg:py-20 md:py-20 sm:py-14 py-12'>
-                <div className='xl:w-10/12 w-full mx-auto'>
-                    <div className='grid grid-cols-1 lg:grid-cols-5 w-full gap-6 h-full'>
-                        <div className='w-full lg:col-span-2 grid grid-cols-1 gap-5 h-full'>
-                            <p className='contact-title mb-5 lg:mb-5 xl:mb-5 2xl:mb-0 3xl:mb-9 sm:w-auto w-4/5'>34,224 <br/>{t.contactInfo.customersChose}<br/> <span className='text-darkbtn dark:text-white'>NameWord</span></p>
+  const { t } = useLanguage();
+  const s = t.site.home.pillars;
 
-                            <div className='contact-card h-full'>
-                                <img src={eye} alt={t.contactInfo.zeroHiddenFees} title={t.contactInfo.zeroHiddenFees} className="dark-mode" />
-                                <p>{t.contactInfo.zeroHiddenFees}</p>
-                            </div>
-                        </div>
-                        <div className='w-full grid grid-cols-1 gap-5 h-full'>
-                            <div className='contact-card h-full'>
-                                <img src={support} alt={t.contactInfo.customerSupport} title={t.contactInfo.customerSupport} className="dark-mode" />
-                                <p>{t.contactInfo.customerSupport}</p>
-                            </div>
-                            <div className='contact-card h-full'>
-                                <img src={browser} alt={t.contactInfo.intuitiveInterface} title={t.contactInfo.intuitiveInterface} className="dark-mode" />
-                                <p>{t.contactInfo.intuitiveInterface}</p>
-                            </div>
-                        </div>
-                        <div className='w-full lg:col-span-2 grid grid-cols-1 gap-5 h-full'>
-                            <div className='contact-card lg:w-1/2 h-full'>
-                                <img src={downtime} alt={t.contactInfo.noDowntimes} title={t.contactInfo.noDowntimes} className="dark-mode" />
-                                <p>{t.contactInfo.noDowntimes}</p>
-                            </div>
-
-                            {/* <div className='testimonial relative p-3 pl-7 mt-4 pt-0 lg:mt-0 lg:pt-3'> */}
-                            <div className='testimonial relative mt-4 lg:mt-0 max-lg:p-3 max-lg:pt-0 pl-7 lg:pt-0'>
-                                <img src={quote} alt="" title="" className="absolute right-0 lg:right-1/5 -top-4 dark-mode" />
-                                <p className="mb-3 leading-9">
-                                    {quoteParts[0]}
-                                    <span className='text-darkbtn dark:text-white'>{t.contactInfo.foundation}</span>
-                                    {quoteParts[1]}
-                                </p>
-                                <span className="text-15 font-medium text-primary dark:text-gray-500">{t.contactInfo.quoteAuthor}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  return (
+    <section className="mt-12">
+      <div className="relative overflow-hidden rounded-3xl border border-line bg-surface-2 p-6 dark:border-white/[0.06] dark:bg-gray-900/60 lg:p-12">
+        <div className="nw-hero-glow -top-24 -right-24 h-64 w-64" />
+        <div className="relative mx-auto max-w-2xl text-center">
+          <span className="nw-eyebrow mb-4"><LuLock className="h-3.5 w-3.5" /> {s.eyebrow}</span>
+          <h2 className="nw-h2">{s.title}</h2>
+          <p className="nw-lead mt-3">{s.lead}</p>
         </div>
+        <div className="relative mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {s.items.map((p, i) => {
+            const Icon = ICONS[i] || LuLock;
+            return (
+              <div key={p.title} className="nw-card nw-card-hover p-5">
+                <span className="nw-icon h-10 w-10"><Icon className="h-5 w-5" /></span>
+                <h3 className="mt-4 text-base font-bold text-primary dark:text-white">{p.title}</h3>
+                <p className="mt-1.5 text-13 text-ink-soft dark:text-gray-400">{p.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
 
-    )
-}
-
-export default ContactInfo
+export default ContactInfo;

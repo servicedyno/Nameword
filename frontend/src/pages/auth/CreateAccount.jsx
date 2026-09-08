@@ -1,5 +1,6 @@
 import { TbArrowRight } from "react-icons/tb";
-import { google, telegram } from "../../components/common/icons";
+import { google } from "../../components/common/icons";
+import { LuLock } from "react-icons/lu";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router";
@@ -12,7 +13,6 @@ import ErrorComponent from "../../components/common/ErrorComponent";
 import { useAuth } from "../../hooks/useAuth";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import TelegramButton from "../../components/common/TelegramButton";
 import { NavLink } from "react-router";
 import Loader from "../../components/common/Loader";
 import { useAlert } from "../../context/AlertContext";
@@ -24,7 +24,6 @@ const CreateAccount = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMobileFocused, setIsMobileFocused] = useState(true);
-  const [telegramLoading, setTelegramLoading] = useState(false);
 
   const { register, error, clearError } = useAuth();
   const navigate = useNavigate();
@@ -70,7 +69,8 @@ const CreateAccount = () => {
   return (
     <div className="login-section">
       <div className="inner-section">
-        <h2 className="heading-title">{t.auth.createAccount || "Create Account"}</h2>
+        <h2 className="heading-title">{t.site.auth.createTitle}</h2>
+        <p className="text-15 text-ink-soft dark:text-gray-400">{t.site.auth.createSub}</p>
         <hr className="card-divider my-3" />
 
         {/* Error message */}
@@ -147,7 +147,7 @@ const CreateAccount = () => {
                     setFieldValue('name', filteredValue);
                   }}
                   onBlur={handleBlur}
-                  disabled={loading || telegramLoading}
+                  disabled={loading}
                 />
                 <label
                   htmlFor="name"
@@ -186,7 +186,7 @@ const CreateAccount = () => {
                     if (error) clearError();
                   }}
                   onBlur={handleBlur}
-                  disabled={loading || telegramLoading}
+                  disabled={loading}
                 />
                 <label
                   htmlFor="username"
@@ -226,7 +226,7 @@ const CreateAccount = () => {
                     if (error) clearError();
                   }}
                   onBlur={handleBlur}
-                  disabled={loading || telegramLoading}
+                  disabled={loading}
                 />
                 <label
                   htmlFor="email"
@@ -322,7 +322,7 @@ const CreateAccount = () => {
                     if (error) clearError();
                   }}
                   onBlur={handleBlur}
-                  disabled={loading || telegramLoading}
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -374,7 +374,7 @@ const CreateAccount = () => {
                     if (error) clearError();
                   }}
                   onBlur={handleBlur}
-                  disabled={loading || telegramLoading}
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -430,14 +430,13 @@ const CreateAccount = () => {
               <button
                 type="submit"
                 className={`add-to-cart max-w-full ${
-                  !(isValid && dirty) || telegramLoading
+                  !(isValid && dirty)
                     ? "disable cursor-not-allowed"
                     : ""
                 }`}
                 disabled={
                   loading ||
                   isSubmitting ||
-                  telegramLoading ||
                   !(isValid && dirty)
                 }
               >
@@ -455,19 +454,17 @@ const CreateAccount = () => {
         {/* Social Buttons */}
         <button
           className={`btn-outline max-w-full ${
-            loading || telegramLoading ? "disable" : ""
+            loading ? "disable" : ""
           }`}
           onClick={handleLogin}
-          disabled={loading || telegramLoading}
+          disabled={loading}
         >
           <img src={google} alt="Google" className="w-5 h-5" />
           {t.auth.continueWithGoogle || "Continue with Google"}
         </button>
-        <TelegramButton 
-          loading={loading} 
-          setLoading={setTelegramLoading} 
-          telegramLoading={telegramLoading} 
-        />
+        <p className="mt-2 flex items-start gap-2 rounded-xl border border-brand/15 bg-brand-50/60 px-3 py-2.5 text-xs text-brand-800 dark:border-brand/20 dark:bg-brand/10 dark:text-brand-200" data-testid="auth-privacy-line">
+          <LuLock className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {t.site.auth.privacyLine}
+        </p>
 
         {/* Login */}
         <p className="text-13 text-primary dark:text-gray-500 font-medium text-center mt-3">

@@ -5,85 +5,127 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #191339;
-  --color-secondary: #79768a;
-  /* Option A — action color remapped to a confident indigo/violet */
-  --color-darkbtn: #4f46e5;
-  --color-darkbtn-hover: #4338ca;
-  --color-darkbtn-active: #3730a3;
+  /* =====================================================================
+     "Midnight Vault" design tokens — offshore, privacy-first
+     Base: deep navy-black · Panels: lifted navy · One accent: encrypted green
+     ===================================================================== */
 
-  /* ===== Option A design tokens: "Trust indigo + warm neutral" ===== */
-  --color-brand: #4f46e5;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-ink: #0f172a;
+  /* Text */
+  --color-primary: #0b1020;          /* ink on light surfaces */
+  --color-secondary: #64748b;        /* muted text */
+  --color-ink: #0b1020;
   --color-ink-soft: #475569;
-  --color-surface: #ffffff;
-  --color-surface-2: #f8fafc;
-  --color-line: #e6e8ef;
-  --color-accent: #f59e0b;
-  --color-accent-50: #fffbeb;
-  --color-success: #0d9488;
-  --color-success-50: #f0fdfa;
-  --color-darkbtn-100: #efedf8;
-  --color-darkbtn-200: #a197d2;
-  --color-lightgray: #eae8f4;
-  --color-lightgray-100: #e3e3e3;
-  --color-lightgray-200: #f7f6fb;
-  --color-lightgray-300: #d1cde4;
-  --color-lightgray-500: #7e7a93;
-  --color-lightgray-600: #9690b4;
-  --color-lightgray-700: #3f392d;
-  --color-active: #928fa1;
-  --color-beige: #f8fafc;
-  --color-beige-100: #f2f1ef;
-  --color-beige-200: #eef2ff;
-  --color-beige-400: #c8c3b9;
-  --color-active-border: #cbd5e1;
-  --color-hover: #f8f7ff;
-  --color-tealdark: #4f46e5;
-  --color-teallight: #eef2ff;
-  --color-teallight-50: #eef2ff;
-  --color-teallight-400: #9ab1b4;
-  --color-teallight-500: #4b787e;
-  --color-teal-hover: #4338ca;
-  --color-stokecolor: #DADADA;
-  --color-save-badge: #FFF3AF;
-  --color-skydark: #4f46e5;
-  --color-slatelight: #F8F8F8;
-  --color-nodata: #9DABAB;
-  --color-disable: #AAA4C9;
-  --color-disable-stoke: #B1ACCB;
-  --color-warning: #DD3B3D;
-  --color-sucess-50: #EBFFEC;
-  --color-sucess-100: #CAF0CC;
-  --color-sucess-400: #3CB665;
-  --color-menu-hover: #EBE9E4;
-  --color-mutebg: #FAF9FF;
-  --color-lightbeige: #FFFADB;
-  --color-golder: #79794A;
-  --color-golder-50: #FFFFF9;
-  --color-golder-100: #F3F3DD;
-  --color-bodycolor: #FAFAFA;
-  --color-light-purple: #EAE6FF;
-  --color-progressbar: #ECEAF3;
-  --color-purple-light: #5440B5;
-  --color-bggray: #F6F6F6;
-  --color-gray-border: #ECE7D8;
-  --color-light-green: #E4EFEF;
-  --color-btn-greenlight: #C3DDDD;
-  --color-light-purple: #E9E8F1;
-  --color-btn-purplelight: #D7D4EA;
+  --color-on-brand: #04150f;         /* text placed on green fills (AA) */
 
-  --shadow-alert: 0px 7px 20px 0px #0000000A;
-  --shadow-alert-white: 0px 7px 20px 0px #ffffff0A;
+  /* Surfaces (light variant = cool graphite) */
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f6fb;
+  --color-line: #dfe5f0;
+
+  /* Accent — encrypted green */
+  --color-brand: #10b981;
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+
+  /* Action colours (legacy aliases -> accent) */
+  --color-darkbtn: #10b981;
+  --color-darkbtn-hover: #059669;
+  --color-darkbtn-active: #047857;
+  --color-darkbtn-100: #ecfdf5;
+  --color-darkbtn-200: #6ee7b7;
+
+  /* Status */
+  --color-success: #10b981;
+  --color-success-50: #ecfdf5;
+  --color-accent: #d97706;           /* muted amber — sparingly */
+  --color-accent-50: #fffbeb;
+  --color-warning: #ef4444;
+  --color-sucess-50: #ecfdf5;
+  --color-sucess-100: #a7f3d0;
+  --color-sucess-400: #10b981;
+
+  /* Navy-tinted neutral scale. Overrides Tailwind's gray-* so every existing
+     dark:bg-gray-900 / dark:border-gray-800 / dark:text-gray-400 becomes vault navy. */
+  --color-gray-50: #f3f6fb;
+  --color-gray-100: #e7ecf5;
+  --color-gray-200: #d3dae8;
+  --color-gray-300: #b3bdd1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #26304a;
+  --color-gray-800: #1a2340;
+  --color-gray-900: #121a2f;
+  --color-gray-950: #0b1020;
+
+  /* Retire indigo/teal/violet remnants by pointing them at the accent scale */
+  --color-teal-300: #6ee7b7;
+  --color-teal-400: #34d399;
+  --color-teal-500: #10b981;
+  --color-teal-600: #059669;
+  --color-teal-700: #047857;
+  --color-indigo-400: #34d399;
+  --color-indigo-500: #10b981;
+  --color-indigo-600: #059669;
+  --color-indigo-800: #047857;
+  --color-violet-500: #10b981;
+  --color-cyan-500: #10b981;
+
+  /* Legacy palette aliases (kept so untouched screens recolour in one shot) */
+  --color-lightgray: #e7ecf5;
+  --color-lightgray-100: #dfe5f0;
+  --color-lightgray-200: #f3f6fb;
+  --color-lightgray-300: #b3bdd1;
+  --color-lightgray-500: #64748b;
+  --color-lightgray-600: #64748b;
+  --color-lightgray-700: #26304a;
+  --color-active: #64748b;
+  --color-beige: #f3f6fb;
+  --color-beige-100: #e7ecf5;
+  --color-beige-200: #ecfdf5;
+  --color-beige-400: #b3bdd1;
+  --color-active-border: #cbd5e1;
+  --color-hover: #f3f6fb;
+  --color-tealdark: #10b981;
+  --color-teallight: #ecfdf5;
+  --color-teallight-50: #ecfdf5;
+  --color-teallight-400: #94a3b8;
+  --color-teallight-500: #475569;
+  --color-teal-hover: #059669;
+  --color-stokecolor: #dfe5f0;
+  --color-save-badge: #d1fae5;
+  --color-skydark: #10b981;
+  --color-slatelight: #f3f6fb;
+  --color-nodata: #94a3b8;
+  --color-disable: #94a3b8;
+  --color-disable-stoke: #b3bdd1;
+  --color-menu-hover: #e7ecf5;
+  --color-mutebg: #f3f6fb;
+  --color-lightbeige: #ecfdf5;
+  --color-golder: #475569;
+  --color-golder-50: #f3f6fb;
+  --color-golder-100: #e7ecf5;
+  --color-bodycolor: #f3f6fb;
+  --color-light-purple: #e7ecf5;
+  --color-progressbar: #e7ecf5;
+  --color-purple-light: #047857;
+  --color-bggray: #f3f6fb;
+  --color-gray-border: #dfe5f0;
+  --color-light-green: #d1fae5;
+  --color-btn-greenlight: #a7f3d0;
+  --color-btn-purplelight: #d1fae5;
 
   --shadow-alert: 0px 7px 20px 0px #0000000a;
   --shadow-alert-white: 0px 7px 20px 0px #ffffff0a;
+  --shadow-glow: 0 0 0 1px rgba(16, 185, 129, 0.25), 0 12px 40px -12px rgba(16, 185, 129, 0.35);
 
   --font-poppins: "Poppins", sans-serif;
 
@@ -97,8 +139,15 @@ body:has(.main-loader) {
   overflow: hidden;
 }
 
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
 body {
-  @apply font-poppins dark:bg-gray-900;
+  @apply font-poppins bg-white text-primary dark:bg-gray-950 dark:text-gray-100;
   overflow-x: hidden;
 }
 
@@ -203,7 +252,7 @@ select {
 
 /*---------------- search-section --------------*/
 .search-section {
-  @apply bg-gradient-to-b from-brand-50/70 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950 border border-line dark:border-gray-800 rounded-4xl min-h-[80vh] flex justify-center items-center relative lg:py-20 md:py-16 sm:py-14 py-10 px-4 z-[1];
+  @apply bg-gradient-to-b from-brand-50/50 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950 border border-line dark:border-white/[0.06] rounded-4xl min-h-[80vh] flex justify-center items-center relative lg:py-20 md:py-16 sm:py-14 py-10 px-4 z-[1];
 }
 
 .globe-image {
@@ -219,7 +268,7 @@ select {
 }
 
 .btn-blue {
-  @apply bg-brand hover:bg-brand-700 active:bg-darkbtn-active text-white rounded-xl w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors;
+  @apply bg-brand hover:bg-brand-400 active:bg-brand-600 text-on-brand rounded-xl w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors;
 }
 
 .search-list {
@@ -245,7 +294,7 @@ select {
 }
 
 .btn-teal {
-  @apply text-teal-700 bg-success-50 dark:bg-teal-500/10 dark:text-teal-300 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
+  @apply text-brand-700 bg-brand-50 dark:bg-brand/15 dark:text-brand-300 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
 }
 
 .no-available .btn-teal {
@@ -253,7 +302,7 @@ select {
 }
 
 .btn-sky {
-  @apply text-brand-700 bg-brand-50 dark:bg-brand/15 dark:text-brand-200 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
+  @apply text-brand-700 bg-brand-50 dark:bg-brand/15 dark:text-brand-300 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
 }
 
 .card-divider {
@@ -277,7 +326,7 @@ select {
 }
 
 .add-to-cart {
-  @apply bg-brand hover:bg-brand-700 active:bg-darkbtn-active text-white rounded-xl min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors;
+  @apply bg-brand hover:bg-brand-400 active:bg-brand-600 text-on-brand rounded-xl min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors;
 }
 
 .btn-text-link {
@@ -285,7 +334,7 @@ select {
 }
 
 .btn-outline {
-  @apply border border-brand text-brand hover:bg-brand hover:text-white rounded-xl min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-white dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors;
+  @apply border border-brand-600 text-brand-700 hover:bg-brand hover:text-on-brand rounded-xl min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-brand-300 dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors;
 }
 
 /*---------------- domain tablist --------------------*/
@@ -385,7 +434,7 @@ select {
 }
 
 .inner-section {
-  @apply w-[480px] border border-stokecolor dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md mt-16 mb-8 p-7 mx-auto flex flex-col gap-2.5;
+  @apply w-[480px] border border-stokecolor dark:border-white/[0.08] bg-white dark:bg-gray-900 rounded-2xl mt-16 mb-8 p-7 mx-auto flex flex-col gap-2.5;
 }
 
 .add-to-cart.disable {
@@ -397,7 +446,7 @@ select {
 }
 
 .input-field {
-  @apply text-primary dark:text-white border border-active-border dark:border-gray-700 px-5 pt-6 pb-2 text-13 font-medium rounded-md w-full focus:outline-0 bg-white dark:bg-gray-900;
+  @apply text-primary dark:text-white border border-active-border dark:border-gray-700 px-5 pt-6 pb-2 text-13 font-medium rounded-md w-full focus:outline-0 focus:border-brand bg-white dark:bg-gray-950;
 }
 
 .input-field:-webkit-autofill ~ label,
@@ -985,7 +1034,7 @@ input[type="checkbox"]:checked {
 }
 
 /* ==================================================================
-   Option A redesign — shared component utilities (nw-*)
+   Midnight Vault — shared component utilities (nw-*)
    ================================================================== */
 @layer components {
   .nw-container {
@@ -995,7 +1044,7 @@ input[type="checkbox"]:checked {
     @apply py-16 sm:py-20 lg:py-24;
   }
   .nw-eyebrow {
-    @apply inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700 dark:bg-brand/15 dark:text-brand-200;
+    @apply inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700 dark:border-brand/25 dark:bg-brand/10 dark:text-brand-300;
   }
   .nw-h2 {
     @apply text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white;
@@ -1005,62 +1054,81 @@ input[type="checkbox"]:checked {
   }
 
   .nw-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .nw-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed bg-brand text-white hover:bg-brand-700 shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed bg-brand text-on-brand hover:bg-brand-400 shadow-sm shadow-brand/20;
   }
   .nw-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed border border-line bg-white text-primary hover:bg-surface-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed border border-line bg-white text-primary hover:border-brand/40 hover:bg-surface-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:border-brand/40 dark:hover:bg-gray-700;
   }
   .nw-btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-ink-soft hover:bg-surface-2 hover:text-primary dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed text-ink-soft hover:bg-surface-2 hover:text-primary dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
   }
   .nw-btn-sm {
     @apply px-3.5 py-2 text-13 rounded-lg;
   }
 
   .nw-card {
-    @apply rounded-2xl border border-line bg-white p-6 transition-all duration-200 dark:border-gray-800 dark:bg-gray-900;
+    @apply rounded-2xl border border-line bg-white p-6 transition-all duration-200 dark:border-white/[0.07] dark:bg-gray-900;
   }
   .nw-card-hover {
-    @apply hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:border-gray-700 dark:hover:shadow-black/40;
+    @apply hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:border-brand/40 dark:hover:shadow-[0_18px_50px_-20px_rgba(16,185,129,0.35)];
   }
 
   .nw-input {
-    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-primary placeholder:text-slate-400 focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500;
+    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-primary placeholder:text-slate-400 focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:placeholder:text-gray-500;
   }
 
   .nw-badge {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
   }
   .nw-badge-brand {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300;
   }
   .nw-badge-accent {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300;
   }
   .nw-badge-success {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-success-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300;
   }
 
   .nw-chip {
-    @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-medium text-ink-soft dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300;
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300;
   }
 
   .nw-link {
-    @apply text-ink-soft transition-colors hover:text-brand dark:text-gray-400 dark:hover:text-white;
+    @apply text-ink-soft transition-colors hover:text-brand-700 dark:text-gray-400 dark:hover:text-brand-300;
+  }
+
+  /* Icon wells used on marketing cards */
+  .nw-icon {
+    @apply flex shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/12 dark:text-brand-300;
+  }
+
+  /* Dark, luminous hero backdrop */
+  .nw-hero {
+    @apply relative overflow-hidden bg-gradient-to-b from-brand-50/50 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950;
+  }
+  .nw-hero-glow {
+    @apply pointer-events-none absolute rounded-full blur-3xl bg-brand-200/40 dark:bg-brand/10;
+  }
+  .nw-grid-bg {
+    background-image: linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
   }
 }
 /* App shell (authed) utilities */
 @layer components {
   .app-rail-item {
-    @apply relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
+    @apply relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-white;
   }
   .app-rail-item-active {
-    @apply bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200;
+    @apply bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300;
   }
   .header-icon-btn {
-    @apply flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-primary dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
+    @apply flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-primary dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-white;
   }
 }

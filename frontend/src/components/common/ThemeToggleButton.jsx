@@ -6,28 +6,35 @@ import { useLanguage } from '../../hooks/useLanguage';
 const ThemeToggleButton = () => {
   const { mode, darkMode, lightMode } = useTheme();
   const { t } = useLanguage();
-  return (
-    <>
-      <div className="language-menu">
-        <button
-          type='button'
-          onClick={lightMode}
-          className={`header-icon p-1 ${mode === 'light' || mode === 'system' ? 'text-white bg-darkbtn dark:bg-gray-700 rounded' : ' text-primary dark:text-white'} cursor-pointer`}
-          aria-label={t.common.buttons.lightMode}
-        >
-          <ImSun />
-        </button>
+  const isDark =
+    mode === 'dark' ||
+    (mode === 'system' && typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
 
-        <button
-          type='button'
-          onClick={darkMode}
-          className={`header-icon p-1 rotate-180 ${mode === 'dark' ? 'text-white bg-darkbtn dark:bg-gray-700 rounded' : ' text-primary dark:text-white'} cursor-pointer`}
-          aria-label={t.common.buttons.darkMode}
-        >
-          <MdOutlineNightlight />
-        </button>
-      </div>
-    </>
+  const base = "header-icon rounded-md p-1 cursor-pointer transition-colors";
+  const on = "bg-brand text-on-brand";
+  const off = "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white";
+
+  return (
+    <div className="language-menu !gap-1" role="group" aria-label="Theme">
+      <button
+        type='button'
+        onClick={lightMode}
+        className={`${base} ${!isDark ? on : off}`}
+        aria-label={t.common.buttons.lightMode}
+        aria-pressed={!isDark}
+      >
+        <ImSun />
+      </button>
+      <button
+        type='button'
+        onClick={darkMode}
+        className={`${base} rotate-180 ${isDark ? on : off}`}
+        aria-label={t.common.buttons.darkMode}
+        aria-pressed={isDark}
+      >
+        <MdOutlineNightlight />
+      </button>
+    </div>
   )
 }
 

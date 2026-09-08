@@ -1,11 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/nameword-logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nameword</title>
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Nameword — Offshore hosting, private by default</title>
+  <meta name="description" content="Register private domains, run your DNS and deploy offshore VPS, RDP, cPanel hosting and private email from privacy-respecting jurisdictions. WHOIS privacy included, prepaid wallet, full API." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Nameword" />
+  <meta property="og:title" content="Nameword — Offshore hosting, private by default" />
+  <meta property="og:description" content="Private domains, DNS, offshore VPS & RDP, cPanel hosting and private email. Minimal data collection, WHOIS privacy included, prepaid wallet." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Nameword — Offshore hosting, private by default" />
+  <meta name="twitter:description" content="Private domains, DNS, offshore VPS & RDP, cPanel hosting and private email from privacy-respecting jurisdictions." />
+  <script>
+    // Dark is the default. Respect a saved preference before first paint to avoid a flash.
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        var dark = t === "light" ? false : t === "system" ? window.matchMedia("(prefers-color-scheme: dark)").matches : true;
+        document.documentElement.classList.toggle("dark", dark);
+      } catch (e) { /* keep dark */ }
+    })();
+  </script>
 </head>
 
 <body>

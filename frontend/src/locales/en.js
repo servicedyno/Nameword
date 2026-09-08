@@ -14,7 +14,7 @@ export const en = {
   },
   // Domain Search
   domain: {
-    registerNewDomain: "Register a new domain",
+    registerNewDomain: "Register a private domain",
     searchPlaceholder: "Domain, Company Name, Keyword...",
     suggestions: "suggestions",
     seeMore: "See more",
@@ -65,8 +65,8 @@ export const en = {
   // Home / Landing
   home: {
     hero: {
-      heading: "Looking for the perfect domain?",
-      subheading: "Nameword Is Trusted By Businesses And Brands That Value Online Credibility",
+      heading: "Offshore hosting, private by default.",
+      subheading: "Private domains, DNS, servers and email from privacy-respecting jurisdictions.",
       tabs: {
         search: "Search",
         transfer: "Transfer"
@@ -329,8 +329,8 @@ export const en = {
       domainUpdateSuccess: "Domain option updated successfully",
       domainUpdateError: "Failed to update domain option. Please try again.",
       // Monthly/Annual Plans
-      monthlyPlansNotAvailable: "Monthly plans are not available right now. Please check back later.",
-      annualPlansNotAvailable: "Annual plans are not available right now. Please check back later.",
+      monthlyPlansNotAvailable: "Monthly cPanel plans are being refreshed. Please check back shortly — your wallet is untouched.",
+      annualPlansNotAvailable: "Annual cPanel plans are being refreshed. Please check back shortly — your wallet is untouched.",
       hostingFallback: "Hosting",
       contactUs: "Contact us",
       gbSSDStorage: "GB SSD Storage",
@@ -576,7 +576,7 @@ export const en = {
   },
   // Footer
   footer: {
-    tagline: "Domains. Hosting. Zero friction.",
+    tagline: "Offshore hosting, private by default.",
     menu: "Menu",
     domainSearch: "Domain Search",
     webEmailHosting: "Web & Email Hosting",
@@ -595,8 +595,8 @@ export const en = {
   // Admin Panel
   admin: {
     dashboard: "Dashboard",
-    dashboardGreeting: "Hi, {name}!",
-    dashboardSubtitle: "Complete all necessary actions on a single page.",
+    dashboardGreeting: "Welcome back, {name}.",
+    dashboardSubtitle: "Your domains, DNS, servers and wallet — in one quiet place.",
     noDomainSuggestionsAvailable: "No domain suggestions available",
     globeImageAlt: "globe",
     globeImageTitle: "globe",
@@ -1564,9 +1564,9 @@ export const en = {
   // Privacy Policy
   privacy: {
     title: "Privacy Policy",
-    intro: "At NameWord, we respect your privacy and are committed to protecting your personal data.",
+    intro: "Nameword is built to run with as little of your personal data as possible. This policy explains what we collect to operate domains, DNS, hosting, servers and email for you, why we need it, and how you stay in control.",
     infoWeCollect: "1. Information We Collect",
-    infoWeCollectText: "We may collect basic information such as your name, email address, payment details, and domain-related data when you use our services.",
+    infoWeCollectText: "We collect only what is needed to run your services: an email address and password for your account, contact details required by domain registries, payment references for wallet top-ups, and the technical data needed to operate DNS, hosting and servers. WHOIS privacy is applied to eligible domains by default.",
     howWeUseInfo: "2. How We Use Your Information",
     howWeUseInfoIntro: "We use your information to:",
     useInfo1: "Provide and manage our services",
@@ -1574,7 +1574,7 @@ export const en = {
     useInfo3: "Communicate with you about your account",
     useInfo4: "Improve our platform and customer experience",
     dataSharing: "3. Data Sharing",
-    dataSharingText: "We do not sell your personal data. We may share information with trusted third parties only when necessary to deliver our services (for example, domain registries or payment providers).",
+    dataSharingText: "We do not sell your personal data and we do not share it for marketing. Information is passed to third parties only where a service cannot be delivered without it — for example a domain registry, a payment processor, or the infrastructure provider in the jurisdiction you selected.",
     dataSecurity: "4. Data Security",
     dataSecurityText: "We take reasonable measures to protect your data, but no system is completely secure.",
     cookies: "5. Cookies",
@@ -1589,9 +1589,9 @@ export const en = {
   // Terms and Conditions
   terms: {
     title: "Terms & Conditions",
-    intro: "By accessing or using NameWord, you agree to these Terms and Conditions. If you do not agree, please do not use our services.",
+    intro: "These terms govern your use of Nameword's domain, DNS, hosting, server and email services. They are written to be read: plain language first, legal precision where it matters. By using the services you agree to them.",
     services: "1. Services",
-    servicesText: "NameWord provides domain name search, registration, and related digital services. Availability, pricing, and features may change at any time.",
+    servicesText: "Nameword provides private domain registration, DNS management, offshore cPanel hosting, VPS and RDP servers, private email and a prepaid wallet. Infrastructure is located in the jurisdictions shown at order time. Availability, pricing and features may change; renewal prices are shown before purchase.",
     userResponsibilities: "2. User Responsibilities",
     userResponsibilitiesText: "You are responsible for providing accurate information and for complying with all applicable laws related to domain ownership and website use.",
     paymentsAndBilling: "3. Payments and Billing",

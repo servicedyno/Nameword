@@ -14,7 +14,7 @@ export const es = {
   },
   // Domain Search
   domain: {
-    registerNewDomain: "Registrar un nuevo dominio",
+    registerNewDomain: "Registrar un dominio privado",
     searchPlaceholder: "Dominio, Nombre de empresa, Palabra clave...",
     suggestions: "sugerencias",
     seeMore: "Ver más",
@@ -329,8 +329,8 @@ export const es = {
       domainUpdateSuccess: "Opción de dominio actualizada exitosamente",
       domainUpdateError: "Error al actualizar la opción de dominio. Por favor, inténtalo de nuevo.",
       // Monthly/Annual Plans
-      monthlyPlansNotAvailable: "Los planes mensuales no están disponibles en este momento. Por favor, vuelve a intentar más tarde.",
-      annualPlansNotAvailable: "Los planes anuales no están disponibles en este momento. Por favor, vuelve a intentar más tarde.",
+      monthlyPlansNotAvailable: "Estamos actualizando los planes cPanel mensuales. Vuelve en un momento; tu monedero no se toca.",
+      annualPlansNotAvailable: "Estamos actualizando los planes cPanel anuales. Vuelve en un momento; tu monedero no se toca.",
       hostingFallback: "Alojamiento",
       contactUs: "Contáctanos",
       gbSSDStorage: "GB de Almacenamiento SSD",
@@ -595,8 +595,8 @@ export const es = {
   // Admin Panel
   admin: {
     dashboard: "Panel de control",
-    dashboardGreeting: "¡Hola, {name}!",
-    dashboardSubtitle: "Completa todas las acciones necesarias en una sola página.",
+    dashboardGreeting: "Bienvenido de nuevo, {name}.",
+    dashboardSubtitle: "Tus dominios, DNS, servidores y monedero, en un solo lugar tranquilo.",
     noDomainSuggestionsAvailable: "No hay sugerencias de dominio disponibles",
     globeImageAlt: "globo",
     globeImageTitle: "globo",
@@ -1564,7 +1564,7 @@ export const es = {
   // Privacy Policy
   privacy: {
     title: "Política de Privacidad",
-    intro: "En NameWord, respetamos tu privacidad y nos comprometemos a proteger tus datos personales.",
+    intro: "Nameword está diseñado para funcionar con la menor cantidad posible de tus datos personales. Esta política explica qué recogemos para operar dominios, DNS, hosting, servidores y correo, por qué lo necesitamos y cómo mantienes el control.",
     infoWeCollect: "1. Información que Recopilamos",
     infoWeCollectText: "Podemos recopilar información básica como tu nombre, dirección de correo electrónico, detalles de pago y datos relacionados con dominios cuando uses nuestros servicios.",
     howWeUseInfo: "2. Cómo Usamos Tu Información",
@@ -1589,7 +1589,7 @@ export const es = {
   // Terms and Conditions
   terms: {
     title: "Términos y Condiciones",
-    intro: "Al acceder o usar NameWord, aceptas estos Términos y Condiciones. Si no estás de acuerdo, por favor no uses nuestros servicios.",
+    intro: "Estos términos regulan tu uso de los servicios de dominios, DNS, hosting, servidores y correo de Nameword. Están escritos para leerse: lenguaje claro primero, precisión legal donde importa. Al usar los servicios, los aceptas.",
     services: "1. Servicios",
     servicesText: "NameWord proporciona búsqueda de nombres de dominio, registro y servicios digitales relacionados. La disponibilidad, precios y características pueden cambiar en cualquier momento.",
     userResponsibilities: "2. Responsabilidades del Usuario",

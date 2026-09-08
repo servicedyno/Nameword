@@ -20,8 +20,8 @@ import PaymentCheckout from "../pages/PaymentCheckout";
 import Hosting from "../pages/Hosting";
 import VPS from "../pages/VPS";
 import RDP from "../pages/RDP";
-import Ssl from "../pages/Ssl";
 import Email from "../pages/Email";
+import Api from "../pages/Api";
 import Pricing from "../pages/Pricing";
 import ProtectedRoute from "../hocs/Protected";
 import UnprotectedRoute from "../hocs/UnProtected";
@@ -113,8 +113,8 @@ function Router() {
       <Route path="/hosting" element={<Hosting />} />
       <Route path="/vps" element={<VPS />} />
       <Route path="/rdp" element={<RDP />} />
-      <Route path="/ssl" element={<Ssl />} />
       <Route path="/email" element={<Email />} />
+      <Route path="/api" element={<Api />} />
       <Route path="/pricing" element={<Pricing />} />
 
    

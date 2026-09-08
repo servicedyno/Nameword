@@ -3,15 +3,21 @@ import React, { createContext, useEffect, useState } from "react";
 const ThemeContext = createContext();
 
 const ThemeProvider = ({ children }) => {
-  const [mode, setMode] = useState('light');
+  // Dark ("Midnight Vault") is the default. A saved preference always wins.
+  const [mode, setMode] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
+    if (savedTheme === 'system') {
+      systemMode();
+    } else if (savedTheme === 'light' || savedTheme === 'dark') {
       setMode(savedTheme);
       applyTheme(savedTheme);
     } else {
-      systemMode();
+      // first visit -> dark by default
+      applyTheme('dark');
+      localStorage.setItem('theme', 'dark');
+      setMode('dark');
     }
   }, []);
 

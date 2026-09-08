@@ -1,6 +1,6 @@
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
-import { LuShieldCheck, LuHardDrive, LuLifeBuoy, LuGauge, LuMail, LuDatabase } from "react-icons/lu";
+import { LuShieldCheck, LuHardDrive, LuMapPin, LuLayoutPanelLeft, LuMail, LuWallet } from "react-icons/lu";
 import ContactInfo from "../components/domain/contact-info";
 import MonthlyBiillingPlan from "../components/hosting/monthly-billing-plan";
 import AnnualBiillingPlan from "../components/hosting/annual-billing-plan";
@@ -11,18 +11,16 @@ import { hostingAPI } from "../api/hosting";
 import { useAlert } from "../context/AlertContext";
 import Loader from "../components/common/Loader";
 import { useLanguage } from "../hooks/useLanguage";
+import { usePageMeta } from "../hooks/usePageMeta";
 
-const HOSTING_FEATURES = [
-  { icon: LuGauge, title: "Blazing-fast NVMe", desc: "SSD-backed servers with LiteSpeed caching for snappy load times." },
-  { icon: LuShieldCheck, title: "Free SSL & security", desc: "Auto-installed SSL, firewalls and malware scanning on every plan." },
-  { icon: LuHardDrive, title: "Daily backups", desc: "Automatic off-site backups so you can restore in a click." },
-  { icon: LuMail, title: "Business email", desc: "Professional mailboxes on your own domain, spam-filtered." },
-  { icon: LuDatabase, title: "cPanel & Plesk", desc: "Manage sites, databases and DNS from a familiar control panel." },
-  { icon: LuLifeBuoy, title: "24/7 expert support", desc: "Real humans ready to help via chat and ticket, any time." },
-];
+// Icons for the six cPanel-hosting value props (copy lives in locales/site.*.js -> hosting.features)
+const FEATURE_ICONS = [LuLayoutPanelLeft, LuMapPin, LuShieldCheck, LuHardDrive, LuWallet, LuMail];
+const CHIP_ICONS = [LuLayoutPanelLeft, LuShieldCheck, LuHardDrive];
 
 const Hosting = () => {
   const { t } = useLanguage();
+  const s = t.site.hosting;
+  usePageMeta(s.eyebrow, s.subtitle);
   const location = useLocation();
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [hostingPlans, setHostingPlans] = useState([]);
@@ -81,9 +79,9 @@ const Hosting = () => {
     try {
       setLoading(true);
 
+      // Fetch every provider, then keep cPanel (hostbay) only — Plesk (connectreseller) is no longer offered.
       const response = await hostingAPI.getHostingPlans({ provider: "both" });
 
-  
       let allPlans = [];
       if (response?.success) {
         if (response?.data?.plans) {
@@ -92,6 +90,7 @@ const Hosting = () => {
           allPlans = response.responseData.plans;
         }
       }
+      allPlans = allPlans.filter((p) => !p.provider || p.provider === "hostbay");
 
       if (allPlans.length > 0) {
         setHostingPlans(allPlans);
@@ -156,20 +155,20 @@ const Hosting = () => {
       <Navbar isLoader={loading} />
 
       {/* Branded hero */}
-      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-brand-50/60 via-white to-white dark:border-gray-800 dark:from-gray-900 dark:via-gray-950 dark:to-gray-950">
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand/10" />
+      <section className="nw-hero border-b border-line dark:border-white/[0.06]">
+        <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
+        <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
         <div className="nw-container relative py-12 text-center sm:py-16">
-          <span className="nw-eyebrow mb-4">Web Hosting</span>
-          <h1 className="text-3xl font-bold tracking-tight text-primary dark:text-white sm:text-4xl">
-            {t.pages.chooseYourHostingPlan}
+          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <h1 className="mx-auto max-w-3xl text-3xl font-bold tracking-tight text-primary dark:text-white sm:text-4xl">
+            {s.title}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl nw-lead">
-            Fast, secure cPanel &amp; Plesk hosting with free SSL, daily backups and 24/7 support.
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl nw-lead">{s.subtitle}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-2">
-            <span className="nw-chip"><LuShieldCheck className="h-4 w-4 text-brand" /> Free SSL</span>
-            <span className="nw-chip"><LuHardDrive className="h-4 w-4 text-brand" /> NVMe SSD</span>
-            <span className="nw-chip"><LuLifeBuoy className="h-4 w-4 text-brand" /> 24/7 support</span>
+            {s.chips.map((c, i) => {
+              const Icon = CHIP_ICONS[i] || LuShieldCheck;
+              return <span key={c} className="nw-chip"><Icon className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {c}</span>;
+            })}
           </div>
         </div>
       </section>
@@ -178,35 +177,35 @@ const Hosting = () => {
         <div className="nw-container">
           {/* Billing toggle */}
           <div className="mb-10 flex justify-center">
-            <div className="inline-flex rounded-full border border-line bg-white p-1 dark:border-gray-800 dark:bg-gray-900">
+            <div className="inline-flex rounded-full border border-line bg-white p-1 dark:border-white/[0.08] dark:bg-gray-900">
               <button
                 onClick={() => setBillingCycle("monthly")}
                 className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                   billingCycle === "monthly"
-                    ? "bg-brand text-white shadow-sm"
+                    ? "bg-brand text-on-brand shadow-sm"
                     : "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                {t.pages.monthly}
+                {s.monthly}
               </button>
               <button
                 onClick={() => setBillingCycle("annually")}
                 className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                   billingCycle === "annually"
-                    ? "bg-brand text-white shadow-sm"
+                    ? "bg-brand text-on-brand shadow-sm"
                     : "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                {t.pages.annually}
+                {s.annually}
                 {annualPlans.length > 0 && annualPlans[0]?.savings_percentage > 0 && (
                   <span
                     className={`nw-badge ${
                       billingCycle === "annually"
-                        ? "bg-white/20 text-white"
-                        : "bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                        ? "bg-gray-950/15 text-on-brand"
+                        : "bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300"
                     }`}
                   >
-                    {t.pages.savePercent.replace("{percent}", annualPlans[0].savings_percentage)}
+                    {s.save.replace("{percent}", annualPlans[0].savings_percentage)}
                   </span>
                 )}
               </button>
@@ -228,15 +227,18 @@ const Hosting = () => {
 
           {/* Value props */}
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {HOSTING_FEATURES.map((f) => (
-              <div key={f.title} className="nw-card nw-card-hover">
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200">
-                  <f.icon className="h-6 w-6" />
-                </span>
-                <h3 className="mt-5 text-lg font-bold text-primary dark:text-white">{f.title}</h3>
-                <p className="mt-2 text-15 text-ink-soft dark:text-gray-400">{f.desc}</p>
-              </div>
-            ))}
+            {s.features.map((f, i) => {
+              const Icon = FEATURE_ICONS[i] || LuShieldCheck;
+              return (
+                <div key={f.title} className="nw-card nw-card-hover">
+                  <span className="nw-icon h-12 w-12">
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-bold text-primary dark:text-white">{f.title}</h3>
+                  <p className="mt-2 text-15 text-ink-soft dark:text-gray-400">{f.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -248,7 +250,7 @@ const Hosting = () => {
             onClick={handleCloseSidebar}
           ></div>
           <div
-            className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-darkmode border-l border-gray-200 dark:border-gray-700 shadow-2xl z-40 transform transition-transform duration-300 ${
+            className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-white/[0.08] shadow-2xl z-40 transform transition-transform duration-300 ${
               isCartOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >

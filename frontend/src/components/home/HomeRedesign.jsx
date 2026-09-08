@@ -1,108 +1,98 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useAuth } from "../../hooks/useAuth";
+import { usePageMeta } from "../../hooks/usePageMeta";
+import { IMAGES } from "../marketing/marketing-ui";
 import {
   LuGlobe,
+  LuNetwork,
   LuServer,
   LuCloud,
   LuMonitor,
-  LuShieldCheck,
   LuMail,
+  LuCode,
   LuSearch,
   LuCheck,
   LuArrowRight,
   LuLock,
-  LuZap,
-  LuHeadphones,
-  LuRocket,
+  LuKeyRound,
+  LuWallet,
+  LuMapPin,
+  LuTerminal,
+  LuShieldCheck,
+  LuGift,
+  LuBadgeCheck,
+  LuLayers,
+  LuEyeOff,
 } from "react-icons/lu";
-import { FaStar } from "react-icons/fa6";
 
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1653549893012-b8b4fbe97630?auto=format&fit=crop&w=1100&q=80";
-const SEC_IMG =
-  "https://images.unsplash.com/photo-1555529902-5261145633bf?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=80&w=1000";
-
-const ICON_WRAP = {
-  brand: "bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200",
-  teal: "bg-success-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300",
-  amber: "bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-};
-
-const PRODUCTS = [
-  { to: "/domain", icon: LuGlobe, title: "Domains", desc: "Find and register the perfect name across 500+ extensions.", price: "from $10.99/yr", color: "brand" },
-  { to: "/hosting", icon: LuServer, title: "Web Hosting", desc: "Blazing-fast cPanel & Plesk hosting with free SSL.", price: "from $2.99/mo", color: "teal" },
-  { to: "/vps", icon: LuCloud, title: "VPS", desc: "Scalable cloud servers deployed in seconds.", price: "from $18/mo", color: "brand" },
-  { to: "/rdp", icon: LuMonitor, title: "RDP", desc: "Reliable remote desktop instances, ready to go.", price: "from $27/mo", color: "teal" },
-  { to: "/ssl", icon: LuShieldCheck, title: "SSL Certificates", desc: "Trusted HTTPS encryption issued in minutes.", price: "free with hosting", color: "amber" },
-  { to: "/email", icon: LuMail, title: "Email", desc: "Professional mailboxes on your own domain.", price: "from $1.49/mo", color: "amber" },
+const PRODUCT_ORDER = [
+  { key: "domains", to: "/domain", icon: LuGlobe },
+  { key: "dns", to: "/dns-management", icon: LuNetwork, protectedRoute: true },
+  { key: "hosting", to: "/hosting", icon: LuServer },
+  { key: "vps", to: "/vps", icon: LuCloud },
+  { key: "rdp", to: "/rdp", icon: LuMonitor },
+  { key: "email", to: "/email", icon: LuMail },
+  { key: "api", to: "/api", icon: LuCode, wide: true },
 ];
 
+const PILLAR_ICONS = [LuMapPin, LuEyeOff, LuKeyRound, LuWallet, LuTerminal];
+const STEP_ICONS = [LuGlobe, LuWallet, LuKeyRound];
+const PERK_ICONS = [LuGift, LuBadgeCheck, LuLayers, LuEyeOff];
+
+// Static reference prices shown on the homepage; the /pricing page shows live per-TLD prices.
 const TLDS = [
-  { tld: ".com", price: "10.99", renew: "12.99", was: null },
-  { tld: ".io", price: "29.99", renew: "44.99", was: "54.99", sale: true },
-  { tld: ".net", price: "11.99", renew: "14.99", was: null },
-  { tld: ".org", price: "9.99", renew: "13.99", was: null },
-  { tld: ".co", price: "7.99", renew: "27.99", was: "29.99", sale: true },
-  { tld: ".ai", price: "64.99", renew: "79.99", was: null },
-  { tld: ".dev", price: "12.99", renew: "14.99", was: null },
-  { tld: ".xyz", price: "1.99", renew: "12.99", was: "13.99", sale: true },
-];
-
-const STEPS = [
-  { icon: LuGlobe, title: "Find your domain", desc: "Search thousands of extensions and lock in an honest price with free WHOIS privacy." },
-  { icon: LuMail, title: "Add email & hosting", desc: "Pair your name with professional email and fast, secure web hosting in one click." },
-  { icon: LuRocket, title: "Launch your site", desc: "Point your DNS, install SSL automatically and go live with confidence." },
-];
-
-const SECURITY = [
-  { icon: LuLock, text: "Two-factor auth & login alerts on every account" },
-  { icon: LuShieldCheck, text: "Free SSL certificate on every website" },
-  { icon: LuGlobe, text: "WHOIS privacy protection included at no cost" },
-  { icon: LuServer, text: "Full DNS records manager with DNSSEC" },
-  { icon: LuZap, text: "Automatic backups and 99.9% uptime SLA" },
+  { tld: ".com", price: "39", renew: "39" },
+  { tld: ".net", price: "51", renew: "51" },
+  { tld: ".org", price: "29", renew: "29" },
+  { tld: ".io", price: "244", renew: "244" },
+  { tld: ".co", price: "59", renew: "59" },
+  { tld: ".xyz", price: "19", renew: "19" },
+  { tld: ".shop", price: "30", renew: "30" },
+  { tld: ".store", price: "160", renew: "160" },
 ];
 
 function Hero() {
   const { t } = useLanguage();
+  const s = t.site.home;
   const navigate = useNavigate();
   const [tab, setTab] = useState("search");
   const [query, setQuery] = useState("");
 
   const submit = () => {
-    let path = "/home";
-    if (query) path += `?value=${encodeURIComponent(query.trim())}`;
+    let path = tab === "transfer" ? "/sign-in" : "/home";
+    if (tab === "transfer") localStorage.setItem("path", "/transfer-domain");
+    if (tab === "search" && query) path += `?value=${encodeURIComponent(query.trim())}`;
     navigate(path);
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/60 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950">
-      <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand/10" />
-      <div className="pointer-events-none absolute top-40 -left-24 h-72 w-72 rounded-full bg-accent-50 blur-3xl dark:bg-amber-500/5" />
+    <section className="nw-hero">
+      <div className="absolute inset-0 nw-grid-bg opacity-70 dark:opacity-100" />
+      <div className="nw-hero-glow -top-32 -right-24 h-96 w-96" />
+      <div className="nw-hero-glow top-64 -left-32 h-80 w-80 opacity-60" />
       <div className="nw-container relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-2 lg:gap-12 lg:py-24">
         {/* Left */}
         <div>
-          <span className="nw-eyebrow mb-5">Domains · Hosting · VPS · RDP</span>
-          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-primary dark:text-white sm:text-5xl lg:text-6xl">
-            {t.home.hero.heading}
+          <span className="nw-eyebrow mb-5"><LuLock className="h-3.5 w-3.5" /> {s.eyebrow}</span>
+          <h1 className="text-4xl font-bold leading-[1.08] tracking-tight text-primary dark:text-white sm:text-5xl lg:text-6xl">
+            {s.heading}
           </h1>
-          <p className="mt-5 max-w-xl text-lg text-ink-soft dark:text-gray-400">{t.home.hero.subheading}</p>
+          <p className="mt-5 max-w-xl text-lg text-ink-soft dark:text-gray-400">{s.subheading}</p>
 
           {/* Search card */}
-          <div className="mt-8 rounded-2xl border border-line bg-white p-4 shadow-lg shadow-slate-200/50 dark:border-gray-800 dark:bg-gray-900 dark:shadow-black/30">
-            <div className="mb-3 inline-flex rounded-lg bg-surface-2 p-1 dark:bg-gray-800">
-              <button
-                onClick={() => setTab("search")}
-                className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${tab === "search" ? "bg-white text-primary shadow-sm dark:bg-gray-950 dark:text-white" : "text-ink-soft dark:text-gray-400"}`}
-              >
-                {t.home.hero.tabs.search}
-              </button>
-              <button
-                onClick={() => setTab("transfer")}
-                className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${tab === "transfer" ? "bg-white text-primary shadow-sm dark:bg-gray-950 dark:text-white" : "text-ink-soft dark:text-gray-400"}`}
-              >
-                {t.home.hero.tabs.transfer}
-              </button>
+          <div className="mt-8 rounded-2xl border border-line bg-white p-4 shadow-lg shadow-slate-200/50 dark:border-white/[0.08] dark:bg-gray-900 dark:shadow-black/40">
+            <div className="mb-3 inline-flex rounded-lg bg-surface-2 p-1 dark:bg-gray-950">
+              {["search", "transfer"].map((k) => (
+                <button
+                  key={k}
+                  onClick={() => setTab(k)}
+                  className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${tab === k ? "bg-white text-primary shadow-sm dark:bg-gray-800 dark:text-white" : "text-ink-soft dark:text-gray-400"}`}
+                >
+                  {s.tabs[k]}
+                </button>
+              ))}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
@@ -112,53 +102,67 @@ function Hero() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submit()}
-                  placeholder={t.home.hero.placeholder}
+                  placeholder={s.placeholder}
                   className="nw-input pl-11"
                   aria-label="Search for a domain"
+                  data-testid="hero-domain-input"
                 />
               </div>
-              <button onClick={submit} className="nw-btn-primary sm:w-auto">
+              <button onClick={submit} className="nw-btn-primary sm:w-auto" data-testid="hero-search-button">
                 <LuSearch className="h-4 w-4" />
-                {tab === "search" ? t.home.hero.buttons.search : t.home.hero.buttons.transfer}
+                {tab === "search" ? s.searchBtn : s.transferBtn}
               </button>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-              {t.home.hero.features.map((f, i) => (
-                <span key={i} className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
-                  <LuCheck className="h-4 w-4 text-teal-600 dark:text-teal-400" /> {f}
+              {s.heroChips.map((f) => (
+                <span key={f} className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
+                  <LuCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {f}
                 </span>
               ))}
             </div>
           </div>
 
           <div className="mt-5 flex items-center gap-4">
-            <button onClick={() => navigate("/hosting")} className="inline-flex items-center gap-1.5 text-15 font-semibold text-brand hover:text-brand-700 dark:text-brand-200">
-              {t.home.hero.needHosting} <LuArrowRight className="h-4 w-4" />
+            <button onClick={() => navigate("/vps")} className="inline-flex items-center gap-1.5 text-15 font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200">
+              {s.needServers} <LuArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
 
         {/* Right visual */}
         <div className="relative">
-          <div className="relative overflow-hidden rounded-3xl border border-line shadow-2xl shadow-slate-300/40 dark:border-gray-800 dark:shadow-black/50">
-            <img src={HERO_IMG} alt="Global network connectivity" className="h-[320px] w-full object-cover sm:h-[420px]" loading="eager" />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-700/50 via-transparent to-transparent" />
+          <div className="relative overflow-hidden rounded-3xl border border-line shadow-2xl shadow-slate-300/40 dark:border-white/[0.08] dark:shadow-black/60">
+            <img src={IMAGES.hero} alt="Data centre corridor at night" className="h-[320px] w-full object-cover sm:h-[440px]" loading="eager" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/30 to-transparent" />
+            <div className="absolute inset-0 ring-1 ring-inset ring-brand/20" />
+            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between text-white">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-300">{t.site.servers.regionLabel}</p>
+                <p className="text-sm font-semibold">EU · SG</p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/15 px-3 py-1 text-xs font-semibold text-brand-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" /> TLS
+              </span>
+            </div>
           </div>
           {/* Floating cards */}
-          <div className="absolute -bottom-5 left-4 flex items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-gray-800 dark:bg-gray-900/95 sm:left-6">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-success-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
+          <div className="absolute -bottom-5 left-4 flex items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/95 sm:left-6">
+            <span className="nw-icon h-10 w-10 rounded-full">
               <LuShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-sm font-bold text-primary dark:text-white">Free WHOIS privacy</p>
-              <p className="text-13 text-ink-soft dark:text-gray-400">on every domain</p>
+              <p className="text-sm font-bold text-primary dark:text-white">{s.heroFloat.title}</p>
+              <p className="text-13 text-ink-soft dark:text-gray-400">{s.heroFloat.sub}</p>
             </div>
           </div>
-          <div className="absolute -top-4 right-4 hidden items-center gap-2 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-gray-800 dark:bg-gray-900/95 sm:flex">
-            <div className="flex text-amber-400">
-              {[0, 1, 2, 3, 4].map((i) => <FaStar key={i} className="h-4 w-4" />)}
+          <div className="absolute -top-4 right-4 hidden items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/95 sm:flex">
+            <span className="nw-icon h-10 w-10 rounded-full">
+              <LuMapPin className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-primary dark:text-white">{s.heroFloat2.title}</p>
+              <p className="text-13 text-ink-soft dark:text-gray-400">{s.heroFloat2.sub}</p>
             </div>
-            <p className="text-sm font-bold text-primary dark:text-white">4.8/5</p>
           </div>
         </div>
       </div>
@@ -167,16 +171,11 @@ function Hero() {
 }
 
 function TrustBar() {
-  const items = [
-    { label: "Rated Excellent", sub: "4.8 out of 5" },
-    { label: "99.9% Uptime", sub: "backed by SLA" },
-    { label: "24/7 Support", sub: "real humans" },
-    { label: "50,000+", sub: "domains managed" },
-  ];
+  const { t } = useLanguage();
   return (
-    <section className="border-y border-line bg-surface-2 dark:border-gray-800 dark:bg-gray-900/40">
+    <section className="border-y border-line bg-surface-2 dark:border-white/[0.06] dark:bg-gray-900/50">
       <div className="nw-container grid grid-cols-2 gap-6 py-8 md:grid-cols-4">
-        {items.map((it) => (
+        {t.site.home.trust.map((it) => (
           <div key={it.label} className="text-center">
             <p className="text-xl font-bold text-primary dark:text-white">{it.label}</p>
             <p className="text-13 text-ink-soft dark:text-gray-400">{it.sub}</p>
@@ -187,32 +186,81 @@ function TrustBar() {
   );
 }
 
-function Products() {
-  const navigate = useNavigate();
+function Pillars() {
+  const { t } = useLanguage();
+  const s = t.site.home.pillars;
   return (
-    <section id="products" className="nw-section">
+    <section id="why" className="nw-section">
       <div className="nw-container">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="nw-eyebrow mb-4">Everything to get online</span>
-          <h2 className="nw-h2">One platform for your whole online presence</h2>
-          <p className="nw-lead mt-4">Domains, hosting, servers, security and email — managed from a single, honest dashboard.</p>
+          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <h2 className="nw-h2">{s.title}</h2>
+          <p className="nw-lead mt-4">{s.lead}</p>
+        </div>
+        {/* 2 wide + 3 regular cards keeps the five pillars balanced on large screens */}
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
+          {s.items.map((p, i) => {
+            const Icon = PILLAR_ICONS[i] || LuShieldCheck;
+            const span = i < 2 ? "lg:col-span-3" : "lg:col-span-2";
+            return (
+              <div key={p.title} className={`nw-card nw-card-hover ${span}`} data-testid={`pillar-${i}`}>
+                <span className="nw-icon h-12 w-12"><Icon className="h-6 w-6" /></span>
+                <h3 className="mt-5 text-lg font-bold text-primary dark:text-white">{p.title}</h3>
+                <p className="mt-2 text-15 text-ink-soft dark:text-gray-400">{p.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Products() {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const s = t.site.home.products;
+  const navigate = useNavigate();
+  const go = (p) => {
+    if (p.protectedRoute && !user) {
+      localStorage.setItem("path", p.to);
+      navigate("/sign-in");
+      return;
+    }
+    navigate(p.to);
+  };
+  return (
+    <section id="products" className="nw-section bg-surface-2 dark:bg-gray-900/40">
+      <div className="nw-container">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <h2 className="nw-h2">{s.title}</h2>
+          <p className="nw-lead mt-4">{s.lead}</p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {PRODUCTS.map((p) => (
-            <button key={p.title} onClick={() => navigate(p.to)} className="nw-card nw-card-hover group text-left">
-              <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${ICON_WRAP[p.color]}`}>
-                <p.icon className="h-6 w-6" />
-              </span>
-              <h3 className="mt-5 text-lg font-bold text-primary dark:text-white">{p.title}</h3>
-              <p className="mt-2 text-15 text-ink-soft dark:text-gray-400">{p.desc}</p>
-              <div className="mt-5 flex items-center justify-between">
-                <span className="text-sm font-semibold text-primary dark:text-white">{p.price}</span>
-                <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand group-hover:gap-2 dark:text-brand-200">
-                  Explore <LuArrowRight className="h-4 w-4 transition-all" />
-                </span>
-              </div>
-            </button>
-          ))}
+          {PRODUCT_ORDER.map((p) => {
+            const item = s.items[p.key];
+            return (
+              <button
+                key={p.key}
+                onClick={() => go(p)}
+                className={`nw-card nw-card-hover group flex flex-col items-stretch text-left ${p.wide ? "sm:col-span-2 lg:col-span-3 lg:flex-row lg:items-center lg:gap-6" : ""}`}
+                data-testid={`product-card-${p.key}`}
+              >
+                <span className="nw-icon h-12 w-12"><p.icon className="h-6 w-6" /></span>
+                <div className={p.wide ? "mt-5 lg:mt-0 lg:flex-1" : "mt-5"}>
+                  <h3 className="text-lg font-bold text-primary dark:text-white">{item.title}</h3>
+                  <p className="mt-2 text-15 text-ink-soft dark:text-gray-400">{item.desc}</p>
+                </div>
+                <div className={`flex items-center justify-between gap-6 ${p.wide ? "mt-5 lg:mt-0 lg:flex-col lg:items-end lg:gap-2" : "mt-auto pt-5"}`}>
+                  <span className="text-sm font-semibold text-primary dark:text-white">{item.price}</span>
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700 group-hover:gap-2 dark:text-brand-300">
+                    {s.explore} <LuArrowRight className="h-4 w-4 transition-all" />
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -220,36 +268,38 @@ function Products() {
 }
 
 function Pricing() {
+  const { t } = useLanguage();
+  const s = t.site.home.pricing;
   const navigate = useNavigate();
   return (
-    <section id="pricing" className="nw-section bg-surface-2 dark:bg-gray-900/40">
+    <section id="pricing" className="nw-section">
       <div className="nw-container">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="nw-eyebrow mb-4">Transparent pricing</span>
-          <h2 className="nw-h2">Honest domain prices, renewal shown upfront</h2>
-          <p className="nw-lead mt-4">No teaser rates or hidden fees. What you see is what you renew.</p>
+          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <h2 className="nw-h2">{s.title}</h2>
+          <p className="nw-lead mt-4">{s.lead}</p>
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TLDS.map((d) => (
             <div key={d.tld} className="nw-card nw-card-hover flex flex-col">
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-bold text-primary dark:text-white">{d.tld}</span>
-                {d.sale && <span className="nw-badge-accent">Sale</span>}
+                <span className="nw-badge-brand"><LuShieldCheck className="h-3 w-3" /> WHOIS</span>
               </div>
               <div className="mt-4 flex items-end gap-2">
-                {d.was && <span className="text-sm text-slate-400 line-through">${d.was}</span>}
                 <span className="text-3xl font-bold text-primary dark:text-white">${d.price}</span>
-                <span className="pb-1 text-13 text-ink-soft dark:text-gray-400">/yr</span>
+                <span className="pb-1 text-13 text-ink-soft dark:text-gray-400">{s.perYear}</span>
               </div>
-              <p className="mt-1 text-13 text-ink-soft dark:text-gray-500">Renews at ${d.renew}/yr</p>
-              <button onClick={() => navigate("/domain")} className="nw-btn-secondary nw-btn-sm mt-5 w-full">Register</button>
+              <p className="mt-1 text-13 text-ink-soft dark:text-gray-500">{s.renews} ${d.renew}{s.perYear}</p>
+              <button onClick={() => navigate(`/domain?value=${encodeURIComponent("yourname" + d.tld)}`)} className="nw-btn-secondary nw-btn-sm mt-5 w-full">{s.register}</button>
             </div>
           ))}
         </div>
-        <div className="mt-10 text-center">
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
           <button onClick={() => navigate("/home")} className="nw-btn-primary">
-            <LuSearch className="h-4 w-4" /> Search your domain
+            <LuSearch className="h-4 w-4" /> {s.searchCta}
           </button>
+          <button onClick={() => navigate("/pricing")} className="nw-btn-secondary">{s.fullTable}</button>
         </div>
       </div>
     </section>
@@ -257,50 +307,58 @@ function Pricing() {
 }
 
 function ThreeSteps() {
+  const { t } = useLanguage();
+  const s = t.site.home.steps;
   return (
-    <section className="nw-section">
+    <section className="nw-section bg-surface-2 dark:bg-gray-900/40">
       <div className="nw-container">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="nw-eyebrow mb-4">Simple by design</span>
-          <h2 className="nw-h2">Get online in 3 easy steps</h2>
+          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <h2 className="nw-h2">{s.title}</h2>
         </div>
         <div className="relative mt-12 grid gap-8 md:grid-cols-3">
-          {STEPS.map((s, i) => (
-            <div key={s.title} className="relative text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200">
-                <s.icon className="h-7 w-7" />
+          {s.items.map((step, i) => {
+            const Icon = STEP_ICONS[i] || LuCheck;
+            return (
+              <div key={step.title} className="relative text-center">
+                <div className="nw-icon mx-auto h-16 w-16 rounded-2xl"><Icon className="h-7 w-7" /></div>
+                <div className="mx-auto mt-4 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-on-brand">{i + 1}</div>
+                <h3 className="mt-4 text-lg font-bold text-primary dark:text-white">{step.title}</h3>
+                <p className="mx-auto mt-2 max-w-xs text-15 text-ink-soft dark:text-gray-400">{step.desc}</p>
               </div>
-              <div className="mx-auto mt-4 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">{i + 1}</div>
-              <h3 className="mt-4 text-lg font-bold text-primary dark:text-white">{s.title}</h3>
-              <p className="mx-auto mt-2 max-w-xs text-15 text-ink-soft dark:text-gray-400">{s.desc}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-function Security() {
+function Privacy() {
+  const { t } = useLanguage();
+  const s = t.site.home.privacy;
   return (
-    <section id="security" className="nw-section bg-surface-2 dark:bg-gray-900/40">
+    <section id="privacy" className="nw-section">
       <div className="nw-container grid items-center gap-12 lg:grid-cols-2">
         <div className="relative order-2 lg:order-1">
-          <div className="overflow-hidden rounded-3xl border border-line shadow-xl dark:border-gray-800">
-            <img src={SEC_IMG} alt="Security and encryption" className="h-[360px] w-full object-cover" loading="lazy" />
+          <div className="relative overflow-hidden rounded-3xl border border-line shadow-xl dark:border-white/[0.08] dark:shadow-black/50">
+            <img src={IMAGES.privacy} alt="Abstract encrypted network" className="h-[360px] w-full object-cover" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-gray-950/20 to-transparent" />
+            <div className="absolute inset-0 ring-1 ring-inset ring-brand/20" />
+            <div className="absolute bottom-5 left-5 flex items-center gap-2 rounded-full border border-brand/40 bg-gray-950/70 px-3 py-1.5 text-xs font-semibold text-brand-200 backdrop-blur">
+              <LuLock className="h-3.5 w-3.5" /> {s.eyebrow}
+            </div>
           </div>
         </div>
         <div className="order-1 lg:order-2">
-          <span className="nw-eyebrow mb-4">Security & trust</span>
-          <h2 className="nw-h2">Your business, protected by default</h2>
-          <p className="nw-lead mt-4">Enterprise-grade security comes standard — no upsells, no surprises.</p>
+          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <h2 className="nw-h2">{s.title}</h2>
+          <p className="nw-lead mt-4">{s.lead}</p>
           <ul className="mt-8 space-y-4">
-            {SECURITY.map((s) => (
-              <li key={s.text} className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
-                  <LuCheck className="h-4 w-4" />
-                </span>
-                <span className="text-15 font-medium text-primary dark:text-gray-200">{s.text}</span>
+            {s.items.map((line) => (
+              <li key={line} className="flex items-start gap-3">
+                <span className="nw-icon mt-0.5 h-6 w-6 rounded-full"><LuCheck className="h-4 w-4" /></span>
+                <span className="text-15 font-medium text-primary dark:text-gray-200">{line}</span>
               </li>
             ))}
           </ul>
@@ -310,34 +368,37 @@ function Security() {
   );
 }
 
-function Rewards() {
+function Loyalty() {
+  const { t } = useLanguage();
+  const s = t.site.home.loyalty;
   const navigate = useNavigate();
   return (
-    <section className="nw-section">
+    <section className="nw-section pt-0">
       <div className="nw-container">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand to-brand-600 px-8 py-12 text-white sm:px-12">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gray-950 px-8 py-12 text-white sm:px-12">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-brand-900/50" />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand/20 blur-3xl" />
           <div className="relative grid items-center gap-8 lg:grid-cols-2">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider">Rewards</span>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Spend $1, earn 1 point. Redeem for real savings.</h2>
-              <p className="mt-3 max-w-lg text-white/80">Every purchase — domains, hosting, servers — earns reward points you can put straight back toward renewals and upgrades.</p>
-              <button onClick={() => navigate("/create-account")} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50">
-                Create a free account <LuArrowRight className="h-4 w-4" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand/40 bg-brand/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-200">
+                <LuGift className="h-3.5 w-3.5" /> {s.badge}
+              </span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{s.title}</h2>
+              <p className="mt-3 max-w-lg text-gray-300">{s.desc}</p>
+              <button onClick={() => navigate("/create-account")} className="nw-btn-primary mt-6">
+                {s.cta} <LuArrowRight className="h-4 w-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: LuZap, label: "Instant points" },
-                { icon: LuHeadphones, label: "Priority support" },
-                { icon: LuShieldCheck, label: "Free privacy" },
-                { icon: LuRocket, label: "Faster checkout" },
-              ].map((b) => (
-                <div key={b.label} className="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-4 backdrop-blur">
-                  <b.icon className="h-6 w-6" />
-                  <span className="text-sm font-semibold">{b.label}</span>
-                </div>
-              ))}
+              {s.perks.map((label, i) => {
+                const Icon = PERK_ICONS[i] || LuCheck;
+                return (
+                  <div key={label} className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4 backdrop-blur">
+                    <Icon className="h-6 w-6 text-brand-300" />
+                    <span className="text-sm font-semibold">{label}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -347,29 +408,35 @@ function Rewards() {
 }
 
 function FinalCta() {
+  const { t } = useLanguage();
+  const s = t.site.home.cta;
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const submit = () => navigate(query ? `/home?value=${encodeURIComponent(query.trim())}` : "/home");
   return (
     <section className="nw-section pt-0">
       <div className="nw-container">
-        <div className="rounded-3xl border border-line bg-surface-2 px-6 py-14 text-center dark:border-gray-800 dark:bg-gray-900/40 sm:px-12">
-          <h2 className="nw-h2">Ready to claim your name?</h2>
-          <p className="nw-lead mx-auto mt-4 max-w-xl">Search for the perfect domain and get online in minutes.</p>
-          <div className="mx-auto mt-8 flex max-w-lg flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submit()}
-                placeholder="yourbrand.com"
-                className="nw-input pl-11"
-                aria-label="Search for a domain"
-              />
+        <div className="relative overflow-hidden rounded-3xl border border-line bg-surface-2 px-6 py-14 text-center dark:border-white/[0.08] dark:bg-gray-900 sm:px-12">
+          <img src={IMAGES.harbour} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-0 dark:opacity-30" loading="lazy" />
+          <div className="absolute inset-0 hidden bg-gradient-to-b from-gray-950/70 via-gray-950/60 to-gray-950/90 dark:block" />
+          <div className="relative">
+            <h2 className="nw-h2">{s.title}</h2>
+            <p className="nw-lead mx-auto mt-4 max-w-xl dark:text-gray-300">{s.lead}</p>
+            <div className="mx-auto mt-8 flex max-w-lg flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && submit()}
+                  placeholder={s.placeholder}
+                  className="nw-input pl-11"
+                  aria-label="Search for a domain"
+                />
+              </div>
+              <button onClick={submit} className="nw-btn-primary">{s.button}</button>
             </div>
-            <button onClick={submit} className="nw-btn-primary">Search Now</button>
           </div>
         </div>
       </div>
@@ -377,17 +444,22 @@ function FinalCta() {
   );
 }
 
-const HomeRedesign = () => (
-  <>
-    <Hero />
-    <TrustBar />
-    <Products />
-    <Pricing />
-    <ThreeSteps />
-    <Security />
-    <Rewards />
-    <FinalCta />
-  </>
-);
+const HomeRedesign = () => {
+  const { t } = useLanguage();
+  usePageMeta(null, t.site.meta.description);
+  return (
+    <>
+      <Hero />
+      <TrustBar />
+      <Pillars />
+      <Products />
+      <Pricing />
+      <ThreeSteps />
+      <Privacy />
+      <Loyalty />
+      <FinalCta />
+    </>
+  );
+};
 
 export default HomeRedesign;

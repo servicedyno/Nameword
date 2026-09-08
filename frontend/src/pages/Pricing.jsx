@@ -1,36 +1,39 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import MainLayout from "../layouts/MainLayout";
-import { SectionHeading, CtaBand, PricingTiers } from "../components/marketing/marketing-ui";
+import { SectionHeading, CtaBand, PricingTiers, IMAGES } from "../components/marketing/marketing-ui";
 import resellerAPI from "../api/reseller";
+import { useLanguage } from "../hooks/useLanguage";
+import { usePageMeta } from "../hooks/usePageMeta";
 import {
   LuSearch,
   LuGlobe,
   LuServer,
   LuMonitor,
   LuShieldCheck,
-  LuArrowRight,
+  LuKeyRound,
+  LuMapPin,
 } from "react-icons/lu";
 
 const money = (n) =>
   n === null || n === undefined || isNaN(Number(n)) ? "—" : `$${Number(n).toFixed(2)}`;
 
-// Representative hosting tiers (provider not connected in this environment).
+// Representative cPanel hosting tiers (live plans load on /hosting when the provider is connected).
 const HOSTING_MONTHLY = [
-  { name: "Starter", desc: "For a first website", price: 2.99, features: ["1 website", "10 GB NVMe storage", "Free SSL", "Unmetered bandwidth", "Weekly backups"] },
-  { name: "Business", desc: "For growing sites", price: 5.99, highlighted: true, features: ["50 websites", "100 GB NVMe storage", "Free SSL + CDN", "Free domain (1 yr)", "Daily backups", "cPanel & email"] },
-  { name: "Pro", desc: "For high traffic", price: 11.99, features: ["Unlimited websites", "200 GB NVMe storage", "Free SSL + CDN", "Priority support", "Daily backups", "Staging & Git"] },
+  { name: "Starter", desc: "One site, kept private", price: 2.99, features: ["1 website", "10 GB NVMe storage", "TLS auto-issued", "Unmetered bandwidth", "Weekly backups"] },
+  { name: "Business", desc: "For agencies and small teams", price: 5.99, highlighted: true, features: ["50 websites", "100 GB NVMe storage", "TLS auto-issued", "Daily backups", "cPanel + mail on your domain", "Paid from wallet"] },
+  { name: "Operator", desc: "For high traffic", price: 11.99, features: ["Unlimited websites", "200 GB NVMe storage", "TLS auto-issued", "Daily backups", "Staging & Git", "Priority support"] },
 ];
 
 function BillingToggle({ cycle, setCycle }) {
   return (
     <div className="mb-10 flex items-center justify-center gap-3">
-      <div className="inline-flex rounded-full border border-line bg-white p-1 dark:border-gray-800 dark:bg-gray-900">
+      <div className="inline-flex rounded-full border border-line bg-white p-1 dark:border-white/[0.08] dark:bg-gray-900">
         <button
           onClick={() => setCycle("monthly")}
           className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
             cycle === "monthly"
-              ? "bg-brand text-white shadow-sm"
+              ? "bg-brand text-on-brand shadow-sm"
               : "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white"
           }`}
         >
@@ -40,7 +43,7 @@ function BillingToggle({ cycle, setCycle }) {
           onClick={() => setCycle("annual")}
           className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
             cycle === "annual"
-              ? "bg-brand text-white shadow-sm"
+              ? "bg-brand text-on-brand shadow-sm"
               : "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white"
           }`}
         >
@@ -48,8 +51,8 @@ function BillingToggle({ cycle, setCycle }) {
           <span
             className={`nw-badge ${
               cycle === "annual"
-                ? "bg-white/20 text-white"
-                : "bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                ? "bg-gray-950/15 text-on-brand"
+                : "bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300"
             }`}
           >
             2 months free
@@ -82,12 +85,17 @@ function toTiers(items, cycle, { unit = "/mo", ctaTo = "/create-account", cta = 
 
 export default function Pricing() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const sp = t.site.pricingPage;
+  usePageMeta(sp.eyebrow, sp.subtitle);
   const [cycle, setCycle] = useState("annual");
 
   const [tldRows, setTldRows] = useState([]);
   const [tldLoading, setTldLoading] = useState(true);
   const [vps, setVps] = useState([]);
+  const [vpsLoading, setVpsLoading] = useState(true);
   const [rdp, setRdp] = useState([]);
+  const [rdpLoading, setRdpLoading] = useState(true);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -119,6 +127,8 @@ export default function Pricing() {
         if (alive) setVps(Array.isArray(d?.plans) ? d.plans : []);
       } catch {
         if (alive) setVps([]);
+      } finally {
+        if (alive) setVpsLoading(false);
       }
     })();
 
@@ -128,6 +138,8 @@ export default function Pricing() {
         if (alive) setRdp(Array.isArray(d?.plans) ? d.plans : []);
       } catch {
         if (alive) setRdp([]);
+      } finally {
+        if (alive) setRdpLoading(false);
       }
     })();
 
@@ -149,7 +161,8 @@ export default function Pricing() {
             `${p.ram_gb ?? "—"} GB RAM`,
             `${p.disk_gb ?? "—"} GB NVMe SSD`,
             "Full root access",
-            "EU & SG regions",
+            "EU or Singapore",
+            "Paid from wallet",
           ],
           cta: "Deploy VPS",
           to: "/vps",
@@ -171,8 +184,9 @@ export default function Pricing() {
             `${p.vcpus ?? "—"} vCPU cores`,
             `${p.ram_gb ?? "—"} GB RAM`,
             `${p.disk_gb ?? "—"} GB SSD`,
-            "Windows desktop",
-            "Remote from anywhere",
+            "Full Administrator access",
+            "EU or Singapore",
+            "Paid from wallet",
           ],
           cta: "Deploy RDP",
           to: "/rdp",
@@ -196,20 +210,19 @@ export default function Pricing() {
   return (
     <MainLayout fluid>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-brand-50/60 via-white to-white dark:border-gray-800 dark:from-gray-900 dark:via-gray-950 dark:to-gray-950">
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand/10" />
+      <section className="nw-hero border-b border-line dark:border-white/[0.06]">
+        <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
+        <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
         <div className="nw-container relative py-14 text-center sm:py-20">
-          <span className="nw-eyebrow mb-4">Transparent pricing</span>
+          <span className="nw-eyebrow mb-4">{sp.eyebrow}</span>
           <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white sm:text-5xl">
-            Simple, honest pricing
+            {sp.title}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl nw-lead">
-            No hidden fees. Renewal prices shown upfront. Domains, hosting, VPS and RDP — all in one place.
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl nw-lead">{sp.subtitle}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-2">
-            <span className="nw-chip"><LuShieldCheck className="h-4 w-4 text-brand" /> Free WHOIS privacy</span>
-            <span className="nw-chip"><LuGlobe className="h-4 w-4 text-brand" /> Free DNS</span>
-            <span className="nw-chip"><LuArrowRight className="h-4 w-4 text-brand" /> No lock-in</span>
+            <span className="nw-chip"><LuShieldCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {t.site.home.heroChips[0]}</span>
+            <span className="nw-chip"><LuMapPin className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {t.site.home.heroChips[1]}</span>
+            <span className="nw-chip"><LuKeyRound className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {t.site.home.heroChips[2]}</span>
           </div>
         </div>
       </section>
@@ -218,9 +231,9 @@ export default function Pricing() {
       <section className="nw-section">
         <div className="nw-container">
           <SectionHeading
-            eyebrow="Domains"
-            title="Domain name pricing"
-            subtitle="Live registration prices across popular extensions. Renewal is shown upfront — no surprises."
+            eyebrow={sp.domainsEyebrow}
+            title={sp.domainsTitle}
+            subtitle={sp.domainsSubtitle}
           />
 
           <form onSubmit={onSearch} className="mx-auto mt-8 flex max-w-xl items-center gap-3">
@@ -229,14 +242,14 @@ export default function Pricing() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Find your domain, e.g. mybrand.com"
+                placeholder={t.site.home.placeholder}
                 className="nw-input pl-11"
               />
             </div>
             <button type="submit" className="nw-btn-primary">Search</button>
           </form>
 
-          <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-2xl border border-line dark:border-gray-800">
+          <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-2xl border border-line dark:border-white/[0.08]">
             <table className="w-full text-left">
               <thead className="bg-surface-2 dark:bg-gray-900/60">
                 <tr className="text-13 font-semibold uppercase tracking-wide text-ink-soft dark:text-gray-400">
@@ -247,7 +260,7 @@ export default function Pricing() {
                   <th className="px-5 py-3.5 text-right">&nbsp;</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line dark:divide-gray-800">
+              <tbody className="divide-y divide-line dark:divide-white/[0.06]">
                 {tldLoading ? (
                   [0, 1, 2, 3, 4, 5].map((i) => (
                     <tr key={i} className="animate-pulse">
@@ -259,7 +272,7 @@ export default function Pricing() {
                 ) : tldRows.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-5 py-8 text-center text-ink-soft dark:text-gray-400">
-                      Live domain pricing is temporarily unavailable. Please try the search above.
+                      Live per-TLD pricing is temporarily unavailable. Try the search above — availability and price are checked live.
                     </td>
                   </tr>
                 ) : (
@@ -267,10 +280,10 @@ export default function Pricing() {
                     <tr key={r.tld} className="text-15 hover:bg-surface-2/70 dark:hover:bg-gray-900/40">
                       <td className="px-5 py-4">
                         <span className="inline-flex items-center gap-2 font-semibold text-primary dark:text-white">
-                          <LuGlobe className="h-4 w-4 text-brand" /> {r.tld}
+                          <LuGlobe className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {r.tld}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-bold text-brand dark:text-brand-300">{money(r.price)}</td>
+                      <td className="px-5 py-4 font-bold text-brand-700 dark:text-brand-300">{money(r.price)}</td>
                       <td className="px-5 py-4 hidden sm:table-cell text-ink-soft dark:text-gray-400">{money(r.price)}/yr</td>
                       <td className="px-5 py-4 hidden sm:table-cell text-ink-soft dark:text-gray-400">{money(r.price)}</td>
                       <td className="px-5 py-4 text-right">
@@ -288,7 +301,7 @@ export default function Pricing() {
             </table>
           </div>
           <p className="mx-auto mt-4 max-w-4xl text-center text-13 text-ink-soft dark:text-gray-500">
-            Prices are per year in USD and include free DNS management and WHOIS privacy where supported.
+            Prices are per year in USD, paid from your prepaid wallet. DNS management is included; WHOIS privacy is included where the registry supports it.
           </p>
         </div>
       </section>
@@ -297,50 +310,51 @@ export default function Pricing() {
       <section className="nw-section bg-surface-2 dark:bg-gray-900/40">
         <div className="nw-container">
           <SectionHeading
-            eyebrow="Hosting, VPS & RDP"
-            title="Plans for every stage"
-            subtitle="Switch to annual billing and get two months free on hosting, VPS and RDP."
+            eyebrow={sp.plansEyebrow}
+            title={sp.plansTitle}
+            subtitle={sp.plansSubtitle}
           />
           <div className="mt-10">
             <BillingToggle cycle={cycle} setCycle={setCycle} />
           </div>
 
           <div className="mb-4 flex items-center gap-2 text-lg font-bold text-primary dark:text-white">
-            <LuShieldCheck className="h-5 w-5 text-brand" /> Web Hosting
+            <LuShieldCheck className="h-5 w-5 text-brand-600 dark:text-brand-400" /> {t.site.nav.items.hosting.title}
           </div>
           <PricingTiers tiers={hostingTiers} />
 
           <div className="mt-16 mb-4 flex items-center gap-2 text-lg font-bold text-primary dark:text-white">
-            <LuServer className="h-5 w-5 text-brand" /> Linux VPS
+            <LuServer className="h-5 w-5 text-brand-600 dark:text-brand-400" /> {t.site.nav.items.vps.title}
           </div>
           {vpsTiers.length ? (
             <PricingTiers tiers={vpsTiers} />
           ) : (
-            <p className="rounded-2xl border border-dashed border-line bg-white py-10 text-center text-ink-soft dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
-              Loading live VPS plans…
+            <p className="rounded-2xl border border-dashed border-line bg-white py-10 text-center text-ink-soft dark:border-white/[0.08] dark:bg-gray-900 dark:text-gray-400">
+              {vpsLoading ? "Loading live VPS plans…" : "Live VPS pricing is temporarily unavailable."}
             </p>
           )}
 
           <div className="mt-16 mb-4 flex items-center gap-2 text-lg font-bold text-primary dark:text-white">
-            <LuMonitor className="h-5 w-5 text-brand" /> Windows RDP
+            <LuMonitor className="h-5 w-5 text-brand-600 dark:text-brand-400" /> {t.site.nav.items.rdp.title}
           </div>
           {rdpTiers.length ? (
             <PricingTiers tiers={rdpTiers} />
           ) : (
-            <p className="rounded-2xl border border-dashed border-line bg-white py-10 text-center text-ink-soft dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
-              Loading live RDP plans…
+            <p className="rounded-2xl border border-dashed border-line bg-white py-10 text-center text-ink-soft dark:border-white/[0.08] dark:bg-gray-900 dark:text-gray-400">
+              {rdpLoading ? "Loading live RDP plans…" : "Live RDP pricing is temporarily unavailable."}
             </p>
           )}
         </div>
       </section>
 
       <CtaBand
-        title="Ready to get online?"
-        subtitle="Grab your domain, add hosting and deploy a server — all from one dashboard."
+        title={sp.ctaTitle}
+        subtitle={sp.ctaLead}
         primaryTo="/create-account"
-        primaryLabel="Create account"
-        secondaryTo="/domain?value=yourbrand.com"
-        secondaryLabel="Search a domain"
+        primaryLabel={t.site.nav.createAccount}
+        secondaryTo="/domain"
+        secondaryLabel={t.site.home.pricing.searchCta}
+        image={IMAGES.harbour}
       />
     </MainLayout>
   );
