@@ -140,6 +140,9 @@ const terminateHosting = (req, res) =>
   forward(res, nomadly.delete(`/hosting/${enc(req.params.user)}`));
 const hostingLogin = (req, res) =>
   forward(res, nomadly.get(`/hosting/${enc(req.params.user)}/login`));
+// Reveal cPanel account credentials (surfaced in the live hosting list as credentials_url).
+const hostingCredentials = (req, res) =>
+  forward(res, nomadly.get(`/hosting/${enc(req.params.user)}/credentials`));
 
 module.exports = {
   getHealth,
@@ -174,4 +177,5 @@ module.exports = {
   unsuspendHosting,
   terminateHosting,
   hostingLogin,
+  hostingCredentials,
 };

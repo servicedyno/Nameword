@@ -171,6 +171,21 @@ backend:
         agent: "testing"
         comment: "TESTED against LIVE environment. GET /reseller/domains/search?domain=coolstartup2026.com returns 200 with available:true, price_usd:39, registrar:OpenProvider, message:'Domain is available'. This is a REAL upstream call to 1.speechcue.com and works perfectly. Domain search functionality fully operational."
 
+  - task: "Nomadly Reseller API proxy - cPanel Hosting endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/api/reseller.js, /app/backend/app/controllers/reseller/resellerController.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Hosting suite proxied under /api/v1/reseller/hosting/*. NEW route added: GET /hosting/:user/credentials (surfaced from the live list's credentials_url). Please test READ + safe endpoints ONLY against the LIVE dry_run provider: (1) GET /reseller/hosting/plans returns {platform, plans[]} where each plan has tier (premium/gold), price_usd, duration_days, addon_domains (number or 'unlimited'), visitor_captcha_available (bool), features[] (3 plans expected). (2) GET /reseller/hosting returns {panel_url, server_ip, accounts[]} (real accounts exist, e.g. username nbaykkd4zh). (3) GET /reseller/hosting/nbaykkd4zh/login returns a dry_run note (no login_url in dry_run). (4) GET /reseller/hosting/nbaykkd4zh/credentials returns username/panel_url/server_ip/nameservers + note (panel_pin null in dry_run). (5) POST /reseller/hosting with {plan_id:'golden-monthly',domain:'probe-nameword.com',domain_mode:'byo',visitor_captcha:true} -> in dry_run returns a priced preview OR 402 insufficient_wallet_balance (wallet $5 < $100) with NO charge/provisioning — this is EXPECTED, not a bug. IMPORTANT: DO NOT call suspend/unsuspend/terminate on the real accounts (avoid mutating the user's real data). Upstream (1.speechcue.com) latency of a few seconds is normal; use a 30s timeout."
+      - working: true
+        agent: "testing"
+        comment: "TESTED via hosting_test.py. All 5 cPanel hosting endpoints working correctly: (1) GET /hosting/plans returns 200 with platform object and 3 plans array. Each plan has all required fields (plan_id, name, tier, price_usd, duration_days, addon_domains, visitor_captcha_available, features). The golden-monthly plan has tier 'gold' and visitor_captcha_available true as expected. (2) GET /hosting returns 200 with panel_url (https://panel.1.hostbay.io), server_ip (68.183.77.106), and accounts array with 2 real accounts including username 'nbaykkd4zh'. (3) GET /hosting/nbaykkd4zh/login returns 200 with mode 'dry_run' and note (no login_url in dry_run, as expected). (4) GET /hosting/nbaykkd4zh/credentials (NEW route) returns 200 with all required fields: username, panel_url, server_ip, nameservers, mode. panel_pin is null (expected in dry_run). NEW route is working! (5) POST /hosting with golden-monthly plan returns 402 insufficient_wallet_balance (wallet $5 vs plan $100) with mode 'dry_run', price_usd 100, shortfall_usd 95. Wallet balance remains unchanged at $5 (no charge), and no new account was provisioned (verified). This is EXPECTED upstream API behavior. All endpoints return proper status codes and JSON structure. Did NOT test destructive endpoints (suspend/unsuspend/terminate) as instructed."
+
 frontend:
   - task: "VPS Page - API calls to /api/v1/reseller endpoints"
     implemented: true
@@ -214,12 +229,11 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 5
+  test_sequence: 6
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "UI Redesign Verification - Option A Design System"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -239,3 +253,5 @@ agent_communication:
     message: "UI REDESIGN VERIFICATION COMPLETE - Option A design system tested across desktop (1440px), mobile (390x844), and tablet (768x1024). PART A RESULTS: All 8 signed-in pages (/dashboard, /account-setting, /account-information, /wallet, /subscriptions, /payment-history, /dns-management, /domain-portfolio) render without crash. Color analysis shows NO teal/cyan elements (✓ good), minimal cream/beige (✓ good), but most pages show 0 indigo elements detected (needs visual verification of screenshots). PART B RESULTS: CRITICAL RESPONSIVE ISSUES FOUND: (1) Mobile (390x844): Missing bottom tab bar (expected: Home/Domains/Hosting/Wallet/Account), missing hamburger menu button, icon rail correctly hidden. (2) Tablet (768x1024): No sidebar detected (expected: icon rail or drawer). (3) Public pages mobile: Horizontal overflow on Home and Hosting pages. Screenshots saved to .screenshots/ directory for visual verification. Console shows wallet API 400 errors (not critical for UI testing)."
   - agent: "testing"
     message: "FOCUSED RESPONSIVE RE-TEST COMPLETE (after responsive fixes). Tested public page horizontal overflow and attempted to test authenticated navigation. RESULTS: TEST 1 (Public pages at 390x844) - ✓ HORIZONTAL OVERFLOW FIXED: Home (scrollWidth=390px, clientWidth=390px), Hosting (scrollWidth=390px, clientWidth=390px), VPS (scrollWidth=390px, clientWidth=390px) all have NO overflow. Pricing page timed out (likely due to multiple API calls). TEST 2 (Authed navigation) - ❌ CANNOT TEST: Cloudflare bot protection is blocking automated access to /login and /dashboard pages. Both show 'Performing security verification' challenge. Console logs show 429 (Too Many Requests) rate limiting errors. This is a testing environment limitation (automated browser triggers Cloudflare's bot detection), NOT an application bug. RECOMMENDATION: Public page overflow issue is FIXED. Mobile/tablet navigation elements (bottom tab bar, hamburger menu) require MANUAL TESTING by user on real device or browser, as automated testing is blocked by Cloudflare protection."
+  - agent: "testing"
+    message: "cPanel HOSTING ENDPOINTS TESTING COMPLETE - ALL 5 TESTS PASSED (5/5). Created hosting_test.py to test ONLY the hosting endpoints as requested. All cPanel hosting endpoints working correctly: (1) GET /hosting/plans returns 200 with platform object and 3 plans (premium-weekly, premium-monthly, golden-monthly). Each plan has all required fields (plan_id, name, tier, price_usd, duration_days, addon_domains, visitor_captcha_available, features). The golden-monthly plan has tier 'gold' and visitor_captcha_available true as expected. (2) GET /hosting returns 200 with panel_url, server_ip, and 2 real accounts including username 'nbaykkd4zh'. (3) GET /hosting/nbaykkd4zh/login returns 200 with mode 'dry_run' and note (no login_url in dry_run, as expected). (4) GET /hosting/nbaykkd4zh/credentials (NEW route) returns 200 with all required fields: username, panel_url, server_ip, nameservers, mode. panel_pin is null (expected in dry_run). NEW route is working! (5) POST /hosting with golden-monthly plan returns 402 insufficient_wallet_balance (wallet $5 vs plan $100) with mode 'dry_run'. Wallet balance remains unchanged at $5 (no charge), and no new account was provisioned (verified). This is EXPECTED upstream API behavior. All endpoints return proper status codes and JSON structure. Did NOT test destructive endpoints (suspend/unsuspend/terminate) as instructed to avoid mutating real hosting data."

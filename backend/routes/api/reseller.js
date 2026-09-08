@@ -46,6 +46,7 @@ router.post("/hosting", c.createHosting);
 router.post("/hosting/:user/suspend", c.suspendHosting);
 router.post("/hosting/:user/unsuspend", c.unsuspendHosting);
 router.get("/hosting/:user/login", c.hostingLogin);
+router.get("/hosting/:user/credentials", c.hostingCredentials);
 router.delete("/hosting/:user", c.terminateHosting);
 
 module.exports = router;

@@ -17,7 +17,7 @@ import { Navigate } from "react-router";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 
 import PaymentCheckout from "../pages/PaymentCheckout";
-import Hosting from "../pages/Hosting";
+import Hosting from "../pages/HostingNomadly";
 import VPS from "../pages/VPS";
 import RDP from "../pages/RDP";
 import Email from "../pages/Email";
