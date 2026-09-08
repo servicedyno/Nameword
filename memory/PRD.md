@@ -8,7 +8,7 @@ Extract and set up the app from https://github.com/Moxxcompany/NamewordProductio
 - **Frontend**: React 19 + Vite 7 + Tailwind v4, Vite dev server on port 3000 (`yarn dev --host 0.0.0.0 --port 3000`)
 - **DB**: local MongoDB `mongodb://localhost:27017/nameword` (Railway `DB_URI` is `*.railway.internal`, unreachable outside Railway)
 - **Ingress**: `/api/*` -> backend 8001, everything else -> frontend 3000. Frontend calls `VITE_API_BASE_URL + /api/v1`.
-- Preview URL: https://nameword-server.preview.emergentagent.com
+- Preview URL: https://db-setup-7.preview.emergentagent.com
 
 ## ⚠️ CRITICAL SECURITY FINDING — Malware removed
 4 source files contained an injected, obfuscated self-executing payload (blockchain-based C2 "dead-drop resolver" that calls TronGrid for wallet `TMfKQEd7TJJa5xNZJZ2Lep838vrzrs7mAP` to fetch attacker-controlled next-stage commands):
