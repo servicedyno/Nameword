@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Tuple
 
 # Base URL from frontend/.env
-BASE_URL = "https://quick-nameword.preview.emergentagent.com/api/v1/reseller"
+BASE_URL = "https://83fdbc70-b6f7-4188-83e3-c3f136d54e67.preview.emergentagent.com/api/v1/reseller"
 
 # Generous timeout for external API proxy (30 seconds)
 TIMEOUT = 30
@@ -436,9 +436,40 @@ def test_9_rdp_create_dry_run():
     
     return True
 
-def test_10_error_passthrough():
-    """Test 10: GET /reseller/vps/nonexistent-id-123 - Error passthrough"""
-    print_test(10, "GET /reseller/vps/nonexistent-id-123 - Error status passthrough")
+def test_10_domain_search():
+    """Test 10: GET /reseller/domains/search?domain=coolstartup2026.com"""
+    print_test(10, "GET /reseller/domains/search?domain=coolstartup2026.com - Domain search")
+    
+    status, data, error = make_request("GET", "/domains/search", params={"domain": "coolstartup2026.com"})
+    
+    if error:
+        print_fail(f"Request failed: {error}")
+        return False
+    
+    if status != 200:
+        print_fail(f"Expected status 200, got {status}")
+        return False
+    
+    print_pass(f"Status code: {status}")
+    
+    if "available" not in data:
+        print_fail("Response missing 'available' field")
+        return False
+    
+    print_pass(f"'available' field present: {data.get('available')}")
+    
+    # Check for price information
+    if "price_usd" in data or "price" in data or "registration_price" in data:
+        price_field = "price_usd" if "price_usd" in data else ("price" if "price" in data else "registration_price")
+        print_pass(f"Price information present: {price_field}={data.get(price_field)}")
+    else:
+        print_info(f"Response: {json.dumps(data, indent=2)}")
+    
+    return True
+
+def test_11_error_passthrough():
+    """Test 11: GET /reseller/vps/nonexistent-id-123 - Error passthrough"""
+    print_test(11, "GET /reseller/vps/nonexistent-id-123 - Error status passthrough")
     
     status, data, error = make_request("GET", "/vps/nonexistent-id-123")
     
@@ -486,7 +517,8 @@ def main():
         test_7_vps_list,
         test_8_rdp_plans_eu,
         test_9_rdp_create_dry_run,
-        test_10_error_passthrough,
+        test_10_domain_search,
+        test_11_error_passthrough,
     ]
     
     results = []
