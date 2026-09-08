@@ -1,0 +1,1069 @@
+{
+	"info": {
+		"_postman_id": "nameword-missing-apis-001",
+		"name": "Nameword - Missing APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"description": "Cart, Hosting Plans, Wallet, Tax, Promo, Invoices, User Session, and additional Domain endpoints. Set base_url to http://localhost:3000/api/v1 (or your API URL). Use x-api-key and Authorization Bearer for auth-required endpoints."
+	},
+	"item": [
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "Add to Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "x-api-key", "value": "{{api_key}}", "disabled": true },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemType\": \"domain\",\n  \"websiteName\": \"example.com\",\n  \"action\": \"register\",\n  \"years\": 1,\n  \"whoisProtection\": true,\n  \"price\": { \"amount\": 12.99, \"currency\": \"USD\" }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/add",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "add"]
+						},
+						"description": "Add domain, bundle, or hosting to cart. itemType: domain|bundle|hosting. Domain needs: websiteName, action(register|transfer|renew), years, price. Hosting needs: hosting.planName, hosting.provider, hosting.planId, hosting.domainOption, hosting.domainName (if new), price."
+					},
+					"response": []
+				},
+				{
+					"name": "List Cart",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/cart/list?markRead=false",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "list"],
+							"query": [{ "key": "markRead", "value": "false", "description": "Optional" }]
+						},
+						"description": "Get current user's cart items. Requires auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove from Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/cart/remove?id={{cart_item_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "remove"],
+							"query": [{ "key": "id", "value": "{{cart_item_id}}", "description": "MongoDB ObjectId of cart item" }]
+						},
+						"description": "Remove item from cart. Query param: id (MongoId)."
+					},
+					"response": []
+				},
+				{
+					"name": "Checkout Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"payment_status\": \"success\",\n  \"walletTransactionId\": \"{{transaction_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/checkout",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "checkout"]
+						},
+						"description": "Process cart checkout. Requires auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/cart/clear",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "clear"]
+						},
+						"description": "Clear all items from cart. Requires auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cart",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"{{cart_item_id}}\",\n  \"years\": 2,\n  \"price\": { \"amount\": 24.99 },\n  \"whoisProtection\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/update",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "update"]
+						},
+						"description": "Update cart item. Requires auth."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Hosting Plans",
+			"item": [
+				{
+					"name": "Get Hosting Plans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/plans?provider=both",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "plans"],
+							"query": [
+								{ "key": "provider", "value": "both", "description": "hostbay|connectreseller|both" },
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "50" }
+							]
+						},
+						"description": "Fetch hosting plans. No auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Calculate Hosting Price",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/calculate-price?plan=starter&period=12&provider=hostbay",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "calculate-price"],
+							"query": [
+								{ "key": "plan", "value": "starter", "description": "Required. Plan code" },
+								{ "key": "period", "value": "12", "description": "Optional. Default 1" },
+								{ "key": "provider", "value": "hostbay", "description": "Optional" }
+							]
+						},
+						"description": "Calculate price for a hosting plan."
+					},
+					"response": []
+				},
+				{
+					"name": "Hosting DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 49.99,\n  \"cartItemIds\": [\"{{cart_item_id}}\"],\n  \"walletAmount\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "dynocheckout-url"]
+						},
+						"description": "Get DynoPay checkout URL for hosting. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Bundle DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 59.99,\n  \"domainCartItemId\": \"{{domain_cart_item_id}}\",\n  \"hostingCartItemId\": \"{{hosting_cart_item_id}}\",\n  \"walletAmount\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/bundle-dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "bundle-dynocheckout-url"]
+						},
+						"description": "Get DynoPay checkout URL for domain+hosting bundle. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Hosting Wallet Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 49.99,\n  \"cartItemIds\": [\"{{cart_item_id}}\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/wallet-payment",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "wallet-payment"]
+						},
+						"description": "Pay for hosting using wallet balance. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Create for Existing Domain",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"domain_name\": \"example.com\",\n  \"plan\": \"starter\",\n  \"period\": 12,\n  \"domain_type\": \"existing\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/create-for-existing-domain",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "create-for-existing-domain"]
+						},
+						"description": "Create hosting for existing domain. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Hosting Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/orders",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "orders"]
+						},
+						"description": "Get user's hosting orders. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Hosting Order",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/orders/:orderId",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "orders", ":orderId"],
+							"variable": [{ "key": "orderId", "value": "" }]
+						},
+						"description": "Delete/cancel hosting order. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Link Domain to Hosting",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"linking_mode\": \"manual\",\n  \"hosting_plan\": \"{{hosting_plan}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/domains/:domain_name/link",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "domains", ":domain_name", "link"],
+							"variable": [{ "key": "domain_name", "value": "example.com" }]
+						},
+						"description": "Link domain to hosting. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Hosting Credentials",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/hosting/:subscription_id/credentials",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "hosting", ":subscription_id", "credentials"],
+							"variable": [{ "key": "subscription_id", "value": "" }]
+						},
+						"description": "Get hosting credentials. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Install SSL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subscription_id\": \"{{subscription_id}}\",\n  \"domain\": \"example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/ssl/install",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "ssl", "install"]
+						},
+						"description": "Install SSL certificate. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get SSL Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/ssl/status?domainName=example.com",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "ssl", "status"],
+							"query": [{ "key": "domainName", "value": "example.com", "description": "Required. Domain name" }]
+						},
+						"description": "Get SSL status. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Renewal Price",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/hosting/:subscription_id/renewal-price?period=12",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "hosting", ":subscription_id", "renewal-price"],
+							"query": [{ "key": "period", "value": "12", "description": "Optional. Default 1" }],
+							"variable": [{ "key": "subscription_id", "value": "" }]
+						},
+						"description": "Get hosting renewal price. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Renewal Options",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/hosting/:subscription_id/renewal-options",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "hosting", ":subscription_id", "renewal-options"],
+							"variable": [{ "key": "subscription_id", "value": "" }]
+						},
+						"description": "Get hosting renewal options. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Renewal Wallet Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subscriptionId\": \"{{subscription_id}}\",\n  \"period\": 12,\n  \"amount\": 49.99,\n  \"plan\": null,\n  \"autoRenew\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/renewal/wallet-payment",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "renewal", "wallet-payment"]
+						},
+						"description": "Renew hosting via wallet. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Renewal DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subscriptionId\": \"{{subscription_id}}\",\n  \"period\": 12,\n  \"amount\": 49.99,\n  \"plan\": null,\n  \"walletAmount\": 0,\n  \"autoRenew\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/renewal/dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "renewal", "dynocheckout-url"]
+						},
+						"description": "Get DynoPay URL for hosting renewal. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Addon Domain",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"domain\": \"addon.example.com\",\n  \"register_new\": false,\n  \"period\": 1,\n  \"auto_renew_domain\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/hosting/:subscription_id/addon-domains",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "hosting", ":subscription_id", "addon-domains"],
+							"variable": [{ "key": "subscription_id", "value": "" }]
+						},
+						"description": "Add addon domain to HostBay subscription. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Addon Domains",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/hosting/:subscription_id/addon-domains",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "hosting", ":subscription_id", "addon-domains"],
+							"variable": [{ "key": "subscription_id", "value": "" }]
+						},
+						"description": "Get addon domains for subscription. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get External Domain DNS Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/external-domain/dns-info?domain=example.com&controlPanel=cpanel",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "external-domain", "dns-info"],
+							"query": [
+								{ "key": "domain", "value": "example.com", "description": "Required" },
+								{ "key": "controlPanel", "value": "cpanel", "description": "Optional. cpanel|plesk" }
+							]
+						},
+						"description": "Get Cloudflare nameservers and server IP. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Server Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/hosting-plans/server-info?domain_name=example.com",
+							"host": ["{{base_url}}"],
+							"path": ["hosting-plans", "server-info"],
+							"query": [{ "key": "domain_name", "value": "example.com", "description": "Optional. For domain-specific DNS instructions" }]
+						},
+						"description": "Get server info. Auth required."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet & Payment History",
+			"item": [
+				{
+					"name": "Get Payment History (Transactions)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/wallet/transactions?page=1&per_page=50",
+							"host": ["{{base_url}}"],
+							"path": ["wallet", "transactions"],
+							"query": [
+								{ "key": "page", "value": "1", "description": "Optional. Default 1" },
+								{ "key": "per_page", "value": "50", "description": "Optional. Default 50" }
+							]
+						},
+						"description": "Get payment/transaction history. Requires x-api-key and auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/wallet/transactions/:id",
+							"host": ["{{base_url}}"],
+							"path": ["wallet", "transactions", ":id"],
+							"variable": [{ "key": "id", "value": "" }]
+						},
+						"description": "Get single payment/transaction. Requires x-api-key and auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Download Invoice",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/wallet/transactions/:id/invoice",
+							"host": ["{{base_url}}"],
+							"path": ["wallet", "transactions", ":id", "invoice"],
+							"variable": [{ "key": "id", "value": "" }]
+						},
+						"description": "Download invoice PDF for payment. Requires x-api-key and auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Refund History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/wallet/refunds?page=1&per_page=50",
+							"host": ["{{base_url}}"],
+							"path": ["wallet", "refunds"],
+							"query": [
+								{ "key": "page", "value": "1", "description": "Optional. Default 1" },
+								{ "key": "per_page", "value": "50", "description": "Optional. Default 50" }
+							]
+						},
+						"description": "Get refund history. Requires x-api-key and auth."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tax",
+			"item": [
+				{
+					"name": "Get User Country (from IP)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/tax/user-country",
+							"host": ["{{base_url}}"],
+							"path": ["tax", "user-country"]
+						},
+						"description": "Get user's country from IP and tax rate. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tax Rates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/tax/tax-rates?country=PT",
+							"host": ["{{base_url}}"],
+							"path": ["tax", "tax-rates"],
+							"query": [{ "key": "country", "value": "PT", "description": "Country code (e.g. PT, US, IN)" }]
+						},
+						"description": "Get tax rate for a country. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate VAT ID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"country_code\": \"PT\",\n  \"vat_number\": \"518713130\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/tax/validate-vat",
+							"host": ["{{base_url}}"],
+							"path": ["tax", "validate-vat"]
+						},
+						"description": "Validate VAT ID for B2B. Auth required."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Promo",
+			"item": [
+				{
+					"name": "Validate Promo Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"promoCode\": \"SAVE10\",\n  \"discount\": 50.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/promo/validate",
+							"host": ["{{base_url}}"],
+							"path": ["promo", "validate"]
+						},
+						"description": "Validate promocode. Body: promoCode, discount (number). Auth required."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Invoices",
+			"item": [
+				{
+					"name": "Get All Invoices",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/invoices",
+							"host": ["{{base_url}}"],
+							"path": ["invoices"]
+						},
+						"description": "Get all invoices for user. Requires x-api-key and auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/invoices/:id",
+							"host": ["{{base_url}}"],
+							"path": ["invoices", ":id"],
+							"variable": [{ "key": "id", "value": "" }]
+						},
+						"description": "Get single invoice. Requires x-api-key and auth."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Session",
+			"item": [
+				{
+					"name": "Get All Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/user-session",
+							"host": ["{{base_url}}"],
+							"path": ["user-session"]
+						},
+						"description": "Get all active sessions. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout Session",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/user-session/logout/:sessionId",
+							"host": ["{{base_url}}"],
+							"path": ["user-session", "logout", ":sessionId"],
+							"variable": [{ "key": "sessionId", "value": "" }]
+						},
+						"description": "Logout specific session. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout All Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/user-session/logout-all",
+							"host": ["{{base_url}}"],
+							"path": ["user-session", "logout-all"]
+						},
+						"description": "Logout all sessions except current. Auth required."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Domain (Additional)",
+			"item": [
+				{
+					"name": "Get Domain Bundles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/domain/bundles?websiteName=example.com&provider=hostbay&years=1",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "bundles"],
+							"query": [
+								{ "key": "websiteName", "value": "example.com", "description": "Required" },
+								{ "key": "provider", "value": "hostbay", "description": "Optional" },
+								{ "key": "years", "value": "1", "description": "Optional" }
+							]
+						},
+						"description": "Get domain bundles. No auth."
+					},
+					"response": []
+				},
+				{
+					"name": "View Domain",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/view-domain?domain=example.com&provider=hostbay",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "view-domain"],
+							"query": [
+								{ "key": "domain", "value": "example.com", "description": "Required" },
+								{ "key": "provider", "value": "hostbay", "description": "Optional" }
+							]
+						},
+						"description": "View domain details. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transfer List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/transfer/list",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "transfer", "list"]
+						},
+						"description": "Get domain transfer list. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transfer Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/transfer/status?domainName=example.com",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "transfer", "status"],
+							"query": [{ "key": "domainName", "value": "example.com", "description": "Required" }]
+						},
+						"description": "Get domain transfer status. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Domain DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 14.99,\n  \"domainData\": {\n    \"websiteName\": \"example.com\",\n    \"action\": \"register\",\n    \"years\": 1,\n    \"isWhoisProtection\": true,\n    \"provider\": \"hostbay\"\n  },\n  \"walletAmount\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/domain/dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "dynocheckout-url"]
+						},
+						"description": "Get DynoPay URL for domain purchase. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Domain Renew DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"domain\": \"example.com\",\n  \"domainNameId\": null,\n  \"provider\": \"hostbay\",\n  \"duration\": 1,\n  \"isWhoisProtection\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/domain/renew/dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "renew", "dynocheckout-url"]
+						},
+						"description": "Get DynoPay URL for domain renewal. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Domain Transfer DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"domain\": \"example.com\",\n  \"domainNameId\": null,\n  \"provider\": \"hostbay\",\n  \"duration\": 1,\n  \"authorizationCode\": \"your-auth-code\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/domain/transfer/dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "transfer", "dynocheckout-url"]
+						},
+						"description": "Get DynoPay URL for domain transfer. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Domain Privacy DynoCheckout URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"domain\": \"example.com\",\n  \"domainNameId\": null,\n  \"provider\": \"hostbay\",\n  \"planId\": \"full\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/domain/privacy/dynocheckout-url",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "privacy", "dynocheckout-url"]
+						},
+						"description": "Get DynoPay URL for domain privacy. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Auth Code",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/:domainName/auth-code?provider=hostbay",
+							"host": ["{{base_url}}"],
+							"path": ["domain", ":domainName", "auth-code"],
+							"query": [{ "key": "provider", "value": "hostbay", "description": "Optional" }],
+							"variable": [{ "key": "domainName", "value": "example.com" }]
+						},
+						"description": "Get domain auth code. Auth and x-api-key required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Domain Contacts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/:domainName/contacts?contactType=technical",
+							"host": ["{{base_url}}"],
+							"path": ["domain", ":domainName", "contacts"],
+							"query": [{ "key": "contactType", "value": "technical", "description": "Optional" }],
+							"variable": [{ "key": "domainName", "value": "example.com" }]
+						},
+						"description": "Get domain contacts. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Domain Contact",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"address\": \"123 Street\",\n  \"city\": \"City\",\n  \"state\": \"State\",\n  \"country\": \"US\",\n  \"zip\": \"12345\",\n  \"phone\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/domain/:domainName/contacts",
+							"host": ["{{base_url}}"],
+							"path": ["domain", ":domainName", "contacts"],
+							"variable": [{ "key": "domainName", "value": "example.com" }]
+						},
+						"description": "Add domain contact. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get DNS Records",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/:domainName/dns/records",
+							"host": ["{{base_url}}"],
+							"path": ["domain", ":domainName", "dns", "records"],
+							"variable": [{ "key": "domainName", "value": "example.com" }]
+						},
+						"description": "Get DNS records by domain. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Create DNS Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"A\",\n  \"name\": \"@\",\n  \"content\": \"192.0.2.1\",\n  \"ttl\": 3600\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/domain/:domainName/dns/records",
+							"host": ["{{base_url}}"],
+							"path": ["domain", ":domainName", "dns", "records"],
+							"variable": [{ "key": "domainName", "value": "example.com" }]
+						},
+						"description": "Create DNS record. Auth required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get WHOIS Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "x-api-key", "value": "{{api_key}}" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/domain/whois?domain=example.com",
+							"host": ["{{base_url}}"],
+							"path": ["domain", "whois"],
+							"query": [{ "key": "domain", "value": "example.com" }]
+						},
+						"description": "Get WHOIS info. Auth and x-api-key required."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://localhost:3000/api/v1", "type": "string" },
+		{ "key": "api_key", "value": "", "type": "string" },
+		{ "key": "token", "value": "", "type": "string" },
+		{ "key": "cart_item_id", "value": "", "type": "string" },
+		{ "key": "subscription_id", "value": "", "type": "string" },
+		{ "key": "domain_cart_item_id", "value": "", "type": "string" },
+		{ "key": "hosting_cart_item_id", "value": "", "type": "string" },
+		{ "key": "transaction_id", "value": "", "type": "string" },
+		{ "key": "hosting_plan", "value": "", "type": "string" }
+	]
+}

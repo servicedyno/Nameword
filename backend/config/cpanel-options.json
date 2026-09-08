@@ -1,0 +1,65 @@
+{
+    "control_panel_options": [
+      {
+        "id": "whm",
+        "name": "WHM",
+        "label": "⚙️ Recommended for hosting multiple websites"
+      },
+      {
+        "id": "plesk",
+        "name": "Plesk",
+        "label": "⚙️ Ideal for managing individual websites and applications"
+      },
+      {
+        "id": "skip",
+        "name": "Skip",
+        "label": "❌ No control panel"
+      }
+    ],
+    "whm_options": [
+        {
+            "id": "solo",
+            "name": "Solo",
+            "label": "1️⃣ 1 account ($15/month)",
+            "price": 15
+        },
+        {
+            "id": "admin",
+            "name": "Admin",
+            "label": "2️⃣ Up to 5 accounts ($25/month)",
+            "price": 25
+        },
+        {
+            "id": "pro",
+            "name": "Pro",
+            "label": "3️⃣ Up to 30 accounts ($35/month)",
+            "price": 35
+        },
+        {
+            "id": "premier",
+            "name": "Premier",
+            "label": "4️⃣ 100+ accounts ($50/month)",
+            "price": 50
+        },
+        {
+            "id": "trial",
+            "name": "Free Trial",
+            "label": "5️⃣ 🆓 Free Trial (15 days) ($0)",
+            "price": 0
+        }
+    ],
+    "plesk_options": [
+        {
+            "id": "webhost",
+            "name": "Web Host Edition",
+            "label": "1️⃣ Web Host Edition – Unlimited domains ($35/month)",
+            "price": 35
+        },
+        {
+            "id": "byol",
+            "name": "Free Trial",
+            "label": "2️⃣ 🆓 Free Trial (7 days)",
+            "price": 0
+        }
+    ]
+  }

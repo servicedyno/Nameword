@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment received - {{CURRENCY}} {{AMOUNT}}</title>
+
+    <style>
+        /* Reset */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #4e4964;
+            font-weight: 500;
+        }
+
+        table {
+            border-spacing: 0;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        img {
+            border: 0;
+            max-width: 100%;
+            display: block;
+            width: auto;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .email-wrapper {
+            background-color: #ffffff;
+            padding: 32px 16px;
+        }
+
+        .email-container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .header {
+            padding-bottom: 24px;
+        }
+
+        .logo {
+            width: 120px;
+        }
+
+        .slogan {
+            font-size: 12px;
+            color: #7a7d96;
+            padding-top: 4px;
+        }
+
+        .card {
+            background-color: #F7F4EC;
+            border-radius: 10px;
+            padding: 48px 32px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #191339;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            margin-bottom: 28px;
+        }
+
+        .btn-container {
+            margin-bottom: 28px;
+        }
+
+        .otp-text {
+            background-color: #34228E;
+            color: #ffffff;
+            font-size: 14px;
+            padding: 18px 40px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .otp-text.btn {
+            border: 1px solid #34228E;
+        }
+
+        .info {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .subscription-details {
+            margin-top: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 15px;
+            color: #2b2f65;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .subscription-details li {
+            margin-bottom: 6px;
+        }
+
+        .team {
+            margin-top: 12px;
+            font-weight: 500;
+            color: #191339;
+        }
+
+        .footer {
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .copyright {
+            font-size: 13px;
+            color: #7E7A93;
+        }
+
+        .social {
+            text-align: right;
+        }
+
+        .social a {
+            font-size: 14px;
+            color: #2b2f65;
+            font-weight: 600;
+            padding-left: 14px;
+        }
+
+        .social a:first-child {
+            padding-left: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff;">
+        <tr>
+            <td class="email-wrapper">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td>
+                                        <img src="https://namewordfrontend-production.up.railway.app/logo.png" alt="logo"
+                                            class="logo" width="120" style="display: block; width: 120px;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="slogan">
+                                        Own Your Name. Power Your Site.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Card -->
+                    <tr>
+                        <td>
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F7F4EC; border-radius: 10px; background-image: url('https://namewordfrontend-production.up.railway.app/security.png'); background-position: top right; background-repeat: no-repeat; background-size: 200px auto;">
+                                <tr>
+                                    <td style="padding: 48px 32px; text-align: center;">
+
+                                        <div class="title">Hi {{NAME}}!</div>
+
+                                        <div class="subtitle">
+                                            We've received your payment.
+                                        </div>
+
+                                        <ul class="subscription-details">
+                                            <li><strong>Amount:</strong> {{CURRENCY}} {{AMOUNT}}</li>
+                                            <li><strong>Invoice #:</strong> {{INVOICE_NUMBER}}</li>
+                                            <li><strong>Date:</strong> {{DATE}}</li>
+                                        </ul>
+
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="btn-container">
+                                            <tr>
+                                                <td align="center">
+                                                    <a href="{{ viewReceiptLink }}" class="otp-text btn" style="text-decoration: none; color: #ffffff;">View Receipt</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <div class="info">
+                                            <div class="team"> — Nameword Team</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td class="copyright" style="font-size: 13px; color: #7E7A93;">
+                                        © 2026 NameWord
+                                    </td>
+                                    <td class="social" style="text-align: right;">
+                                        <a href="https://x.com/namewordcom" target="_blank"
+                                            style="font-size: 14px; color: #2b2f65; font-weight: 600; text-decoration: none; padding-left: 14px;">
+                                            <img src="https://namewordfrontend-production.up.railway.app/twitter.png" alt="X" height="16" width="16"
+                                                style="display:inline-block; vertical-align:middle;">
+                                        </a>
+                                        <a href="https://www.facebook.com/namewordcom" target="_blank"
+                                            style="font-size: 14px; color: #2b2f65; font-weight: 600; text-decoration: none; padding-left: 14px;">
+                                            <img src="https://namewordfrontend-production.up.railway.app/facebook.png" alt="Facebook" height="16" width="16"
+                                                style="display:inline-block; vertical-align:middle;">
+                                        </a>
+                                        <a href="http://www.instagram.com/namewordcom" target="_blank"
+                                            style="font-size: 14px; color: #2b2f65; font-weight: 600; text-decoration: none; padding-left: 14px;">
+                                            <img src="https://namewordfrontend-production.up.railway.app/instagram.png" alt="Instagram" height="16"
+                                                width="16" style="display:inline-block; vertical-align:middle;">
+                                        </a>
+                                        <a href="https://www.linkedin.com/company/namewordcom/" target="_blank"
+                                            style="font-size: 14px; color: #2b2f65; font-weight: 600; text-decoration: none; padding-left: 14px;">
+                                            <img src="https://namewordfrontend-production.up.railway.app/linkedin.png" alt="LinkedIn" height="16" width="16"
+                                                style="display:inline-block; vertical-align:middle;">
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

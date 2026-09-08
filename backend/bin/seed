@@ -1,0 +1,171 @@
+#!/usr/bin/env node
+
+const dotenv = require("dotenv");
+const dotenvExpand = require('dotenv-expand');
+
+dotenvExpand.expand(dotenv.config());
+
+const env = require('../start/env');
+const mongoose = require('mongoose');
+
+
+// Import Seeders
+const badgesDataSeeder = require("../seeders/badges.seeder");
+const tiersDataSeeder = require("../seeders/tiers.seeder");
+const { createSSHAdminSeeder } = require("../seeders/ssh.seeder");
+const vpsPlansSeeder = require("../seeders/vpsplans.seeder");
+const vpsBillingCycleDiscountsSeeder = require("../seeders/vpsBillingCycleDiscounts.seeder");
+const cPanelPlanSeeder = require("../seeders/cPanelPlan.seeder");
+const operatingSystemsSeeder = require("../seeders/operatingSystems.seeder");
+const vpsDiskSeeder = require("../seeders/vpsDisks.seeder");
+const rdpPlanSeeder = require("../seeders/rdpPlan.seeder");
+const rdpBillingCycleDiscountsSeeder = require("../seeders/rdpBillingCycleDiscounts.seeder");
+
+// Import Models
+const Badge = require("../app/models/Badge");
+const MembershipTier = require("../app/models/MembershipTier");
+const Admin = require("../app/models/Admin");
+const VpsPlan = require("../app/models/VPSPlan");
+const VPSBillingCycleDiscount = require("../app/models/VPSBillingCycleDiscount");
+const CPanelPlan = require("../app/models/CpanelPlan");
+const OperatingSystem = require("../app/models/OperatingSystem");
+const VPSDisk = require("../app/models/VPSDisk");
+const RDPPlan = require("../app/models/RDPPlan");
+const RDPBillingCycleDiscount = require("../app/models/RDPBillingCycleDiscount");
+
+(async () => {
+	//console.log(process.argv);
+	let [_, __, ...argv] = process.argv;
+
+	await mongoose.connect(env.DB_URI);
+
+	// await MembershipTier.deleteMany({});
+	// const tiersData = await tiersDataSeeder();
+	// await MembershipTier.create(tiersData);
+
+	// 🏅 Seed Membership Tiers (Update if exists)
+	const membershipTierCount = await MembershipTier.countDocuments();
+	const tiersData = await tiersDataSeeder();
+	if (membershipTierCount <= 0) {
+		await MembershipTier.create(tiersData);
+		console.log("✅ Membership tier seeded.");
+	} else {
+		for (const tier of tiersData) {
+			await MembershipTier.updateOne({ name: tier.name }, tier, { upsert: false });
+		}
+		console.log("✅ Membership tier updated");
+	}
+
+	// 🏆 Seed Badges
+	await Badge.deleteMany({});
+	const badgesData = await badgesDataSeeder();
+	//console.log(badgesData);
+	await Badge.create(badgesData);
+
+	// 🔐 Seed SSH Admin if it doesn't exist
+	const sshAdminExists = await Admin.findOne({ name: "SSH-Admin" });
+
+	if (!sshAdminExists) {
+		console.log("🔍 SSH-Admin not found, creating...");
+		const sshAdmin = await createSSHAdminSeeder();
+		await Admin.create(sshAdmin);
+		console.log("✅ SSH-Admin seeded.");
+	} else {
+		console.log("SSH-Admin already exists. Skipping seeding.");
+	}
+
+	// 📌 Seed VPS Plans (Update if exists)
+	const plans = await vpsPlansSeeder();
+	const VPSPlansCount = await VpsPlan.countDocuments();
+	if (VPSPlansCount <= 0) {
+		await VpsPlan.create(plans);
+		console.log("✅ VPS Plan seeded.");
+	} else {
+		for (const plan of plans) {
+			await VpsPlan.updateOne({ name: plan.name }, plan, { upsert: false });
+		}
+		console.log("✅ VPS Plan updated.");
+	}
+
+	// 💰 Seed Billing Cycle Discounts (If empty)
+	const vpsBillingCycleDiscountCount = await VPSBillingCycleDiscount.countDocuments();
+	const vpsBillingCycleDiscounts = await vpsBillingCycleDiscountsSeeder();
+	if (vpsBillingCycleDiscountCount <= 0) {
+		await VPSBillingCycleDiscount.create(vpsBillingCycleDiscounts);
+		console.log("✅ Billing cycle discounts seeded.");
+	} else {
+		for (const billingCycle of vpsBillingCycleDiscounts) {
+			await VPSBillingCycleDiscount.updateOne({ type: billingCycle.type }, billingCycle, { upsert: false });
+		}
+		console.log("✅ Billing cycle Updated");
+	}
+
+	// 📡 Seed CPanel Plans (If empty)
+	const cpanelPlansCount = await CPanelPlan.countDocuments();
+	const cpanelPlan = await cPanelPlanSeeder();
+	if (cpanelPlansCount <= 0) {
+		await CPanelPlan.create(cpanelPlan);
+		console.log("✅ CPanel Plan seeded.");
+	} else {
+		for (const plan of cpanelPlan) {
+			await CPanelPlan.updateOne({ id: plan.id, type: plan.type }, plan, { upsert: true });
+		}
+		console.log("✅ CPanel Plan Updated");
+	}
+
+	// Check and Seed CPanel Plans
+	const os = await OperatingSystem.countDocuments();
+	const osList = await operatingSystemsSeeder();
+	if (os <= 0) {
+		await OperatingSystem.create(osList);
+		console.log("✅ OS seeded.");
+	} else {
+		for (const os of osList) {
+			await OperatingSystem.updateOne({ name: os.name }, os, { upsert: false });
+		}
+		console.log("✅ OS Updated");
+	}
+
+	// 💾 Seed VPS Disks (Update if exists)
+	const disks = await vpsDiskSeeder();
+	const vpsDiskCount = await VPSDisk.countDocuments();
+	if (vpsDiskCount <= 0) {
+		console.log("✅ Disks seeded.");
+		await VPSDisk.create(disks);
+	} else {
+		for (const disk of disks) {
+			await VPSDisk.updateOne({ type: disk.type }, disk, { upsert: false });
+		}
+		console.log("✅ Disks updated.");
+	}
+
+	// 💻 🆕 Seed RDP Plans
+	const rdpPlans = await rdpPlanSeeder();
+	const rdpPlansCount = await RDPPlan.countDocuments();
+	if (rdpPlansCount <= 0) {
+		await RDPPlan.create(rdpPlans);
+		console.log("✅ RDP Plans seeded.");
+	} else {
+		for (const plan of rdpPlans) {
+			await RDPPlan.updateOne({ name: plan.name }, plan, { upsert: true });
+		}
+		console.log("✅ RDP Plans updated.");
+	}
+
+	// 💰 Seed RDP Billing Cycle Discounts (If empty)
+	const rdpBillingCycleDiscountCount = await RDPBillingCycleDiscount.countDocuments();
+	const rdpBillingCycleDiscounts = await rdpBillingCycleDiscountsSeeder();
+	if (rdpBillingCycleDiscountCount <= 0) {
+		await RDPBillingCycleDiscount.create(rdpBillingCycleDiscounts);
+		console.log("✅ RDP Billing cycle discounts seeded.");
+	} else {
+		for (const billingCycle of rdpBillingCycleDiscounts) {
+			await RDPBillingCycleDiscount.updateOne({ type: billingCycle.type }, billingCycle, { upsert: false });
+		}
+		console.log("✅ RDP Billing cycle Updated");
+	}
+
+	console.log("🎉 Seeding process completed successfully!");
+
+	await mongoose.disconnect();
+})();

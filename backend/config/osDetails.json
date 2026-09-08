@@ -1,0 +1,65 @@
+    {
+    "os_families": [
+        {
+            "name": "Ubuntu",
+            "version": "Ubuntu 24.04 LTS",
+            "cloud": "ubuntu-os-cloud",
+            "family": "ubuntu-2204-lts",
+            "arm_family": "ubuntu-2204-lts-amd64",
+            "caption": "Best for general use and development",
+            "os_name": "ubuntu",
+            "paid": false
+        },
+        {
+            "name": "Debian",
+            "version": "Debian 12",
+            "cloud": "debian-cloud",
+            "family": "debian-12",
+            "arm_family": "debian-12-arm64",
+            "caption": "Stable, lightweight, and widely used",
+            "os_name": "debian",
+            "paid": false
+        },
+        {
+            "name": "AlmaLinux",
+            "version": "AlmaLinux 9",
+            "cloud": "almalinux-cloud",
+            "family": "almalinux-9",
+            "arm_family": "almalinux-9-arm64",
+            "caption": "Popular CentOS replacement for servers",
+            "os_name": "almalinux",
+            "paid": false
+        },
+        {
+            "name": "Rocky Linux",
+            "version": "Rocky Linux 9 ",
+            "cloud": "rocky-linux-cloud",
+            "family": "rocky-linux-9",
+            "arm_family": "rocky-linux-9-arm64",
+            "caption": "Another CentOS alternative, enterprise-ready",
+            "os_name": "rockylinux",
+            "paid": false
+        },
+        {
+            "name": "CentOS",
+            "version": "CentOS Stream 9",
+            "cloud": "centos-cloud",
+            "family": "centos-stream-9",
+            "arm_family": "centos-stream-9-arm64",
+            "caption": "Stable for enterprise applications",
+            "os_name": "centos",
+            "paid": false
+        },
+        {
+            "name": "Windows Server 2022",
+            "version": "Windows Server 2022",
+            "cloud": "windows-cloud",
+            "family": "windows-2022",
+            "arm_family": "windows-2022",
+            "caption": "For Windows-based applications (+$15/month)",
+            "os_name": "win",
+            "paid": true
+        }
+      
+    ]
+}

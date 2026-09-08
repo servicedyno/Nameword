@@ -1,0 +1,55 @@
+{
+    "plans": [
+      {
+        "name": "Basic",
+        "monthlyPrice": 32,
+        "hourlyPrice": 0.045,
+        "label": "Basic – $32/month ($0.045/hour) – 2 vCPU, 4GB RAM, 64GB Disk",
+        "specs": {
+          "vCPU": 2,
+          "RAM": 4,
+          "disk": 64
+        },
+        "level": 1,
+        "upgrade_options": ["Standard", "Premium", "Enterprise"]
+      },
+      {
+        "name": "Standard",
+        "monthlyPrice": 65,
+        "hourlyPrice": 0.09,
+        "label": "Standard – $65/month ($0.09/hour) – 4 vCPU, 8GB RAM, 80GB Disk",
+        "specs": {
+          "vCPU": 4,
+          "RAM": 8,
+          "disk": 80
+        },
+        "level": 2,
+        "upgrade_options": ["Premium", "Enterprise"]
+      },
+      {
+        "name": "Premium",
+        "monthlyPrice": 129,
+        "hourlyPrice": 0.18,
+        "label": "Premium – $129/month ($0.18/hour) – 8 vCPU, 16GB RAM, 160GB Disk",
+        "specs": {
+          "vCPU": 8,
+          "RAM": 16,
+          "disk": 160
+        },
+        "level": 3,
+        "upgrade_options": ["Enterprise"]
+      },
+      {
+        "name": "Enterprise",
+        "monthlyPrice": 256,
+        "hourlyPrice": 0.35,
+        "label": "Enterprise – $256/month ($0.35/hour) – 16 vCPU, 32GB RAM, 200GB Disk",
+        "specs": {
+          "vCPU": 16,
+          "RAM": 32,
+          "disk": 200
+        },
+        "level": 4
+      }
+    ]
+  }

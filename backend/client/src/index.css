@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+#telegram-login-BozznameBot{
+	width: 100% !important;
+}
+html:not(root) body {
+    width: 100% !important;
+}
