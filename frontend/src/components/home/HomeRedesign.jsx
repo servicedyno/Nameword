@@ -28,7 +28,7 @@ import {
 } from "react-icons/lu";
 
 const PRODUCT_ORDER = [
-  { key: "domains", to: "/domain", icon: LuGlobe },
+  { key: "domains", to: "/domains", icon: LuGlobe },
   { key: "dns", to: "/dns-management", icon: LuNetwork, protectedRoute: true },
   { key: "hosting", to: "/hosting", icon: LuServer },
   { key: "vps", to: "/vps", icon: LuCloud },
@@ -61,7 +61,7 @@ function Hero() {
   const [query, setQuery] = useState("");
 
   const submit = () => {
-    let path = tab === "transfer" ? "/sign-in" : "/home";
+    let path = tab === "transfer" ? "/sign-in" : "/domains";
     if (tab === "transfer") localStorage.setItem("path", "/transfer-domain");
     if (tab === "search" && query) path += `?value=${encodeURIComponent(query.trim())}`;
     navigate(path);
@@ -291,12 +291,12 @@ function Pricing() {
                 <span className="pb-1 text-13 text-ink-soft dark:text-gray-400">{s.perYear}</span>
               </div>
               <p className="mt-1 text-13 text-ink-soft dark:text-gray-500">{s.renews} ${d.renew}{s.perYear}</p>
-              <button onClick={() => navigate(`/domain?value=${encodeURIComponent("yourname" + d.tld)}`)} className="nw-btn-secondary nw-btn-sm mt-5 w-full">{s.register}</button>
+              <button onClick={() => navigate(`/domains?value=${encodeURIComponent("yourname" + d.tld)}`)} className="nw-btn-secondary nw-btn-sm mt-5 w-full">{s.register}</button>
             </div>
           ))}
         </div>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <button onClick={() => navigate("/home")} className="nw-btn-primary">
+          <button onClick={() => navigate("/domains")} className="nw-btn-primary">
             <LuSearch className="h-4 w-4" /> {s.searchCta}
           </button>
           <button onClick={() => navigate("/pricing")} className="nw-btn-secondary">{s.fullTable}</button>
@@ -412,7 +412,7 @@ function FinalCta() {
   const s = t.site.home.cta;
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const submit = () => navigate(query ? `/home?value=${encodeURIComponent(query.trim())}` : "/home");
+  const submit = () => navigate(query ? `/domains?value=${encodeURIComponent(query.trim())}` : "/domains");
   return (
     <section className="nw-section pt-0">
       <div className="nw-container">

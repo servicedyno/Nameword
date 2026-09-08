@@ -1,5 +1,4 @@
-import { Routes, Route } from "react-router";
-import Home from "../pages/Home";
+import { Routes, Route, useLocation } from "react-router";
 
 import CreateAccount from "../pages/auth/CreateAccount";
 import SignIn from "../pages/auth/SignIn";
@@ -58,6 +57,13 @@ const IsQrCode = ({ children }) => {
   return children;
 };
 
+// Legacy domain routes (/home, /domain) were replaced by the /domains hub.
+// Redirect while preserving any ?value= / ?q= query so the search still runs.
+function LegacyDomainRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/domains${search}`} replace />;
+}
+
 function Router() {
   return (
     <Routes>
@@ -92,7 +98,8 @@ function Router() {
         <Route path="/change-email" element={<ChangeEmail />} />
       </Route>
 
-      <Route path="/home" element={<Home />} />
+      <Route path="/home" element={<LegacyDomainRedirect />} />
+      <Route path="/domain" element={<LegacyDomainRedirect />} />
       <Route path="/hosting" element={<Hosting />} />
       <Route path="/domains" element={<DomainsNomadly />} />
       <Route path="/dns-manager" element={<DnsManagerNomadly />} />

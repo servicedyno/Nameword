@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import resellerAPI from "../api/reseller";
@@ -59,6 +59,7 @@ function ResultCard({ domain, available, price_usd, registrar, onRegister }) {
 export default function DomainsNomadly() {
   usePageMeta("Domains", "Search, register and manage domains — wallet-billed at the live registrar price.");
   const { showAlert } = useAlert();
+  const [searchParams] = useSearchParams();
 
   const [mode, setMode] = useState(null);
   const [account, setAccount] = useState(null);
@@ -106,10 +107,11 @@ export default function DomainsNomadly() {
     loadDomains();
   }, [loadMeta, loadDomains]);
 
-  const doSearch = async (e) => {
+  const doSearch = async (e, override) => {
     if (e) e.preventDefault();
-    const q = query.trim().toLowerCase();
+    const q = String(override != null ? override : query).trim().toLowerCase();
     if (!q) return;
+    if (override != null) setQuery(q);
     setSearching(true);
     setSearched(true);
     setExact(null);
@@ -132,6 +134,19 @@ export default function DomainsNomadly() {
       setSearching(false);
     }
   };
+
+  // Auto-run a search when arriving with ?value= / ?q= (homepage hero, footer,
+  // pricing, dashboard, and the legacy /home & /domain redirects all land here).
+  const autoSearchedRef = useRef(false);
+  useEffect(() => {
+    if (autoSearchedRef.current) return;
+    const initial = (searchParams.get("value") || searchParams.get("q") || "").trim();
+    if (initial) {
+      autoSearchedRef.current = true;
+      setQuery(initial);
+      doSearch(null, initial);
+    }
+  }, [searchParams]);
 
   const openRegister = (domain, price_usd) => {
     setReg({ domain, price_usd });
