@@ -56,6 +56,61 @@ const getRdpCredentials = (req, res) =>
 // ---------- Domains ----------
 const searchDomain = (req, res) =>
   forward(res, nomadly.get("/domains/search", { params: req.query }));
+
+// Curated set of popular TLDs used to build live alternative suggestions.
+const POPULAR_TLDS = [
+  "com", "net", "org", "io", "co", "ai",
+  "app", "dev", "xyz", "online", "shop", "store",
+];
+
+// Live TLD suggestions powered by the reseller search. Given a keyword or a
+// full domain, we check the base label across a curated set of TLDs in parallel
+// and return real availability + pricing. Failures per-TLD are ignored so a slow
+// or erroring upstream lookup never breaks the whole response.
+const suggestDomains = async (req, res) => {
+  const raw = String(req.query.domain || req.query.keyword || "")
+    .trim()
+    .toLowerCase();
+  if (!raw) {
+    return res
+      .status(400)
+      .json({ error: "bad_request", message: "domain or keyword is required" });
+  }
+  const label = (raw.includes(".") ? raw.split(".")[0] : raw).replace(/[^a-z0-9-]/g, "");
+  if (!label) {
+    return res
+      .status(400)
+      .json({ error: "bad_request", message: "invalid domain/keyword" });
+  }
+
+  // Build candidate list: exact input first (if it had a TLD), then popular TLDs.
+  const candidates = [];
+  if (raw.includes(".")) candidates.push(raw);
+  for (const tld of POPULAR_TLDS) {
+    const d = `${label}.${tld}`;
+    if (!candidates.includes(d)) candidates.push(d);
+  }
+  const limited = candidates.slice(0, 12);
+
+  const settled = await Promise.allSettled(
+    limited.map((d) => nomadly.get("/domains/search", { params: { domain: d } }))
+  );
+  const suggestions = settled
+    .map((r, i) => {
+      if (r.status !== "fulfilled") return null;
+      const data = r.value?.data || {};
+      return {
+        domain: data.domain || limited[i],
+        available: !!data.available,
+        price_usd: data.price_usd ?? null,
+        registrar: data.registrar || null,
+      };
+    })
+    .filter(Boolean);
+
+  return res.json({ keyword: label, count: suggestions.length, suggestions });
+};
+
 const listDomains = (req, res) => forward(res, nomadly.get("/domains"));
 const registerDomain = (req, res) =>
   forward(res, nomadly.post("/domains/register", req.body || {}));
@@ -104,6 +159,7 @@ module.exports = {
   deleteRdp,
   getRdpCredentials,
   searchDomain,
+  suggestDomains,
   listDomains,
   registerDomain,
   listDnsRecords,

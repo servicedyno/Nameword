@@ -1,33 +1,38 @@
 import { useState, useCallback } from 'react';
-import { domainAPI } from '../api/domains';
+import resellerAPI from '../api/reseller';
 
+// Live domain search powered by the Nomadly reseller API (real availability +
+// pricing). Responses are mapped to the shape the domain UI already expects:
+//   searchResults: { query, available, registrationFee, renewalfee, registrar }
+//   tldSuggestions: [{ websiteName, available, registrationFee, renewalfee, registrar }]
 export const useDomainSearch = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchResults, setSearchResults] = useState(null);
-  // const [provider, setProvider] = useState(null);
   const [tldSuggestions, setTldSuggestions] = useState([]);
 
-
-  const searchDomain = useCallback(async (domainName, feePercentages = {}) => {
+  const searchDomain = useCallback(async (domainName) => {
     setLoading(true);
     setError(null);
 
     try {
-      const params = {
-        websiteName: domainName,
-        renewalFeePerc: feePercentages.renewal || 50,
-        transferFeePerc: feePercentages.transfer || 50,
-        registrationFeePerc: feePercentages.registration || 50,
-      };
-
-      const result = await domainAPI.searchDomain(params);
-      setSearchResults(result?.responseData || null);
-      // setProvider(result?.provider || null);
-      return result;
+      const data = await resellerAPI.searchDomain(domainName);
+      // Only surface the "exact match" card when the domain is actually available.
+      if (data?.available) {
+        const price = Number(data.price_usd) || 0;
+        setSearchResults({
+          query: data.domain || domainName,
+          available: true,
+          registrationFee: price,
+          renewalfee: price,
+          registrar: data.registrar || null,
+        });
+      } else {
+        setSearchResults(null);
+      }
+      return data;
     } catch (err) {
       setSearchResults(null);
-      // setProvider(null);
       const errorMessage = err.response?.data?.message || 'Domain search failed';
       setError(errorMessage);
       throw err;
@@ -39,13 +44,27 @@ export const useDomainSearch = () => {
   const getTldSuggestions = useCallback(async (websiteName) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const params = { websiteName };
-      const result = await domainAPI.getTldSuggestions(params);
-      setTldSuggestions(result?.responseData?.filter((item) => item?.available) || []);
+      const data = await resellerAPI.suggestDomains(websiteName);
+      const exact = String(websiteName || '').trim().toLowerCase();
+      const list = (data?.suggestions || [])
+        .filter((s) => s?.available)
+        // Exclude the exact searched domain (already shown as the main result card).
+        .filter((s) => String(s.domain || '').toLowerCase() !== exact)
+        .map((s) => {
+          const price = Number(s.price_usd) || 0;
+          return {
+            websiteName: s.domain,
+            available: true,
+            registrationFee: price,
+            renewalfee: price,
+            registrar: s.registrar || null,
+          };
+        });
+      setTldSuggestions(list);
       setError(null);
-      return result;
+      return list;
     } catch (err) {
       setTldSuggestions([]);
       const errorMessage = err.response?.data?.message || 'Domain search failed';

@@ -28,6 +28,7 @@ router.delete("/rdp/:id", c.deleteRdp);
 
 // ---------- Domains ----------
 router.get("/domains/search", c.searchDomain);
+router.get("/domains/suggest", c.suggestDomains);
 router.get("/domains", c.listDomains);
 router.post("/domains/register", c.registerDomain);
 

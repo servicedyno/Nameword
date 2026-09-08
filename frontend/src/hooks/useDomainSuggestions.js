@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { domainAPI } from '../api/domains';
+import resellerAPI from '../api/reseller';
 import { useAlert } from '../context/AlertContext';
 
 export const useDomainSuggestions = () => {
@@ -11,11 +11,14 @@ export const useDomainSuggestions = () => {
   const getSuggestions = useCallback(async (keyword, limit = 10) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const params = { keyword, limit };
-      const result = await domainAPI.getSuggestions(params);
-      const suggestionList = result?.responseData?.registryDomainSuggestionList || [];
+      const data = await resellerAPI.suggestDomains(keyword);
+      // Map the live reseller suggestions to the dropdown's {domainName} shape.
+      const suggestionList = (data?.suggestions || [])
+        .filter((s) => s?.available)
+        .slice(0, limit)
+        .map((s) => ({ domainName: s.domain, price_usd: s.price_usd }));
       setSuggestions(suggestionList);
       return suggestionList;
     } catch (err) {

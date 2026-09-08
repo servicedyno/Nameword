@@ -22,6 +22,7 @@ import VPS from "../pages/VPS";
 import RDP from "../pages/RDP";
 import Ssl from "../pages/Ssl";
 import Email from "../pages/Email";
+import Pricing from "../pages/Pricing";
 import ProtectedRoute from "../hocs/Protected";
 import UnprotectedRoute from "../hocs/UnProtected";
 
@@ -114,6 +115,7 @@ function Router() {
       <Route path="/rdp" element={<RDP />} />
       <Route path="/ssl" element={<Ssl />} />
       <Route path="/email" element={<Email />} />
+      <Route path="/pricing" element={<Pricing />} />
 
    
       <Route element={<AuthLayout />}>

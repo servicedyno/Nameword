@@ -35,6 +35,8 @@ export const resellerAPI = {
   // Domains
   searchDomain: async (domain) =>
     (await apiClient.get(`${R}/domains/search`, { params: { domain } })).data,
+  suggestDomains: async (domain) =>
+    (await apiClient.get(`${R}/domains/suggest`, { params: { domain } })).data,
   listDomains: async () => (await apiClient.get(`${R}/domains`)).data,
   registerDomain: async (payload) =>
     (await apiClient.post(`${R}/domains/register`, payload)).data,

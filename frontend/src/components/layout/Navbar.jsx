@@ -42,12 +42,7 @@ const Navbar = () => {
   const goPricing = (e) => {
     e.preventDefault();
     setMobileOpen(false);
-    if (window.location.pathname === "/") {
-      document.querySelector("#pricing")?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      navigate("/");
-      setTimeout(() => document.querySelector("#pricing")?.scrollIntoView({ behavior: "smooth" }), 400);
-    }
+    navigate("/pricing");
   };
 
   const deskLink = "rounded-lg px-3 py-2 text-15 font-medium text-primary hover:bg-surface-2 dark:text-white dark:hover:bg-gray-800 transition-colors";

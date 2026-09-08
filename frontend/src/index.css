@@ -39,21 +39,21 @@
   --color-lightgray-600: #9690b4;
   --color-lightgray-700: #3f392d;
   --color-active: #928fa1;
-  --color-beige: #f7f4ec;
+  --color-beige: #f8fafc;
   --color-beige-100: #f2f1ef;
-  --color-beige-200: #f2e8d0;
+  --color-beige-200: #eef2ff;
   --color-beige-400: #c8c3b9;
-  --color-active-border: #5c5776;
+  --color-active-border: #cbd5e1;
   --color-hover: #f8f7ff;
-  --color-tealdark: #16979a;
-  --color-teallight: #f2fafb;
-  --color-teallight-50: #ebf6f6;
+  --color-tealdark: #4f46e5;
+  --color-teallight: #eef2ff;
+  --color-teallight-50: #eef2ff;
   --color-teallight-400: #9ab1b4;
   --color-teallight-500: #4b787e;
-  --color-teal-hover: #22b2b5;
+  --color-teal-hover: #4338ca;
   --color-stokecolor: #DADADA;
   --color-save-badge: #FFF3AF;
-  --color-skydark: #3EBFD8;
+  --color-skydark: #4f46e5;
   --color-slatelight: #F8F8F8;
   --color-nodata: #9DABAB;
   --color-disable: #AAA4C9;
@@ -99,6 +99,7 @@ body:has(.main-loader) {
 
 body {
   @apply font-poppins dark:bg-gray-900;
+  overflow-x: hidden;
 }
 
 /*------------------------ start css --------------------*/
