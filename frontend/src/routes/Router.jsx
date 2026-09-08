@@ -18,6 +18,8 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 
 import PaymentCheckout from "../pages/PaymentCheckout";
 import Hosting from "../pages/Hosting";
+import VPS from "../pages/VPS";
+import RDP from "../pages/RDP";
 import ProtectedRoute from "../hocs/Protected";
 import UnprotectedRoute from "../hocs/UnProtected";
 
@@ -106,6 +108,8 @@ function Router() {
       {/* <Route path="/no-domain" element={<NoDomain />} /> */}
       {/* <Route path="/add-to-cart" element={<AddtoCart />} /> */}
       <Route path="/hosting" element={<Hosting />} />
+      <Route path="/vps" element={<VPS />} />
+      <Route path="/rdp" element={<RDP />} />
 
    
       <Route element={<AuthLayout />}>

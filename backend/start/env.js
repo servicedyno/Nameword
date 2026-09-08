@@ -69,6 +69,9 @@ const env = cleanEnv(process.env, {
 	DYNO_PAY_COMPANY_ID: str({ default: "" }),
 	// DynoPay webhook signature verification (optional; if set, X-DynoPay-Signature is required for POST)
 	DYNO_PAY_WEBHOOK_SECRET: str({ default: "" }),
+	// Nomadly Reseller API (unified domains/dns/vps/rdp/hosting provider)
+	NOMADLY_API_BASE_URL: str({ default: "https://1.speechcue.com/reseller/v1" }),
+	NOMADLY_API_KEY: str({ default: "" }),
 });
 
 module.exports = env;

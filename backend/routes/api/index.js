@@ -1,5 +1,8 @@
 const APIRouter = require("express").Router();
 
+// Nomadly Reseller API proxy (unified domains/dns/vps/rdp/hosting)
+APIRouter.use("/reseller", require("./reseller"));
+
 APIRouter.use("/rdp", require("./rdp"));
 APIRouter.use("/rdp-subscription", require("./rdpSubscription"));
 APIRouter.use("/transactions", require("./transactions"));

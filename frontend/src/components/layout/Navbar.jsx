@@ -86,6 +86,15 @@ const Navbar = ({ isLoader = false}) => {
 								</NavLink>
 							</li>
 							<li>
+								<NavLink to="/hosting" className="navlink" onClick={() => setIsOpen(false)}>Hosting</NavLink>
+							</li>
+							<li>
+								<NavLink to="/vps" className="navlink" onClick={() => setIsOpen(false)}>VPS</NavLink>
+							</li>
+							<li>
+								<NavLink to="/rdp" className="navlink" onClick={() => setIsOpen(false)}>RDP</NavLink>
+							</li>
+							<li>
 								<NavLink to="/help-support#need-help" className="navlink" onClick={() => setIsOpen(false)}>{t.nav.contact}</NavLink>
 							</li>
 							<li>
