@@ -67,11 +67,11 @@ Mirror the proven VPS/RDP pattern (`services/nomadlyReseller.js` + `controllers/
 
 ### 3.2 Backend — retail layer (the important new part)
 - **Ownership:** a `ResellerAsset` (or extend existing Subscription/Domain models) linking every Nomadly resource id → `userId`, product type, status, wholesale cost, retail price, renewal date. All "my X" lists read from our DB filtered by `userId`, then hydrate live status from Nomadly.
-- **Pricing/markup:** a config (flat % or per-product/per-plan overrides) computing **retail = round(cost × (1+markup))**. Single source of truth used by every catalog + checkout.
+- **Pricing (API-driven):** the Nomadly reseller API returns `price_usd` per plan/TLD — that's the single source of truth (no manual price table). Retail = API price × (1 + **optional markup%**). Markup is a simple config lever (global + optional per-product override); default 0% = resell at cost. Note: API price = what Nomadly charges our reseller wallet, so markup>0 is where margin comes from.
 - **Order/checkout service (idempotent):**
   1. Compute retail price. 2. **Debit user wallet** (USD) in a transaction (reject with clear message if insufficient → prompt top-up).
   3. Call Nomadly to provision. 4. On success: persist asset owned by user. 5. On Nomadly failure (`502 provisioning_failed`) or `402 insufficient_wallet_balance` (owner float empty): **auto-refund the user wallet** and show a clear, honest message.
-- **Wallet:** reuse existing Wallet/Transaction/Payment. Top-up via **DynoPay** (create checkout → webhook credits wallet, verify `DYNO_PAY_WEBHOOK_SECRET`, idempotent by payment id). Ledger entries for buy/refund/topup/renewal.
+- **Wallet top-up via DynoPay EMBEDDED checkout (on-site):** server creates a session `POST /api/user/embed/session` (x-api-key, server-side) → returns `client_secret` + `checkout_url` (`&embed=1`); frontend mounts the embedded iframe (via DynoPay `embed.js`) in a modal so the user pays **without leaving Nameword**. Confirm payment via **webhook** (`payment.confirmed`) and/or `GET /getPaymentStatus/:id`, then credit the user wallet (idempotent by payment id). `DYNO_PAY_WEBHOOK_SECRET` optional (we re-verify via getPaymentStatus). Ledger entries for buy/refund/topup/renewal.
 - **Go-live:** surface `mode` from `/reseller/health`; when `live`, real IPs/credentials returned; add owner alerting when the reseller float is low.
 
 ### 3.3 Backend — reminders/jobs
@@ -97,7 +97,7 @@ Move `/vps` `/rdp` (and new domains/hosting buy+manage) **behind `ProtectedRoute
 - **Domains:** results as real **badges** (not fake buttons); **term (years) selector + WHOIS-privacy toggle + visible renewal price** at the result card; suggestion debounce **2000ms → ~300ms**; guard `$0.00`; wire `FiInfo` tooltips; skeleton/empty/error instead of full-page loader.
 - **Hosting:** show **branded plan names** (no `hostbay`/`connectreseller` leakage); Monthly/Annual with honest savings; keep the 5-step wizard but allow **stepper back-nav**; decouple provider calls from step progression.
 - **VPS/RDP:** add **presets** ("Ubuntu web server", "Windows dev box"); show **live/test mode**; low-balance warning with top-up.
-- **Checkout:** wallet-first; DynoPay for top-up; kill the hard-coded **20% tax flicker** (skeleton the total until real rate); remove production `console.log`s; clarify payment-method labels (no "Credit/Debit Card" copy when only wallet+crypto exist).
+- **Checkout:** wallet-first; **DynoPay embedded (iframe modal) for top-up — no redirect off-site**; kill the hard-coded **20% tax flicker** (skeleton the total until real rate); remove production `console.log`s; clarify payment-method labels (crypto/wallet only — no "Credit/Debit Card" copy).
 
 ### 4.3 Manage flows
 - **Searchable combobox** domain switcher (replace native `<select>`); robust active-domain resolution.
@@ -160,7 +160,7 @@ Rationale: fix the fragile loaders first (fast, high impact), restore the core b
 ---
 
 ## 8. Open questions for you
-- **Markup:** flat % across everything, or per-product margins? Any target retail prices?
-- **DynoPay:** can you share live creds now, or build wallet behind a flag and test later?
+- **Markup:** pricing comes from the Nomadly API; do you want a margin markup on top (global % and/or per-product), or resell at API cost (0%)?
+- **DynoPay:** ✅ resolved — embedded checkout works with your API key.
 - **Go-live timing:** OK to build/verify in `dry_run` and flip to live only after DynoPay + reseller-float funding are ready? (strongly recommended)
 - **Public vs gated:** keep public catalog pages for SEO/discovery and gate only at deploy/checkout — OK?
