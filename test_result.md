@@ -361,6 +361,18 @@ frontend:
         agent: "testing"
         comment: "TESTED HOMEPAGE DOMAIN SEARCH BUG FIX - ALL 3 TEST SCENARIOS PASSED. TEST 1 (Homepage hero search - exact reported flow): ✅ ALL 14 TESTS PASSED. (1) Navigated to homepage successfully. (2) Hero search elements (data-testid='hero-domain-input' and 'hero-search-button') found. (3) Typed 'coolstartup2026' in hero input. (4) Clicked search button -> URL navigated to /domains?value=coolstartup2026 (query preserved). (5) Domains page hero heading 'Find your domain, register in seconds' found. (6) Search input prefilled with 'coolstartup2026'. (7) 'Test mode' banner present with correct text. (8) Auto-search initiated (button shows 'Search'). (9) Waited 35s -> 13 Register buttons appeared with 13 'Available' badges and 14 price elements (search results working). (10) No 'Domain search failed' error alert. (11) Clicked first Register button. (12) Register modal opened with heading 'Register coolstartup2026.com'. (13) DNS/Nameservers dropdown present with 3 options (Cloudflare/Registrar/Custom). (14) Cancel and Register buttons present in modal. TEST 2a (Legacy /home redirect): ✅ ALL 4 TESTS PASSED. Navigated to /home?value=coolstartup2026.com -> redirected to /domains?value=coolstartup2026.com (query preserved), search input prefilled, auto-search completed with 12 Register buttons, no error alert. TEST 2b (Legacy /domain redirect): ✅ PASSED (redirect works with 5s wait). Navigated to /domain?value=coolstartup2026.com -> redirected to /domains?value=coolstartup2026.com (React Router redirect takes ~5s). TEST 3 (Console/network sanity): ✅ 3/4 PASSED. GET /api/v1/reseller/domains/search returns 200 ✓. GET /api/v1/reseller/domains/suggest returns 200 ✓. No failed (4xx/5xx) API calls ✓. Console shows 28 errors (all 429 rate limiting - EXPECTED per review_request: 'This pod may rate-limit rapid automated reloads'). CONCLUSION: Homepage domain search bug fix is FULLY WORKING. All three test scenarios pass: (1) Homepage hero search navigates to /domains with auto-search and results, (2) Legacy /home redirects to /domains with auto-search, (3) Legacy /domain redirects to /domains with auto-search. Register modal opens correctly with all expected elements. API calls return 200. No functional issues found."
 
+  - task: "Landing page INLINE domain search + register (no navigation)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/home/HomeRedesign.jsx, /app/frontend/src/components/domain/DomainSearchResults.jsx, /app/frontend/src/components/domain/RegisterDomainModal.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "USER REQUEST: the public landing page should show domain search RESULTS INLINE (same page, smooth transition, NO navigation to a separate page), with the exact match shown INSTANTLY and alternative TLDs streaming in after, plus a register flow right there. Previously the hero search navigated to /domains (and results felt like they never loaded because the page waited for the slow ~25s suggestions before showing anything). FIX: (1) New DomainSearchResults component fetches the exact match and the suggestions INDEPENDENTLY so the fast exact result renders immediately while suggestions stream in. (2) New RegisterDomainModal (portaled to body, dry_run preview, no charge). (3) HomeRedesign Hero + FinalCta now render results INLINE below the search box (no navigation; URL stays '/') and smooth-scroll to results. VERIFY (PUBLIC / logged out) at homepage '/': type 'coolstartup2026' in the hero search (data-testid='hero-domain-input') and click the search button (data-testid='hero-search-button'). EXPECT: URL STAYS at '/' (no navigation). Below the hero a results panel appears with a 'Test mode' banner, a 'Search results' heading, the EXACT match 'coolstartup2026.com' Available $39 with a green Register button appearing quickly, then a 'More options' list of other TLDs (.net/.org/.io/.co/.ai/.app/.dev) streaming in (wait up to 30s). The exact '.com' must NOT be duplicated in 'More options'. Click a Register button -> RegisterDomainModal opens (heading 'Register <domain>', DNS/Nameservers dropdown, Cancel/Register). Clicking Register in the modal shows a dry_run 'Simulated (test mode)' preview with NO charge. NOTE: pod rate-limits rapid automated reloads (429s are environmental, not bugs)."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
@@ -368,7 +380,8 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Landing page INLINE domain search + register (no navigation)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

@@ -1,8 +1,18 @@
 // API Configuration
+//
+// Talk to the backend on the SAME ORIGIN the app is served from. In the Emergent
+// preview (and in production) the ingress routes `/api/*` to the backend on the
+// very same host that serves the SPA, so a same-origin base URL works no matter
+// which preview / custom URL the user opens — and avoids the cross-origin/CORS
+// failures that happen when the API base is pinned to one specific hostname.
+// VITE_API_BASE_URL is kept only as a non-browser (SSR/build) fallback.
+const RUNTIME_ORIGIN =
+  typeof window !== "undefined" && window.location && window.location.origin
+    ? window.location.origin
+    : (import.meta.env.VITE_API_BASE_URL || "http://localhost:3000");
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/v1`
-    : 'http://localhost:3000/api/v1',
+  BASE_URL: `${RUNTIME_ORIGIN}/api/v1`,
   API_KEY: import.meta.env.VITE_API_KEY || 'YOUR_API_KEY_HERE'
 };
 

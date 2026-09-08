@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../hooks/useAuth";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { IMAGES } from "../marketing/marketing-ui";
+import DomainSearchResults from "../domain/DomainSearchResults";
 import {
   LuGlobe,
   LuNetwork,
@@ -59,12 +60,19 @@ function Hero() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("search");
   const [query, setQuery] = useState("");
+  const [submitted, setSubmitted] = useState("");
+  const resultsRef = useRef(null);
 
   const submit = () => {
-    let path = tab === "transfer" ? "/sign-in" : "/domains";
-    if (tab === "transfer") localStorage.setItem("path", "/transfer-domain");
-    if (tab === "search" && query) path += `?value=${encodeURIComponent(query.trim())}`;
-    navigate(path);
+    if (tab === "transfer") {
+      localStorage.setItem("path", "/transfer-domain");
+      navigate("/sign-in");
+      return;
+    }
+    const q = query.trim();
+    if (!q) return;
+    setSubmitted(q);
+    setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
 
   return (
@@ -166,6 +174,12 @@ function Hero() {
           </div>
         </div>
       </div>
+
+      {submitted && (
+        <div ref={resultsRef} className="nw-container relative scroll-mt-24 pb-16">
+          <DomainSearchResults query={submitted} />
+        </div>
+      )}
     </section>
   );
 }
@@ -410,9 +424,15 @@ function Loyalty() {
 function FinalCta() {
   const { t } = useLanguage();
   const s = t.site.home.cta;
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const submit = () => navigate(query ? `/domains?value=${encodeURIComponent(query.trim())}` : "/domains");
+  const [submitted, setSubmitted] = useState("");
+  const resultsRef = useRef(null);
+  const submit = () => {
+    const q = query.trim();
+    if (!q) return;
+    setSubmitted(q);
+    setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+  };
   return (
     <section className="nw-section pt-0">
       <div className="nw-container">
@@ -439,6 +459,11 @@ function FinalCta() {
             </div>
           </div>
         </div>
+        {submitted && (
+          <div ref={resultsRef} className="scroll-mt-24 pt-10">
+            <DomainSearchResults query={submitted} />
+          </div>
+        )}
       </div>
     </section>
   );
