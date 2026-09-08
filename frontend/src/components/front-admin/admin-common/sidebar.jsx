@@ -18,11 +18,11 @@ import { hostingAPI } from "../../../api/hosting";
 import { useAlert } from "../../../context/AlertContext";
 import { useLanguage } from "../../../hooks/useLanguage";
 
-const domainRoutes = ["/domain-overview", "/dns-management", "/contact-info"];
+const domainRoutes = ["/domain-overview", "/dns-manager", "/contact-info"];
 
 const hostingRoutes = new Set([
   "/setup-websites",
-  "/websites-overview",
+  "/hosting",
   "/manage-plan",
   "/upgrade-plan",
   "/renew-plan",
@@ -524,7 +524,7 @@ export default function Sidebar({ setIsEnlarge }) {
               <div className="flex flex-col gap-5">
                 <div className="flex items-center justify-between">
                   <NavLink
-                    to={"/domain-portfolio"}
+                    to={"/domains"}
                     className="flex items-center gap-2 text-lightgray-700 dark:text-gray-400"
                     onClick={closeSidebar}
                   >
@@ -538,7 +538,7 @@ export default function Sidebar({ setIsEnlarge }) {
                     className="right-link"
                     onClick={() => toggleMenu("domains")}
                   >
-                    <NavLink to="/domain-portfolio">{t.admin.seeAll}</NavLink>
+                    <NavLink to="/domains">{t.admin.seeAll}</NavLink>
                     {openMenus.domains ? (
                       <IoIosArrowUp size={16} className="cursor-pointer" />
                     ) : (
@@ -579,7 +579,7 @@ export default function Sidebar({ setIsEnlarge }) {
               <div className="flex flex-col gap-5">
                 <div className="flex items-center justify-between">
                   <NavLink
-                    to={"/websites"}
+                    to={"/hosting"}
                     className="flex items-center gap-2 text-lightgray-700 dark:text-gray-400"
                     onClick={closeSidebar}
                   >
@@ -596,7 +596,7 @@ export default function Sidebar({ setIsEnlarge }) {
                     className="right-link"
                     onClick={() => toggleMenu("hosting")}
                   >
-                    <NavLink to="/websites">{t.admin.seeAll}</NavLink>
+                    <NavLink to="/hosting">{t.admin.seeAll}</NavLink>
                     <button type="button">
                       {openMenus.hosting ? (
                         <IoIosArrowUp size={16} />
@@ -641,7 +641,7 @@ export default function Sidebar({ setIsEnlarge }) {
                             <NavLink
                               to={
                                 site.hostingOrder
-                                  ? "/websites-overview"
+                                  ? "/hosting"
                                   : "/setup-websites"
                               }
                               state={domainState}
@@ -786,7 +786,7 @@ export default function Sidebar({ setIsEnlarge }) {
                   </li>
                   <li>
                     <NavLink
-                      to={"/dns-management"}
+                      to={"/dns-manager"}
                       state={{ currentDomain: activeDomain }}
                     >
                       {t.admin.dnsManagement}
@@ -802,7 +802,7 @@ export default function Sidebar({ setIsEnlarge }) {
                     <NavLink to={"/setup-websites"}>{t.admin.setup}</NavLink>
                   </li>
                   <li>
-                    <NavLink to={"/websites-overview"}>
+                    <NavLink to={"/hosting"}>
                       {t.admin.overview}
                     </NavLink>
                   </li>

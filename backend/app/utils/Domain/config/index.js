@@ -22,12 +22,11 @@ const config = {
   price_diffrence_threshold: 3
 };
 
-// Validate ConnectReseller API Key
+// Validate ConnectReseller API Key (legacy — superseded by the Nomadly reseller API).
 if (!config.connectreseller.apiKey) {
-  console.error(
-    "ConnectReseller API key is missing. Please set CONNECTSELLER_API_KEY in your environment variables."
+  console.warn(
+    "[legacy ConnectReseller] CONNECTSELLER_API_KEY not set — legacy domain provider disabled."
   );
-  throw new Error("ConnectReseller API key is missing.");
 }
 
 // Validate HostBay API Key (warn but don't throw, as it's optional for some deployments)

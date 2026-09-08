@@ -1,5 +1,6 @@
 import { createContext, useState, useCallback, useEffect } from "react";
 import { domainAPI } from "../api/domains";
+import resellerAPI from "../api/reseller";
 import { useAuth } from "../hooks/useAuth";
 import Loader from "../components/common/Loader";
 import { useAlert } from "./AlertContext";
@@ -15,23 +16,23 @@ const DomainProvider = ({ children }) => {
 
   const {user} = useAuth();
 
-  // 📌 Fetch All Domains
+  // 📌 Fetch All Domains (Nomadly reseller portfolio)
   const fetchDomains = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await domainAPI.domainList();
-      setDomains(response.data || []);
-      return { ...response, success: true };
+      const data = await resellerAPI.listDomains();
+      const list = data?.domains || [];
+      setDomains(list);
+      return { data: list, success: true };
     } catch (err) {
       const errMsg =
-        err?.response?.data?.errors?.[0]?.message ||
         err?.response?.data?.message || "Failed to fetch domains.";
-      showAlert(errMsg, { duration: 2500, type: 'warning' });
+      setError(errMsg);
       return { error: errMsg, success: false };
     } finally {
       setLoading(false);
     }
-  }, [showAlert]);
+  }, []);
 
   // 📌 Fetch View Domain
   const fetchViewDomain = useCallback(async (domain) => {

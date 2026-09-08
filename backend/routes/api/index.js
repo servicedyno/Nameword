@@ -1,6 +1,9 @@
 const APIRouter = require("express").Router();
 
-// Nomadly Reseller API proxy (unified domains/dns/vps/rdp/hosting)
+// Nomadly Reseller API proxy (unified domains/dns/vps/rdp/hosting).
+// This is the single provider surface for domains, DNS and cPanel hosting.
+// The legacy ConnectReseller / WHM / Plesk / Cloudflare integrations have been
+// retired (routes below removed) in favour of the reseller proxy.
 APIRouter.use("/reseller", require("./reseller"));
 
 APIRouter.use("/rdp", require("./rdp"));
@@ -25,18 +28,6 @@ APIRouter.use("/cart", require("./cart"));
 APIRouter.use("/chat", require("./chat"));
 
 APIRouter.use(require("./api-keys"));
-APIRouter.use("/dns", require("./dns"));
-APIRouter.use("/domain-forward", require("./domain-forward"));
-APIRouter.use("/domain", require("./domain"));
-APIRouter.use("/host", require("./host"));
-APIRouter.use("/cpanel", require("./hosting/cpanelRoutes"));
-APIRouter.use("/hosting-plans", require("./hosting/hostingPlansRoutes"));
-APIRouter.use(require("./hosting/pleskRoutes"));
-APIRouter.use("/plesk", require("./hosting/pleskRoutes"));
-APIRouter.use("/cloudflare", require("./hosting/cloudflareRoutes"));
-APIRouter.use("/firewall", require("./firewall"));
-APIRouter.use(require("./hosting/whmRoutes"));
-APIRouter.use("/domain-provider-client", require("./domainProviderClient"));
 APIRouter.use("/tax", require("./tax"));
 APIRouter.use("/promo", require("./promo"));
 

@@ -9,9 +9,9 @@ import {
 // Signed-in navigation: Overview · Domains · DNS · Hosting · VPS · RDP · Wallet · Rewards · Settings & API · Help
 const RAIL = [
   { key: "overview", to: "/dashboard", icon: LuLayoutDashboard, match: ["/dashboard"] },
-  { key: "domains", to: "/domain-portfolio", icon: LuGlobe, match: ["/domain-portfolio", "/domain-overview", "/contact-info", "/transfer-domain"] },
-  { key: "dns", to: "/dns-management", icon: LuNetwork, match: ["/dns-management"] },
-  { key: "hosting", to: "/websites", icon: LuServer, match: ["/websites", "/setup-websites", "/websites-overview", "/manage-plan", "/upgrade-plan", "/renew-plan"] },
+  { key: "domains", to: "/domains", icon: LuGlobe, match: ["/domains", "/domain-overview", "/contact-info", "/transfer-domain"] },
+  { key: "dns", to: "/dns-manager", icon: LuNetwork, match: ["/dns-manager"] },
+  { key: "hosting", to: "/hosting", icon: LuServer, match: ["/hosting", "/setup-websites", "/hosting", "/manage-plan", "/upgrade-plan", "/renew-plan"] },
   { key: "vps", to: "/vps", icon: LuCloud, match: ["/vps"] },
   { key: "rdp", to: "/rdp", icon: LuMonitor, match: ["/rdp"] },
   { key: "wallet", to: "/wallet", icon: LuWallet, match: ["/wallet", "/subscriptions", "/payment-history"] },

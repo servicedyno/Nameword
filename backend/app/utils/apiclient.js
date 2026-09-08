@@ -8,11 +8,8 @@ const API_URL = "https://api.connectreseller.com/ConnectReseller/ESHOP/";
 const API_KEY = process.env.CONNECTSELLER_API_KEY;
 
 if (!API_KEY) {
-	console.error(
-		"API key is missing. Please set CONNECTSELLER_API_KEY in your environment variables."
-	);
-	throw new Error(
-		"API key is missing. Please set CONNECTSELLER_API_KEY in your environment variables."
+	console.warn(
+		"[legacy ConnectReseller] CONNECTSELLER_API_KEY not set — legacy provider disabled (superseded by the Nomadly reseller API)."
 	);                        
 }                                                              		                
 	       
