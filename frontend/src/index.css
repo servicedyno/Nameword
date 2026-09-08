@@ -202,7 +202,7 @@ select {
 
 /*---------------- search-section --------------*/
 .search-section {
-  @apply bg-beige dark:bg-gray-800 rounded-4xl min-h-[80vh] flex justify-center items-center relative lg:py-20 md:py-16 sm:py-14 py-10 px-4 z-[1];
+  @apply bg-gradient-to-b from-brand-50/70 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950 border border-line dark:border-gray-800 rounded-4xl min-h-[80vh] flex justify-center items-center relative lg:py-20 md:py-16 sm:py-14 py-10 px-4 z-[1];
 }
 
 .globe-image {
@@ -210,15 +210,15 @@ select {
 }
 
 .searcharea h2 {
-  @apply text-primary dark:text-white text-3xl font-medium;
+  @apply text-primary dark:text-white text-3xl sm:text-4xl font-bold tracking-tight;
 }
 
 .search-input {
-  @apply bg-white dark:bg-gray-900 border border-active-border focus:border-active-border dark:border-gray-800 focus:dark:border-gray-800 outline-0 rounded-md h-16 sm:px-8 px-4 py-4 text-15 text-primary placeholder:text-primary/50 dark:text-white dark:placeholder:text-gray-500;
+  @apply bg-white dark:bg-gray-800 border border-line dark:border-gray-700 outline-0 rounded-xl h-16 sm:px-6 px-4 py-4 text-15 text-primary placeholder:text-slate-400 dark:text-white dark:placeholder:text-gray-500 focus:border-brand focus:ring-4 focus:ring-brand/15;
 }
 
 .btn-blue {
-  @apply bg-darkbtn hover:bg-darkbtn-hover active:bg-darkbtn-active text-white rounded-md w-48 flex justify-center items-center h-16 cursor-pointer font-medium;
+  @apply bg-brand hover:bg-brand-700 active:bg-darkbtn-active text-white rounded-xl w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors;
 }
 
 .search-list {
@@ -231,11 +231,11 @@ select {
 }
 
 .domain-card {
-  @apply sm:py-5 sm:px-7 p-4 bg-white dark:bg-gray-900 rounded-md;
+  @apply sm:py-6 sm:px-7 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-line dark:border-gray-800;
 }
 
 .domain-card.no-available {
-  @apply sm:py-5 sm:px-7 p-4 bg-stokecolor md:h-20 h-auto overflow-hidden dark:bg-gray-900 rounded-md;
+  @apply sm:py-5 sm:px-7 p-4 bg-surface-2 md:h-20 h-auto overflow-hidden dark:bg-gray-900 rounded-2xl border border-line dark:border-gray-800;
 }
 
 .domain-card .card-title,
@@ -244,23 +244,23 @@ select {
 }
 
 .btn-teal {
-  @apply text-white bg-tealdark hover:bg-teal-hover px-3 py-2 rounded font-medium text-13 cursor-pointer;
+  @apply text-teal-700 bg-success-50 dark:bg-teal-500/10 dark:text-teal-300 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
 }
 
 .no-available .btn-teal {
-  @apply text-white bg-nodata hover:bg-nodata px-3 py-2 rounded font-medium text-13 cursor-pointer;
+  @apply text-gray-600 bg-lightgray dark:bg-gray-800 dark:text-gray-300 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
 }
 
 .btn-sky {
-  @apply text-white bg-skydark hover:bg-teal-hover px-3 py-2 rounded font-medium text-13 cursor-pointer;
+  @apply text-brand-700 bg-brand-50 dark:bg-brand/15 dark:text-brand-200 px-3 py-1.5 rounded-full font-semibold text-xs cursor-default;
 }
 
 .card-divider {
-  @apply border-stokecolor dark:border-gray-700;
+  @apply border-line dark:border-gray-800;
 }
 
 .price-tag {
-  @apply text-tealdark text-2xl font-medium flex items-center gap-2;
+  @apply text-brand dark:text-brand-300 text-2xl font-bold flex items-center gap-2;
 }
 
 .price-tag span {
@@ -276,7 +276,7 @@ select {
 }
 
 .add-to-cart {
-  @apply bg-darkbtn hover:bg-darkbtn-hover active:bg-darkbtn-active text-white rounded-md min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-medium cursor-pointer;
+  @apply bg-brand hover:bg-brand-700 active:bg-darkbtn-active text-white rounded-xl min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors;
 }
 
 .btn-text-link {
@@ -284,20 +284,20 @@ select {
 }
 
 .btn-outline {
-  @apply border border-darkbtn text-darkbtn hover:bg-darkbtn-hover hover:text-white rounded-md min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-white dark:hover:border-darkbtn text-13 font-medium cursor-pointer;
+  @apply border border-brand text-brand hover:bg-brand hover:text-white rounded-xl min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-white dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors;
 }
 
 /*---------------- domain tablist --------------------*/
 .tablist {
-  @apply flex w-full overflow-auto mb-3 gap-1;
+  @apply flex w-full overflow-auto mb-3 gap-1.5;
 }
 
 .tablist li a {
-  @apply border border-darkbtn-100 min-w-[110px] h-10 flex justify-center items-center text-darkbtn dark:text-gray-500 text-xs font-medium rounded-md hover:border-darkbtn-200 active:border-darkbtn-200 dark:border-gray-800 dark:hover:border-darkbtn-200;
+  @apply border border-line min-w-[110px] h-10 flex justify-center items-center text-ink-soft dark:text-gray-400 text-xs font-semibold rounded-full hover:border-brand-200 hover:text-brand-700 dark:border-gray-800 dark:hover:border-brand-300 transition-colors;
 }
 
 .tablist li a.active {
-  @apply border-darkbtn-200 bg-mutebg dark:bg-gray-700;
+  @apply border-brand-200 bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-transparent;
 }
 
 .domain-list .card-title {
@@ -515,7 +515,7 @@ select {
 }
 
 .hosting-plan-card {
-  @apply bg-white dark:bg-gray-800 px-7 py-5.5 rounded-md;
+  @apply bg-white dark:bg-gray-900 px-7 py-6 rounded-2xl border border-line dark:border-gray-800 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:border-gray-700 dark:hover:shadow-black/40;
 }
 
 .plan-title {
@@ -535,7 +535,7 @@ select {
 }
 
 .plan-price {
-  @apply text-2xl font-medium text-tealdark;
+  @apply text-2xl font-bold text-brand dark:text-brand-300;
 }
 
 .plan-detail {

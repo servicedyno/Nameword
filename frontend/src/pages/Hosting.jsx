@@ -1,6 +1,6 @@
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
-import { datacenter } from "../components/common/icons";
+import { LuShieldCheck, LuHardDrive, LuLifeBuoy, LuGauge, LuMail, LuDatabase } from "react-icons/lu";
 import ContactInfo from "../components/domain/contact-info";
 import MonthlyBiillingPlan from "../components/hosting/monthly-billing-plan";
 import AnnualBiillingPlan from "../components/hosting/annual-billing-plan";
@@ -11,6 +11,15 @@ import { hostingAPI } from "../api/hosting";
 import { useAlert } from "../context/AlertContext";
 import Loader from "../components/common/Loader";
 import { useLanguage } from "../hooks/useLanguage";
+
+const HOSTING_FEATURES = [
+  { icon: LuGauge, title: "Blazing-fast NVMe", desc: "SSD-backed servers with LiteSpeed caching for snappy load times." },
+  { icon: LuShieldCheck, title: "Free SSL & security", desc: "Auto-installed SSL, firewalls and malware scanning on every plan." },
+  { icon: LuHardDrive, title: "Daily backups", desc: "Automatic off-site backups so you can restore in a click." },
+  { icon: LuMail, title: "Business email", desc: "Professional mailboxes on your own domain, spam-filtered." },
+  { icon: LuDatabase, title: "cPanel & Plesk", desc: "Manage sites, databases and DNS from a familiar control panel." },
+  { icon: LuLifeBuoy, title: "24/7 expert support", desc: "Real humans ready to help via chat and ticket, any time." },
+];
 
 const Hosting = () => {
   const { t } = useLanguage();
@@ -145,96 +154,118 @@ const Hosting = () => {
   return (
     <div>
       <Navbar isLoader={loading} />
-      <div className="px-5 mb-10">
-        <div className="search-section w-full mb-20">
-          <img
-            src={datacenter}
-            alt="hosting"
-            title="hosting"
-            className="globe-image dark:opacity-5"
-          />
 
-          {/* Hosting plan */}
-          <div className="searcharea w-full text-center">
-            <h2 className="mb-8">{t.pages.chooseYourHostingPlan}</h2>
+      {/* Branded hero */}
+      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-brand-50/60 via-white to-white dark:border-gray-800 dark:from-gray-900 dark:via-gray-950 dark:to-gray-950">
+        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand/10" />
+        <div className="nw-container relative py-12 text-center sm:py-16">
+          <span className="nw-eyebrow mb-4">Web Hosting</span>
+          <h1 className="text-3xl font-bold tracking-tight text-primary dark:text-white sm:text-4xl">
+            {t.pages.chooseYourHostingPlan}
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl nw-lead">
+            Fast, secure cPanel &amp; Plesk hosting with free SSL, daily backups and 24/7 support.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            <span className="nw-chip"><LuShieldCheck className="h-4 w-4 text-brand" /> Free SSL</span>
+            <span className="nw-chip"><LuHardDrive className="h-4 w-4 text-brand" /> NVMe SSD</span>
+            <span className="nw-chip"><LuLifeBuoy className="h-4 w-4 text-brand" /> 24/7 support</span>
+          </div>
+        </div>
+      </section>
 
-            {/* Hosting plan tab panel */}
-            <div className="hosting-tabpanel">
+      <section className="nw-section">
+        <div className="nw-container">
+          {/* Billing toggle */}
+          <div className="mb-10 flex justify-center">
+            <div className="inline-flex rounded-full border border-line bg-white p-1 dark:border-gray-800 dark:bg-gray-900">
               <button
                 onClick={() => setBillingCycle("monthly")}
-                className={`tab-link ${
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                   billingCycle === "monthly"
-                    ? "bg-beige-200 text-primary cursor-pointer"
-                    : "dark:text-white cursor-pointer"
+                    ? "bg-brand text-white shadow-sm"
+                    : "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 {t.pages.monthly}
               </button>
               <button
                 onClick={() => setBillingCycle("annually")}
-                className={`tab-link ${
+                className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                   billingCycle === "annually"
-                    ? "bg-beige-200 text-primary cursor-pointer"
-                    : "dark:text-white cursor-pointer"
+                    ? "bg-brand text-white shadow-sm"
+                    : "text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                {t.pages.annually}{" "}
+                {t.pages.annually}
                 {annualPlans.length > 0 && annualPlans[0]?.savings_percentage > 0 && (
-                  <span className="save-lable">{t.pages.savePercent.replace("{percent}", annualPlans[0].savings_percentage)}</span>
+                  <span
+                    className={`nw-badge ${
+                      billingCycle === "annually"
+                        ? "bg-white/20 text-white"
+                        : "bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                    }`}
+                  >
+                    {t.pages.savePercent.replace("{percent}", annualPlans[0].savings_percentage)}
+                  </span>
                 )}
               </button>
             </div>
+          </div>
 
-            {loading ? (
-              <Loader />
-            ) : (
-              <>
-                {/* monthly billing plan */}
-                {billingCycle === "monthly" && (
-                  <MonthlyBiillingPlan
-                    plans={monthlyPlans}
-                    onSelectPlan={handlePlanSelect}
-                  />
-                )}
+          {loading ? (
+            <Loader />
+          ) : (
+            <>
+              {billingCycle === "monthly" && (
+                <MonthlyBiillingPlan plans={monthlyPlans} onSelectPlan={handlePlanSelect} />
+              )}
+              {billingCycle === "annually" && (
+                <AnnualBiillingPlan plans={annualPlans} onSelectPlan={handlePlanSelect} />
+              )}
+            </>
+          )}
 
-                {/* annual billing plan */}
-                {billingCycle === "annually" && (
-                  <AnnualBiillingPlan
-                    plans={annualPlans}
-                    onSelectPlan={handlePlanSelect}
-                  />
-                )}
-              </>
-            )}
+          {/* Value props */}
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {HOSTING_FEATURES.map((f) => (
+              <div key={f.title} className="nw-card nw-card-hover">
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200">
+                  <f.icon className="h-6 w-6" />
+                </span>
+                <h3 className="mt-5 text-lg font-bold text-primary dark:text-white">{f.title}</h3>
+                <p className="mt-2 text-15 text-ink-soft dark:text-gray-400">{f.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
+      </section>
 
-        {isCartOpen && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/40 z-30"
-              onClick={handleCloseSidebar}
-            ></div>
-            <div
-              className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-darkmode border-l border-gray-200 dark:border-gray-700 shadow-2xl z-40 transform transition-transform duration-300 ${
-                isCartOpen ? "translate-x-0" : "translate-x-full"
-              }`}
-            >
-              <HostingCartSidebar
-                plan={selectedPlan}
-                isModelOpen={isCartOpen}
-                onClose={handleCloseSidebar}
-                existingDomainFromSetup={location.state?.existingDomain}
-                fromSetup={location.state?.fromSetup}
-                setSelectedPlan={setSelectedPlan}
-              />
-            </div>
-          </>
-        )}
+      {isCartOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-30"
+            onClick={handleCloseSidebar}
+          ></div>
+          <div
+            className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-darkmode border-l border-gray-200 dark:border-gray-700 shadow-2xl z-40 transform transition-transform duration-300 ${
+              isCartOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <HostingCartSidebar
+              plan={selectedPlan}
+              isModelOpen={isCartOpen}
+              onClose={handleCloseSidebar}
+              existingDomainFromSetup={location.state?.existingDomain}
+              fromSetup={location.state?.fromSetup}
+              setSelectedPlan={setSelectedPlan}
+            />
+          </div>
+        </>
+      )}
 
-        {/* contact info */}
-        <ContactInfo />
-      </div>
+      {/* contact info */}
+      <ContactInfo />
       <Footer />
     </div>
   );

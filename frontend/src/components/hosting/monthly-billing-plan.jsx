@@ -8,8 +8,8 @@ const MonthlyPlan = ({ plans = [], onSelectPlan }) => {
 
   if (!plans.length) {
     return (
-      <div className="py-10">
-        <p className="text-gray-500 dark:text-gray-300">
+      <div className="mx-auto max-w-lg rounded-2xl border border-dashed border-line bg-surface-2 py-12 px-6 text-center dark:border-gray-800 dark:bg-gray-900/40">
+        <p className="text-ink-soft dark:text-gray-300">
           {t.cart.hosting.monthlyPlansNotAvailable}
         </p>
       </div>
@@ -74,7 +74,7 @@ const MonthlyPlan = ({ plans = [], onSelectPlan }) => {
 
               <div className="text-left">
                 <div className="flex flex-col items-start gap-1 mb-2">
-                  <div className="text-lg font-medium text-tealdark">
+                  <div className="text-lg font-medium text-brand">
                     ${price.toFixed(2)}
                   </div>
                   {originalPrice > price && (

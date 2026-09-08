@@ -57,15 +57,15 @@ const statusStyle = (status = "") => {
 };
 
 const Spec = ({ icon: Icon, label, value }) => (
-  <div className="flex items-center gap-2 text-sm text-secondary dark:text-gray-400">
-    <Icon className="shrink-0 text-tealdark" size={16} />
+  <div className="flex items-center gap-2 text-sm text-ink-soft dark:text-gray-400">
+    <Icon className="shrink-0 text-brand" size={16} />
     <span className="text-primary dark:text-white font-medium">{value}</span>
     <span>{label}</span>
   </div>
 );
 
 const PlanSkeleton = () => (
-  <div className="rounded-xl border border-lightgray dark:border-gray-800 p-6 animate-pulse">
+  <div className="rounded-2xl border border-line dark:border-gray-800 p-6 animate-pulse">
     <div className="h-5 w-32 bg-lightgray dark:bg-gray-800 rounded mb-4" />
     <div className="h-3 w-24 bg-lightgray dark:bg-gray-800 rounded mb-2" />
     <div className="h-3 w-20 bg-lightgray dark:bg-gray-800 rounded mb-2" />
@@ -244,49 +244,53 @@ export default function ServersPage({ product = "vps" }) {
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Hero */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-teallight dark:bg-gray-800 text-tealdark">
-                <FiServer size={22} />
-              </span>
-              <h1 className="text-3xl font-semibold text-primary dark:text-white">
+      {/* Branded hero */}
+      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-brand-50/60 via-white to-white dark:border-gray-800 dark:from-gray-900 dark:via-gray-950 dark:to-gray-950">
+        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand/10" />
+        <div className="nw-container relative py-10 sm:py-14">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <span className="nw-eyebrow mb-4">{product === "rdp" ? "Windows RDP" : "Linux VPS"}</span>
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-4xl">
                 {meta.title}
               </h1>
-            </div>
-            <p className="text-secondary dark:text-gray-400 mt-2 max-w-xl">
-              {meta.tagline}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {account && (
-              <div className="text-right">
-                <p className="text-xs text-secondary dark:text-gray-400">Wallet</p>
-                <p className="text-lg font-semibold text-primary dark:text-white">
-                  {money(account.wallet_balance_usd)}
-                </p>
+              <p className="mt-3 max-w-xl nw-lead">{meta.tagline}</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="nw-chip"><FiZap className="h-4 w-4 text-brand" /> Deploy in seconds</span>
+                <span className="nw-chip"><FiGlobe className="h-4 w-4 text-brand" /> EU &amp; SG regions</span>
+                <span className="nw-chip"><FiLock className="h-4 w-4 text-brand" /> Full root access</span>
               </div>
-            )}
-            <div>
-              <label className="sr-only" htmlFor="region">Region</label>
-              <div className="relative">
-                <FiGlobe className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary" size={16} />
-                <select
-                  id="region"
-                  value={region}
-                  onChange={(e) => setRegion(e.target.value)}
-                  className="appearance-none pl-9 pr-8 py-2.5 rounded-md border border-lightgray dark:border-gray-800 bg-white dark:bg-gray-900 text-primary dark:text-white text-sm font-medium focus:outline-none focus:border-darkbtn"
-                >
-                  {REGIONS.map((r) => (
-                    <option key={r.code} value={r.code}>{r.label}</option>
-                  ))}
-                </select>
+            </div>
+            <div className="flex items-center gap-3">
+              {account && (
+                <div className="rounded-2xl border border-line bg-white px-4 py-3 text-right shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <p className="text-xs text-ink-soft dark:text-gray-400">Wallet</p>
+                  <p className="text-lg font-bold text-primary dark:text-white">
+                    {money(account.wallet_balance_usd)}
+                  </p>
+                </div>
+              )}
+              <div>
+                <label className="sr-only" htmlFor="region">Region</label>
+                <div className="relative">
+                  <FiGlobe className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" size={16} />
+                  <select
+                    id="region"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    className="appearance-none rounded-xl border border-line bg-white pl-9 pr-8 py-3 text-sm font-medium text-primary focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  >
+                    {REGIONS.map((r) => (
+                      <option key={r.code} value={r.code}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
+      <main className="nw-container py-12">
 
         {/* Mode banner */}
         {mode === "dry_run" && (
@@ -326,38 +330,38 @@ export default function ServersPage({ product = "vps" }) {
               <button onClick={() => loadPlans(region)} className="btn-teal mt-3">Retry</button>
             </div>
           ) : plans.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center rounded-xl border border-lightgray dark:border-gray-800 py-12 px-6">
-              <FiServer className="text-secondary mb-3" size={28} />
+            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-line dark:border-gray-800 py-12 px-6">
+              <FiServer className="text-ink-soft mb-3" size={28} />
               <p className="text-primary dark:text-white font-medium">No plans available in this region</p>
-              <p className="text-secondary dark:text-gray-400 text-sm mt-1">Try a different region.</p>
+              <p className="text-ink-soft dark:text-gray-400 text-sm mt-1">Try a different region.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {plans.map((p) => (
                 <div
                   key={p.plan_id}
-                  className="group rounded-xl border border-lightgray dark:border-gray-800 bg-white dark:bg-gray-900 p-6 hover:shadow-lg hover:border-darkbtn/40 transition"
+                  className="nw-card nw-card-hover group !p-6"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-primary dark:text-white">{p.name || p.plan_id}</h3>
-                      <p className="text-xs text-secondary dark:text-gray-500 mt-0.5">{p.plan_id}</p>
+                      <p className="text-xs text-ink-soft dark:text-gray-500 mt-0.5">{p.plan_id}</p>
                     </div>
-                    <span className="text-tealdark"><FiZap size={20} /></span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200"><FiZap size={18} /></span>
                   </div>
                   <div className="space-y-2 mb-5">
                     <Spec icon={FiCpu} label="vCPU" value={p.vcpus ?? "—"} />
                     <Spec icon={FiServer} label="GB RAM" value={p.ram_gb ?? "—"} />
                     <Spec icon={FiHardDrive} label="GB SSD" value={p.disk_gb ?? "—"} />
                   </div>
-                  <div className="flex items-end justify-between border-t border-lightgray dark:border-gray-800 pt-4">
+                  <div className="flex items-end justify-between border-t border-line dark:border-gray-800 pt-4">
                     <div>
                       <span className="text-2xl font-bold text-primary dark:text-white">{money(p.price_usd)}</span>
-                      <span className="text-secondary dark:text-gray-400 text-sm"> /mo</span>
+                      <span className="text-ink-soft dark:text-gray-400 text-sm"> /mo</span>
                     </div>
                     <button
                       onClick={() => openDeploy(p)}
-                      className="bg-darkbtn hover:bg-darkbtn-hover text-white rounded-md px-4 py-2 text-sm font-medium cursor-pointer"
+                      className="nw-btn-primary nw-btn-sm"
                     >
                       Deploy
                     </button>
@@ -384,8 +388,8 @@ export default function ServersPage({ product = "vps" }) {
               ))}
             </div>
           ) : servers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-lightgray dark:border-gray-800 py-12 px-6">
-              <FiServer className="text-secondary mb-3" size={28} />
+            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-line dark:border-gray-800 py-12 px-6">
+              <FiServer className="text-ink-soft mb-3" size={28} />
               <p className="text-primary dark:text-white font-medium">No servers yet</p>
               <p className="text-secondary dark:text-gray-400 text-sm mt-1 max-w-md">
                 Deploy a plan above to get started.
@@ -397,7 +401,7 @@ export default function ServersPage({ product = "vps" }) {
               {servers.map((s) => {
                 const id = s.id || s._id || s.instance_id;
                 return (
-                  <div key={id} className="rounded-xl border border-lightgray dark:border-gray-800 bg-white dark:bg-gray-900 p-5 flex flex-col lg:flex-row lg:items-center gap-4">
+                  <div key={id} className="nw-card !p-5 flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-semibold text-primary dark:text-white">{s.hostname || s.plan || meta.title}</span>
@@ -452,12 +456,12 @@ export default function ServersPage({ product = "vps" }) {
                 <>
                   <div>
                     <label htmlFor="hostname" className="block text-sm font-medium text-primary dark:text-white mb-1">Hostname <span className="text-secondary font-normal">(optional)</span></label>
-                    <input id="hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} placeholder="web-01" className="w-full rounded-md border border-lightgray dark:border-gray-800 bg-white dark:bg-gray-900 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-darkbtn" />
+                    <input id="hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} placeholder="web-01" className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
                   </div>
                   {meta.osChoices && (
                     <div>
                       <label htmlFor="os" className="block text-sm font-medium text-primary dark:text-white mb-1">Operating system</label>
-                      <select id="os" value={os} onChange={(e) => setOs(e.target.value)} className="w-full appearance-none rounded-md border border-lightgray dark:border-gray-800 bg-white dark:bg-gray-900 text-primary dark:text-white px-3 py-2.5 text-sm capitalize focus:outline-none focus:border-darkbtn">
+                      <select id="os" value={os} onChange={(e) => setOs(e.target.value)} className="w-full appearance-none rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm capitalize focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15">
                         {meta.osChoices.map((o) => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </div>
