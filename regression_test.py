@@ -12,7 +12,7 @@ import time
 from typing import Dict, Any, Tuple
 
 # Base URLs from frontend/.env
-BACKEND_BASE_URL = "https://adb9111d-6233-4d61-bac5-dca2984535eb.preview.emergentagent.com/api/v1"
+BACKEND_BASE_URL = "https://nameword-dev.preview.emergentagent.com/api/v1"
 RESELLER_BASE_URL = f"{BACKEND_BASE_URL}/reseller"
 
 # Generous timeout for external API proxy (30 seconds)
