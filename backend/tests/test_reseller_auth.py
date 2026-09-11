@@ -6,7 +6,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://4e314bad-ff68-4ada-9c7a-3a6918fcd5a7.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://setup-credentials-1.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api/v1"
 
 DEMO_EMAIL = "demo@nameword.local"
