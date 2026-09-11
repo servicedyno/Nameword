@@ -449,7 +449,14 @@ const getDynocheckoutUrl = async (req, res) => {
 			return res.status(404).json({ message: "User not found" });
 		}
 
-		const walletToken = await ensureWallet(userId);
+		// Embedded checkout is userless; a DynoPay customer is optional.
+		// Don't let a customer-registration hiccup block the top-up.
+		let walletToken = null;
+		try {
+			walletToken = await ensureWallet(userId);
+		} catch (walletErr) {
+			console.warn("[Wallet getDynocheckoutUrl] ensureWallet skipped:", walletErr?.message || walletErr);
+		}
 
 		const meta_data = {
 			product_name: "Wallet Top-up",
@@ -494,11 +501,14 @@ const getDynocheckoutUrl = async (req, res) => {
 				});
 			}
 
-			console.log("[Wallet getDynocheckoutUrl] success, redirect user to:", checkoutUrl);
+			console.log("[Wallet getDynocheckoutUrl] success, embedded checkout:", checkoutUrl);
 			return res.status(200).json({
 				message: "Your payment link has been created successfully. Please complete the checkout to add funds.",
 				redirect_url: checkoutUrl,
 				checkoutUrl: checkoutUrl,
+				embedded: true,
+				clientSecret: payload.client_secret || null,
+				expiresAt: payload.expires_at || null,
 			});
 		}
 

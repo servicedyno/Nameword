@@ -57,6 +57,7 @@ const Wallet = () => {
 
     const handleModalClose = () => {
         setIsModal(false);
+        fetchWalletBalance();
     }
 
     useEffect(() => {
@@ -100,7 +101,7 @@ const Wallet = () => {
                             <button type='button' className='add-to-cart' onClick={handleModalOpen} >
                                 {t.admin?.walletTopUp || "Top Up"}
                             </button>
-                            {isModal && <WalletModal onClose={handleModalClose}  />}
+                            {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} />}
                         </div>
                     </div>
                     <div className='action-card p-7 min-h-36 flex w-full items-center'>
