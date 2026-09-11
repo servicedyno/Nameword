@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
-import { FiAlertTriangle, FiArrowRight, FiGlobe, FiPlus, FiServer, FiTrash2, FiCreditCard, FiRefreshCw } from "react-icons/fi";
+import { FiAlertTriangle, FiArrowRight, FiGlobe, FiPlus, FiServer, FiTrash2, FiCreditCard, FiRefreshCw, FiGift } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { usePageMeta } from "../../hooks/usePageMeta";
@@ -12,7 +12,8 @@ import Loader from "../../components/common/Loader";
 
 const newClientOrderId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
-function DomainLine({ item, hosting, problem, onRemove, onNsChange }) {
+function DomainLine({ item, hosting, problem, onRemove, onNsChange, onNsListChange }) {
+  const nsIncomplete = item.ns_choice === "custom" && (item.nameservers || []).filter(Boolean).length < 2;
   return (
     <div className={`nw-card !p-0 overflow-hidden ${problem ? "border-red-300 dark:border-red-800" : ""}`} data-testid={`cart-item-domain-${item.domain}`}>
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
@@ -31,8 +32,24 @@ function DomainLine({ item, hosting, problem, onRemove, onNsChange }) {
               >
                 <option value="cloudflare">Cloudflare DNS (recommended, free)</option>
                 <option value="registrar">Registrar default</option>
+                <option value="custom">Custom nameservers</option>
               </select>
             </label>
+            {item.ns_choice === "custom" && (
+              <div className="mt-2 max-w-xs" data-testid={`cart-ns-custom-${item.domain}`}>
+                <textarea
+                  rows={2}
+                  value={(item.nameservers || []).join(", ")}
+                  onChange={(e) => onNsListChange(item.id, e.target.value.split(/[\s,]+/).map((x) => x.trim()).filter(Boolean))}
+                  placeholder="ns1.example.com, ns2.example.com"
+                  className="nw-input !py-2 !px-3 text-sm w-full"
+                  data-testid={`cart-ns-input-${item.domain}`}
+                />
+                <p className={`mt-1 text-xs ${nsIncomplete ? "text-red-600 dark:text-red-300" : "text-ink-soft dark:text-gray-400"}`}>
+                  {nsIncomplete ? "Enter at least two nameservers." : "Enter 2–4 nameserver hostnames, comma or space separated."}
+                </p>
+              </div>
+            )}
             {problem && (
               <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-600 dark:text-red-300" data-testid={`cart-item-problem-${item.domain}`}>
                 <FiAlertTriangle /> {problem}
@@ -88,19 +105,26 @@ export default function CartPage() {
   const [problems, setProblems] = useState({});
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState(null);
+  const [redeemPoints, setRedeemPoints] = useState(0);
   const clientOrderId = useRef(newClientOrderId());
 
-  const payload = useMemo(() => cart.toPayload(), [cart.items]);
-  const payloadKey = JSON.stringify(payload);
+  const orderPayload = useMemo(() => cart.toPayload(), [cart.items]);
+  // Quote only needs price-affecting fields — exclude custom nameservers so editing
+  // them doesn't trigger a slow live re-price on every keystroke.
+  const quotePayload = useMemo(
+    () => orderPayload.map((i) => { const { nameservers, ...rest } = i; return rest; }),
+    [orderPayload]
+  );
+  const quoteKey = JSON.stringify(quotePayload);
 
   const refreshQuote = useCallback(async () => {
-    if (!isAuthenticated || payload.length === 0) {
+    if (!isAuthenticated || quotePayload.length === 0) {
       setQuote(null);
       return;
     }
     setQuoting(true);
     try {
-      const q = await checkoutAPI.quote(payload);
+      const q = await checkoutAPI.quote(quotePayload);
       setQuote(q);
       setProblems({});
       // Sync live prices back into the local cart.
@@ -116,7 +140,7 @@ export default function CartPage() {
     } finally {
       setQuoting(false);
     }
-  }, [isAuthenticated, payloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, quoteKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     clientOrderId.current = newClientOrderId();
@@ -128,16 +152,25 @@ export default function CartPage() {
   if (!isAuthenticated) return <Navigate to={cart.isEmpty ? "/domains" : "/checkout/account"} replace />;
 
   const walletBalance = quote?.wallet_balance_usd;
-  const total = quote?.subtotal_usd ?? cart.subtotal;
-  const shortfall = walletBalance == null ? 0 : Math.max(0, Math.round((total - walletBalance) * 100) / 100);
+  const subtotal = quote?.subtotal_usd ?? cart.subtotal;
+  const pointValue = quote?.point_value_usd ?? 0.02;
+  const pointsBalance = Number(quote?.points_balance ?? 0);
+  const maxRedeem = Number(quote?.max_redeemable_points ?? 0);
+  const appliedPoints = Math.max(0, Math.min(Number(redeemPoints) || 0, maxRedeem));
+  const pointsDiscount = Math.round(appliedPoints * pointValue * 100) / 100;
+  const payable = Math.round(Math.max(0, subtotal - pointsDiscount) * 100) / 100;
+  const shortfall = walletBalance == null ? 0 : Math.max(0, Math.round((payable - walletBalance) * 100) / 100);
   const hasProblems = Object.keys(problems).length > 0;
-  const canPay = !!quote && !quoting && !paying && !hasProblems && shortfall <= 0 && cart.count > 0;
+  const customNsIncomplete = cart.domains.some(
+    (d) => d.ns_choice === "custom" && (d.nameservers || []).filter(Boolean).length < 2
+  );
+  const canPay = !!quote && !quoting && !paying && !hasProblems && !customNsIncomplete && shortfall <= 0 && cart.count > 0;
 
   const pay = async () => {
     setPaying(true);
     setPayError(null);
     try {
-      const res = await checkoutAPI.createOrder(payload, clientOrderId.current);
+      const res = await checkoutAPI.createOrder(orderPayload, clientOrderId.current, appliedPoints > 0 ? { redeem_points: appliedPoints } : {});
       const order = res?.order;
       cart.clear();
       window.dispatchEvent(new Event("wallet:updated"));
@@ -191,7 +224,7 @@ export default function CartPage() {
               </div>
             )}
             {cart.domains.map((d) => (
-              <DomainLine key={d.id} item={d} hosting={cart.hostingFor(d.domain)} problem={problems[d.domain]} onRemove={onRemove} onNsChange={(id, ns) => cart.update(id, { ns_choice: ns })} />
+              <DomainLine key={d.id} item={d} hosting={cart.hostingFor(d.domain)} problem={problems[d.domain]} onRemove={onRemove} onNsChange={(id, ns) => cart.update(id, { ns_choice: ns })} onNsListChange={(id, list) => cart.update(id, { nameservers: list })} />
             ))}
             {cart.hosting.filter((h) => !cart.hasDomain(h.domain)).map((h) => (
               <div key={h.id} className="nw-card !p-5 flex items-center justify-between gap-4" data-testid={`cart-item-hosting-${h.domain}`}>
@@ -212,9 +245,53 @@ export default function CartPage() {
 
           <CartSummary
             items={cart.items}
+            discount={pointsDiscount}
+            discountLabel="Reward points"
+            total={payable}
             footer={
               <div className="space-y-3" data-testid="cart-payment-panel">
+                {pointsBalance > 0 && (
+                  <div className="rounded-xl border border-line dark:border-gray-800 p-4" data-testid="cart-rewards-panel">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium text-primary dark:text-white">
+                        <FiGift className="text-brand-600 dark:text-brand-400" /> Reward points
+                      </span>
+                      <span className="text-xs text-ink-soft dark:text-gray-400" data-testid="cart-points-balance">
+                        {pointsBalance} pts · {money(pointsBalance * pointValue)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={maxRedeem}
+                      step={1}
+                      value={appliedPoints}
+                      onChange={(e) => setRedeemPoints(Math.max(0, Math.min(Number(e.target.value), maxRedeem)))}
+                      className="mt-3 w-full accent-[var(--color-brand-600,#4f46e5)]"
+                      data-testid="cart-points-slider"
+                      aria-label="Reward points to redeem"
+                    />
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                      <span className="text-ink-soft dark:text-gray-400">
+                        Using <span className="font-semibold text-primary dark:text-white" data-testid="cart-points-applied">{appliedPoints}</span> pts
+                        {pointsDiscount > 0 && <span className="text-brand-700 dark:text-brand-300"> (− {money(pointsDiscount)})</span>}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setRedeemPoints(maxRedeem)} disabled={appliedPoints >= maxRedeem} className="font-medium text-brand-700 dark:text-brand-300 hover:underline disabled:opacity-40" data-testid="cart-points-max">Use max</button>
+                        {appliedPoints > 0 && (
+                          <button type="button" onClick={() => setRedeemPoints(0)} className="text-ink-soft hover:text-primary dark:text-gray-400" data-testid="cart-points-clear">Clear</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="rounded-xl border border-line dark:border-gray-800 p-4">
+                  {pointsDiscount > 0 && (
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="inline-flex items-center gap-1.5 text-brand-700 dark:text-brand-300"><FiGift size={14} /> Points discount</span>
+                      <span className="font-semibold text-brand-700 dark:text-brand-300 nw-mono" data-testid="cart-points-discount">− {money(pointsDiscount)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-sm">
                     <span className="inline-flex items-center gap-2 text-ink-soft dark:text-gray-400"><FiCreditCard /> Wallet balance</span>
                     <span className="font-semibold text-primary dark:text-white nw-mono" data-testid="cart-wallet-balance">{quoting && walletBalance == null ? "…" : money(walletBalance)}</span>
@@ -222,7 +299,7 @@ export default function CartPage() {
                   <div className="mt-2 flex items-center justify-between text-sm">
                     <span className="text-ink-soft dark:text-gray-400">After this order</span>
                     <span className={`font-semibold nw-mono ${shortfall > 0 ? "text-red-600 dark:text-red-300" : "text-primary dark:text-white"}`} data-testid="cart-wallet-after">
-                      {walletBalance == null ? "…" : shortfall > 0 ? `− ${money(shortfall)} short` : money(walletBalance - total)}
+                      {walletBalance == null ? "…" : shortfall > 0 ? `− ${money(shortfall)} short` : money(Math.round((walletBalance - payable) * 100) / 100)}
                     </span>
                   </div>
                   {shortfall > 0 && (
@@ -233,7 +310,7 @@ export default function CartPage() {
                   <p className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert" data-testid="cart-pay-error">{payError}</p>
                 )}
                 <button type="button" onClick={pay} disabled={!canPay} className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" data-testid="cart-pay-button">
-                  {paying ? "Processing…" : quoting ? "Updating prices…" : `Pay ${money(total)} from wallet`}
+                  {paying ? "Processing…" : quoting ? "Updating prices…" : payable <= 0 ? `Pay with ${appliedPoints} points` : `Pay ${money(payable)} from wallet`}
                 </button>
                 <button type="button" onClick={refreshQuote} disabled={quoting} className="inline-flex w-full items-center justify-center gap-2 text-xs text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white" data-testid="cart-refresh-quote">
                   <FiRefreshCw size={12} className={quoting ? "animate-spin" : ""} /> Prices are re-checked live at payment

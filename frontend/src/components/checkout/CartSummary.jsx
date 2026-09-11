@@ -4,8 +4,9 @@ import { FiGlobe, FiServer } from "react-icons/fi";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 
 // Sticky right-hand order summary shared by the hosting, account and cart steps.
-export default function CartSummary({ items, title = "Order summary", footer, children, editHref = "/domains" }) {
+export default function CartSummary({ items, title = "Order summary", footer, children, editHref = "/domains", discount = 0, discountLabel = "Discount", total }) {
   const subtotal = Math.round(items.reduce((s, i) => s + (Number(i.price_usd) || 0), 0) * 100) / 100;
+  const grandTotal = total != null ? total : subtotal;
   return (
     <aside className="nw-card lg:sticky lg:top-28 !p-0 overflow-hidden" data-testid="cart-summary">
       <div className="flex items-center justify-between px-5 py-4 border-b border-line dark:border-gray-800">
@@ -40,9 +41,15 @@ export default function CartSummary({ items, title = "Order summary", footer, ch
           <span>Taxes</span>
           <span className="nw-mono">$0.00</span>
         </div>
+        {discount > 0 && (
+          <div className="flex items-center justify-between text-sm text-brand-700 dark:text-brand-300" data-testid="summary-discount">
+            <span>{discountLabel}</span>
+            <span className="nw-mono">− {money(discount)}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between pt-2 border-t border-dashed border-line dark:border-gray-800">
           <span className="font-semibold text-primary dark:text-white">Total</span>
-          <span className="text-xl font-bold text-primary dark:text-white nw-mono" data-testid="cart-summary-total">{money(subtotal)}</span>
+          <span className="text-xl font-bold text-primary dark:text-white nw-mono" data-testid="cart-summary-total">{money(grandTotal)}</span>
         </div>
         {children}
       </div>

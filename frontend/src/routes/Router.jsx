@@ -31,6 +31,7 @@ import Dashboard from "../pages/front-admin/dashboard";
 import AccountInfomation from "../pages/front-admin/AccountInfomation";
 
 import PaymentHistory from "../pages/front-admin/billing/PaymentHistory";
+import OrderHistory from "../pages/front-admin/OrderHistory";
 import Subscriptions from "../pages/front-admin/billing/Subscriptions";
 import Wallet from "../pages/front-admin/billing/Wallet";
 
@@ -141,6 +142,7 @@ function Router() {
         <Route path="/account-setting" element={<AccountSettings />} />
         <Route path="/account-information" element={<AccountInfomation />} />
         <Route path="/payment-history" element={<PaymentHistory />} />
+        <Route path="/orders" element={<OrderHistory />} />
         <Route path="/subscriptions" element={<Subscriptions />} />
         <Route path="/wallet" element={<Wallet />} />
       </Route>

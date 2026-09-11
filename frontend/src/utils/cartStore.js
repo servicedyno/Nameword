@@ -51,7 +51,7 @@ export const cartStore = {
   addDomain({ domain, price_usd, registrar }) {
     const d = norm(domain);
     const items = read().filter((i) => !(i.type === "domain" && i.domain === d));
-    items.push({ id: uid(), type: "domain", domain: d, price_usd: Number(price_usd) || 0, registrar: registrar || null, ns_choice: "cloudflare" });
+    items.push({ id: uid(), type: "domain", domain: d, price_usd: Number(price_usd) || 0, registrar: registrar || null, ns_choice: "cloudflare", nameservers: [] });
     write(items);
   },
 
@@ -108,7 +108,12 @@ export const cartStore = {
   toPayload() {
     return read().map((i) =>
       i.type === "domain"
-        ? { type: "domain", domain: i.domain, ns_choice: i.ns_choice || "cloudflare" }
+        ? {
+            type: "domain",
+            domain: i.domain,
+            ns_choice: i.ns_choice || "cloudflare",
+            ...(i.ns_choice === "custom" && Array.isArray(i.nameservers) ? { nameservers: i.nameservers.filter(Boolean) } : {}),
+          }
         : { type: "hosting", domain: i.domain, plan_id: i.plan_id }
     );
   },

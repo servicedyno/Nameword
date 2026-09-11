@@ -2,7 +2,21 @@ const { nomadly } = require("../../services/nomadlyReseller");
 const Wallet = require("../../models/Wallet");
 const Transaction = require("../../models/Transaction");
 const Order = require("../../models/Order");
+const User = require("../../models/User");
+const RewardPointLog = require("../../models/RewardPointLog");
 const { createPaymentRecord } = require("../../utils/paymentHelper");
+
+// ---- Reward points config -------------------------------------------------
+// USD value of one reward point when redeemed (default $0.02; mirrors frontend
+// VITE_REWARD_POINT_VALUE). Points earned per $1 spent on an order.
+const pointValueUsd = () => {
+  const v = parseFloat(process.env.REWARD_POINT_VALUE);
+  return Number.isFinite(v) && v > 0 ? v : 0.02;
+};
+const purchaseRewardRate = () => {
+  const v = parseFloat(process.env.PURCHASE_REWARD_RATE);
+  return Number.isFinite(v) && v >= 0 ? v : 1; // points per $1 spent
+};
 
 // Hostinger-style checkout: the cart lives in the browser until payment; this
 // controller re-prices every item against the Nomadly reseller API, charges the
@@ -18,9 +32,26 @@ class HttpError extends Error {
 }
 
 const DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+const NS_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
 const round2 = (n) => Math.round(Number(n) * 100) / 100;
 const normDomain = (d) => String(d || "").trim().toLowerCase();
 const SENSITIVE_RE = /password|pin|secret|token/i;
+
+// Validate + normalise a custom nameserver list (2–4 unique valid hostnames).
+function normalizeNameservers(raw, domain) {
+  const arr = Array.isArray(raw) ? raw : String(raw || "").split(/[\s,]+/);
+  const cleaned = arr.map((x) => String(x || "").trim().toLowerCase()).filter(Boolean);
+  const uniq = [...new Set(cleaned)];
+  for (const ns of uniq) {
+    if (!NS_RE.test(ns)) {
+      throw new HttpError(400, "invalid_nameservers", `"${ns}" is not a valid nameserver hostname.`, { domain });
+    }
+  }
+  if (uniq.length < 2) {
+    throw new HttpError(400, "invalid_nameservers", `Enter at least two custom nameservers for ${domain}.`, { domain });
+  }
+  return uniq.slice(0, 4);
+}
 
 const sanitizeUpstream = (data) => {
   if (!data || typeof data !== "object") return data;
@@ -77,10 +108,13 @@ async function priceItems(rawItems) {
       if (!Number.isFinite(price) || price <= 0) {
         throw new HttpError(400, "pricing_failed", `Could not price ${domain}.`, { domain });
       }
+      const nsChoice = ["registrar", "custom"].includes(it.ns_choice) ? it.ns_choice : "cloudflare";
+      const nameservers = nsChoice === "custom" ? normalizeNameservers(it.nameservers, domain) : [];
       out.push({
         type,
         domain,
-        ns_choice: it.ns_choice === "registrar" ? "registrar" : "cloudflare",
+        ns_choice: nsChoice,
+        nameservers,
         registrar: d.registrar || null,
         price_usd: round2(price),
       });
@@ -144,17 +178,56 @@ async function creditWallet(userId, amount, reference) {
   return wallet;
 }
 
+// Current (non-expired) reward-point balance for a user.
+async function getPointsBalance(userId) {
+  const user = await User.findById(userId);
+  if (!user) return 0;
+  const bal = await user.rewardPoints();
+  return Math.max(0, Number(bal) || 0);
+}
+
+// Clamp a redemption request to the user's balance and to 100% of the order.
+function computeRedemption(requestedPoints, pointsBalance, subtotal) {
+  const v = pointValueUsd();
+  const req = Math.max(0, Number(requestedPoints) || 0);
+  const maxByBalance = Math.max(0, Number(pointsBalance) || 0);
+  const maxByOrder = v > 0 ? subtotal / v : 0; // up to 100% of the order
+  const applied = round2(Math.min(req, maxByBalance, maxByOrder));
+  const discount = round2(applied * v);
+  return { applied, discount, point_value_usd: v };
+}
+
+async function logPoints(userId, points, operationType) {
+  const p = round2(points);
+  if (!(p > 0)) return;
+  await RewardPointLog.create({ userId, rewardPoints: p, operationType });
+}
+
 async function provisionItem(item, mode, email) {
   try {
-    const r =
-      item.type === "domain"
-        ? await nomadly.post("/domains/register", { domain: item.domain, ns_choice: item.ns_choice })
-        : await nomadly.post("/hosting", {
-            plan_id: item.plan_id,
-            domain: item.domain,
-            domain_mode: "byo",
-            email,
-          });
+    let r;
+    if (item.type === "domain") {
+      const body = { domain: item.domain, ns_choice: item.ns_choice };
+      if (item.ns_choice === "custom" && Array.isArray(item.nameservers) && item.nameservers.length) {
+        body.nameservers = item.nameservers;
+      }
+      r = await nomadly.post("/domains/register", body);
+      // Best-effort (live only): ensure the custom nameservers are actually applied.
+      if (item.ns_choice === "custom" && r.data?.mode === "live" && item.nameservers?.length) {
+        try {
+          await nomadly.put(`/dns/${encodeURIComponent(item.domain)}/nameservers`, { nameservers: item.nameservers });
+        } catch (e) {
+          console.error("[checkout] set custom nameservers failed:", e?.message || e);
+        }
+      }
+    } else {
+      r = await nomadly.post("/hosting", {
+        plan_id: item.plan_id,
+        domain: item.domain,
+        domain_mode: "byo",
+        email,
+      });
+    }
     const data = sanitizeUpstream(r.data || {});
     const live = data.mode === "live";
     return {
@@ -187,10 +260,31 @@ class CheckoutController {
       const [items, mode] = await Promise.all([priceItems(req.body?.items), getMode()]);
       const subtotal_usd = round2(items.reduce((s, i) => s + i.price_usd, 0));
       const body = { success: true, mode, items, subtotal_usd, currency: "USD" };
+      body.point_value_usd = pointValueUsd();
       if (req.user?.id) {
-        const wallet = await ensureWallet(req.user.id);
+        const [wallet, pointsBalance] = await Promise.all([
+          ensureWallet(req.user.id),
+          getPointsBalance(req.user.id),
+        ]);
         body.wallet_balance_usd = round2(walletUsd(wallet));
-        body.shortfall_usd = round2(Math.max(0, subtotal_usd - body.wallet_balance_usd));
+
+        // Reward points: what the buyer holds, and how much can be applied here.
+        const { applied, discount, point_value_usd } = computeRedemption(
+          req.body?.redeem_points,
+          pointsBalance,
+          subtotal_usd
+        );
+        body.points_balance = round2(pointsBalance);
+        body.point_value_usd = point_value_usd;
+        body.max_redeemable_points = round2(
+          Math.min(pointsBalance, point_value_usd > 0 ? subtotal_usd / point_value_usd : 0)
+        );
+        body.points_applied = applied;
+        body.points_discount_usd = discount;
+
+        const payable_usd = round2(Math.max(0, subtotal_usd - discount));
+        body.payable_usd = payable_usd;
+        body.shortfall_usd = round2(Math.max(0, payable_usd - body.wallet_balance_usd));
       }
       return res.json(body);
     } catch (err) {
@@ -211,7 +305,17 @@ class CheckoutController {
       const [items, mode] = await Promise.all([priceItems(req.body?.items), getMode()]);
       const subtotal_usd = round2(items.reduce((s, i) => s + i.price_usd, 0));
 
-      const wallet = await debitWallet(userId, subtotal_usd);
+      // Reward points redemption — clamp to the buyer's balance and 100% of the order.
+      const pointsBalance = await getPointsBalance(userId);
+      const { applied: points_redeemed, discount: points_discount_usd } = computeRedemption(
+        req.body?.redeem_points,
+        pointsBalance,
+        subtotal_usd
+      );
+      const charged_usd = round2(Math.max(0, subtotal_usd - points_discount_usd));
+
+      // Atomic, overdraft-safe debit of the CASH portion (points cover the rest).
+      const wallet = await debitWallet(userId, charged_usd);
       if (!wallet) {
         const current = await Wallet.findOne({ userId });
         const balance = round2(walletUsd(current));
@@ -220,22 +324,32 @@ class CheckoutController {
           error: "insufficient_wallet_balance",
           message: "Your wallet balance can't cover this order. Top up and try again.",
           total_usd: subtotal_usd,
+          points_discount_usd,
+          payable_usd: charged_usd,
           wallet_balance_usd: balance,
-          shortfall_usd: round2(subtotal_usd - balance),
+          shortfall_usd: round2(charged_usd - balance),
         });
       }
 
-      const tx = await Transaction.create({
-        userId,
-        walletId: wallet._id,
-        amount: subtotal_usd,
-        currency: "USD",
-        type: "debit",
-        method: "wallet_balance",
-        reference: clientOrderId ? `checkout:${clientOrderId}` : `checkout:${Date.now()}`,
-        status: "completed",
-        from: "nameword",
-      });
+      // Cash is committed → burn the redeemed points.
+      if (points_redeemed > 0) {
+        await logPoints(userId, points_redeemed, "debit");
+      }
+
+      let tx = null;
+      if (charged_usd > 0) {
+        tx = await Transaction.create({
+          userId,
+          walletId: wallet._id,
+          amount: charged_usd,
+          currency: "USD",
+          type: "debit",
+          method: "wallet_balance",
+          reference: clientOrderId ? `checkout:${clientOrderId}` : `checkout:${Date.now()}`,
+          status: "completed",
+          from: "nameword",
+        });
+      }
 
       const order = new Order({
         userId,
@@ -243,20 +357,34 @@ class CheckoutController {
         mode,
         items,
         subtotal_usd,
-        charged_usd: subtotal_usd,
-        transactionId: tx._id,
+        points_redeemed,
+        points_discount_usd,
+        charged_usd,
+        transactionId: tx ? tx._id : undefined,
       });
 
-      let refunded = 0;
+      let refunded = 0; // cash refunded to wallet
+      let pointsRestored = 0; // reward points restored on failed items
       for (const item of order.items) {
         const result = await provisionItem(item, mode, req.user.email);
         item.status = result.status;
         item.message = result.message;
         item.upstream = result.upstream;
         if (result.status === "failed") {
-          await creditWallet(userId, item.price_usd, `refund:${order.orderNumber || tx.transactionId}:${item.domain}`);
-          item.refunded_usd = item.price_usd;
-          refunded = round2(refunded + item.price_usd);
+          // Refund a failed item proportionally across the cash + points it was paid with.
+          const cashShare =
+            subtotal_usd > 0 ? round2(item.price_usd * (charged_usd / subtotal_usd)) : round2(item.price_usd);
+          const pointsShareUsd = round2(item.price_usd - cashShare);
+          if (cashShare > 0) {
+            await creditWallet(userId, cashShare, `refund:${order.orderNumber || (tx && tx._id) || "order"}:${item.domain}`);
+          }
+          if (pointsShareUsd > 0 && pointValueUsd() > 0) {
+            const restore = round2(pointsShareUsd / pointValueUsd());
+            await logPoints(userId, restore, "credit");
+            pointsRestored = round2(pointsRestored + restore);
+          }
+          item.refunded_usd = round2(item.price_usd);
+          refunded = round2(refunded + cashShare);
         } else {
           try {
             await createPaymentRecord({
@@ -267,7 +395,7 @@ class CheckoutController {
               currency: "USD",
               paymentMethod: "wallet_balance",
               status: "completed",
-              transactionId: tx._id,
+              transactionId: tx ? tx._id : null,
               metadata: { checkout: true, mode, itemType: item.type, domain: item.domain, plan_id: item.plan_id || null },
             });
           } catch (e) {
@@ -278,7 +406,17 @@ class CheckoutController {
 
       const failedCount = order.items.filter((i) => i.status === "failed").length;
       order.refunded_usd = refunded;
+      order.points_restored = pointsRestored;
       order.status = failedCount === order.items.length ? "failed" : failedCount > 0 ? "partial" : "paid";
+
+      // Earn reward points on the NET cash actually kept by the business.
+      const netCash = round2(Math.max(0, charged_usd - refunded));
+      const points_earned = round2(netCash * purchaseRewardRate());
+      if (points_earned > 0) {
+        await logPoints(userId, points_earned, "credit");
+      }
+      order.points_earned = points_earned;
+
       const after = await Wallet.findOne({ userId });
       order.wallet_balance_after_usd = round2(walletUsd(after));
       await order.save();

@@ -119,8 +119,8 @@ const FrontLayout = () => {
             <button onClick={() => setPaletteOpen(true)} className="sm:hidden header-icon-btn" aria-label="Search"><LuSearch className="h-5 w-5" /></button>
 
             {/* reward points */}
-            <NavLink to="/wallet#rewards" title={app.rewards} data-testid="rewards-chip" className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-semibold text-primary dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-gray-200">
-              <LuGift className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {Number(user?.rewardPoints ?? 0)} {app.pts}
+            <NavLink to="/wallet#rewards" title={app.rewards} data-testid="rewards-chip" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 sm:px-3 py-1.5 text-13 font-semibold text-primary dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-gray-200">
+              <LuGift className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {Number(user?.rewardPoints ?? 0)} <span className="hidden sm:inline">{app.pts}</span>
             </NavLink>
 
             {/* wallet chip */}

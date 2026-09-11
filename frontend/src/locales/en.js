@@ -612,6 +612,7 @@ export const en = {
     wallet: "Wallet",
     subscriptions: "Subscriptions",
     paymentHistory: "Payment history",
+    orders: "Orders",
     refundHistory: "Refund history",
     subscriptionsSeePaymentHistory: "See payment history",
     walletBalance: "Wallet Balance",

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
-import { FiAlertTriangle, FiArrowRight, FiCheckCircle, FiGlobe, FiServer, FiSettings, FiXCircle } from "react-icons/fi";
+import { FiAlertTriangle, FiArrowRight, FiCheckCircle, FiGlobe, FiServer, FiSettings, FiXCircle, FiGift } from "react-icons/fi";
 import checkoutAPI from "../../api/checkout";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { money, durationLabel } from "../../utils/checkoutFormat";
@@ -81,9 +81,12 @@ export default function OrderSuccess() {
                   <div className="min-w-0">
                     <p className="font-semibold text-primary dark:text-white break-all">{it.type === "domain" ? it.domain : it.plan_name}</p>
                     <p className="text-xs text-ink-soft dark:text-gray-400">
-                      {it.type === "domain" ? `Registration · 1 year · ${it.ns_choice === "registrar" ? "Registrar DNS" : "Cloudflare DNS"}` : `Hosting for ${it.domain} · ${durationLabel(it.duration_days)}`}
+                      {it.type === "domain" ? `Registration · 1 year · ${it.ns_choice === "registrar" ? "Registrar DNS" : it.ns_choice === "custom" ? "Custom nameservers" : "Cloudflare DNS"}` : `Hosting for ${it.domain} · ${durationLabel(it.duration_days)}`}
                     </p>
                     {it.message && <p className="mt-1 text-xs text-ink-soft dark:text-gray-400">{it.message}</p>}
+                    {it.ns_choice === "custom" && Array.isArray(it.nameservers) && it.nameservers.length > 0 && (
+                      <p className="mt-1 text-xs text-ink-soft dark:text-gray-400 nw-mono">NS: {it.nameservers.join(", ")}</p>
+                    )}
                     {Array.isArray(it.upstream?.result?.nameservers) && (
                       <p className="mt-1 text-xs text-ink-soft dark:text-gray-400 nw-mono">NS: {it.upstream.result.nameservers.join(", ")}</p>
                     )}
@@ -98,9 +101,21 @@ export default function OrderSuccess() {
           })}
         </ul>
         <div className="border-t border-line dark:border-gray-800 bg-surface-2/60 dark:bg-gray-900/40 px-5 py-4 space-y-1.5 text-sm">
+          {order.points_discount_usd > 0 && (
+            <div className="flex justify-between text-brand-700 dark:text-brand-300" data-testid="order-points-discount">
+              <span>Paid with reward points{order.points_redeemed ? ` (${order.points_redeemed} pts)` : ""}</span>
+              <span className="nw-mono">− {money(order.points_discount_usd)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-ink-soft dark:text-gray-400"><span>Charged from wallet</span><span className="nw-mono" data-testid="order-charged">{money(order.charged_usd)}</span></div>
           {order.refunded_usd > 0 && <div className="flex justify-between text-ink-soft dark:text-gray-400"><span>Refunded</span><span className="nw-mono">{money(order.refunded_usd)}</span></div>}
           <div className="flex justify-between font-semibold text-primary dark:text-white"><span>Wallet balance now</span><span className="nw-mono" data-testid="order-wallet-after">{money(order.wallet_balance_after_usd)}</span></div>
+          {order.points_earned > 0 && (
+            <div className="flex justify-between pt-1 text-green-600 dark:text-green-400" data-testid="order-points-earned">
+              <span className="inline-flex items-center gap-1.5"><FiGift size={14} /> Reward points earned</span>
+              <span className="nw-mono">+ {order.points_earned} pts</span>
+            </div>
+          )}
         </div>
       </div>
 

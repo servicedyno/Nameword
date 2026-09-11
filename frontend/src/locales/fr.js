@@ -612,6 +612,7 @@ export const fr = {
     wallet: "Portefeuille",
     subscriptions: "Abonnements",
     paymentHistory: "Historique des paiements",
+    orders: "Commandes",
     refundHistory: "Historique des remboursements",
     subscriptionsSeePaymentHistory: "Voir l'historique des paiements",
     walletBalance: "Solde du portefeuille",

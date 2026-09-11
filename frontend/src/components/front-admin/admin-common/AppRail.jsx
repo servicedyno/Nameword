@@ -14,7 +14,7 @@ const RAIL = [
   { key: "hosting", to: "/hosting", icon: LuServer, match: ["/hosting", "/setup-websites", "/hosting", "/manage-plan", "/upgrade-plan", "/renew-plan"] },
   { key: "vps", to: "/vps", icon: LuCloud, match: ["/vps"] },
   { key: "rdp", to: "/rdp", icon: LuMonitor, match: ["/rdp"] },
-  { key: "wallet", to: "/wallet", icon: LuWallet, match: ["/wallet", "/subscriptions", "/payment-history"] },
+  { key: "wallet", to: "/wallet", icon: LuWallet, match: ["/wallet", "/subscriptions", "/payment-history", "/orders"] },
   { key: "rewards", to: "/wallet#rewards", icon: LuGift, match: [] },
   { key: "settings", to: "/account-setting", icon: LuSettings, match: ["/account-setting", "/account-information", "/change-email"] },
 ];

@@ -612,6 +612,7 @@ export const es = {
     wallet: "Billetera",
     subscriptions: "Suscripciones",
     paymentHistory: "Historial de pagos",
+    orders: "Pedidos",
     refundHistory: "Historial de reembolsos",
     subscriptionsSeePaymentHistory: "Ver historial de pagos",
     walletBalance: "Saldo de la billetera",

@@ -7,7 +7,8 @@ const orderItemSchema = new mongoose.Schema(
     plan_id: { type: String },
     plan_name: { type: String },
     duration_days: { type: Number },
-    ns_choice: { type: String, enum: ["cloudflare", "registrar"], default: "cloudflare" },
+    ns_choice: { type: String, enum: ["cloudflare", "registrar", "custom"], default: "cloudflare" },
+    nameservers: { type: [String], default: [] },
     registrar: { type: String },
     price_usd: { type: Number, required: true },
     status: {
@@ -31,6 +32,12 @@ const orderSchema = new mongoose.Schema(
     status: { type: String, enum: ["paid", "partial", "failed"], default: "paid" },
     items: { type: [orderItemSchema], default: [] },
     subtotal_usd: { type: Number, required: true },
+    // Reward points applied as a discount (redemption).
+    points_redeemed: { type: Number, default: 0 },
+    points_discount_usd: { type: Number, default: 0 },
+    // Reward points earned for this purchase, and any restored on failed-item refunds.
+    points_earned: { type: Number, default: 0 },
+    points_restored: { type: Number, default: 0 },
     charged_usd: { type: Number, required: true },
     refunded_usd: { type: Number, default: 0 },
     wallet_balance_after_usd: { type: Number },
