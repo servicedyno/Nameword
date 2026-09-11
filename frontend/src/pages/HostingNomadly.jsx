@@ -6,7 +6,8 @@ import WalletNudge from "../components/reseller/WalletNudge";
 import { useAlert } from "../context/AlertContext";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useBuyer } from "../hooks/useBuyer";
-import { Link } from "react-router";
+import { useCart } from "../hooks/useCart";
+import { Link, useNavigate } from "react-router";
 import {
   FiShield,
   FiGlobe,
@@ -16,7 +17,6 @@ import {
   FiTrash2,
   FiLock,
   FiExternalLink,
-  FiCheckCircle,
   FiAlertTriangle,
   FiPauseCircle,
   FiPlayCircle,
@@ -66,7 +66,9 @@ const Row = ({ label, value }) => (
 export default function HostingNomadly() {
   usePageMeta("Offshore cPanel Hosting", "Anti-Red cPanel hosting from a privacy-respecting jurisdiction.");
   const { showAlert } = useAlert();
-  const { isAuthenticated, mode, balance, refresh, requireLogin } = useBuyer();
+  const { isAuthenticated, mode, balance } = useBuyer();
+  const navigate = useNavigate();
+  const cart = useCart();
 
   const [platform, setPlatform] = useState(null);
   const [plans, setPlans] = useState([]);
@@ -77,14 +79,12 @@ export default function HostingNomadly() {
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
 
-  // Buy modal
+  // Add-to-cart modal
   const [buyPlan, setBuyPlan] = useState(null);
   const [domain, setDomain] = useState("");
   const [domainMode, setDomainMode] = useState("byo");
-  const [email, setEmail] = useState("");
-  const [captcha, setCaptcha] = useState(false);
-  const [buying, setBuying] = useState(false);
-  const [buyResult, setBuyResult] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   // Account actions
   const [busyUser, setBusyUser] = useState(null);
@@ -128,50 +128,51 @@ export default function HostingNomadly() {
   }, [isAuthenticated, loadAccounts]);
 
   const openBuy = (plan) => {
-    if (!requireLogin("/hosting")) return;
     setBuyPlan(plan);
     setDomain("");
     setDomainMode("byo");
-    setEmail("");
-    setCaptcha(false);
-    setBuyResult(null);
+    setAddError(null);
   };
 
   const closeBuy = () => {
     setBuyPlan(null);
-    setBuyResult(null);
-    setBuying(false);
+    setAddError(null);
+    setAdding(false);
   };
 
-  const submitBuy = async () => {
+  const DOMAIN_RE = /^([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+  // Wire "Select plan" into the shared checkout cart (Hostinger-style funnel).
+  // BYO: attach hosting to a domain the customer already owns (they point our
+  // nameservers afterwards). Register-new: price the domain live and add both
+  // the registration and the hosting to the cart.
+  const addPlanToCart = async () => {
     if (!buyPlan) return;
-    if (!domain.trim()) {
-      showAlert("Please enter a domain.", { type: "fail" });
+    const d = domain.trim().toLowerCase();
+    if (!DOMAIN_RE.test(d)) {
+      setAddError("Please enter a valid domain, e.g. mysite.com");
       return;
     }
-    setBuying(true);
-    setBuyResult(null);
+    setAdding(true);
+    setAddError(null);
     try {
-      const payload = {
-        plan_id: buyPlan.plan_id,
-        domain: domain.trim(),
-        domain_mode: domainMode,
-        ...(email.trim() ? { email: email.trim() } : {}),
-        ...(buyPlan.visitor_captcha_available ? { visitor_captcha: captcha } : {}),
-      };
-      const res = await resellerAPI.createHosting(payload);
-      setBuyResult(res);
-      if (res?.mode === "live" && res?.result?.success) {
-        showAlert("Hosting account created.", { type: "success" });
-        loadAccounts();
-        refresh();
+      if (domainMode === "buy") {
+        const res = await resellerAPI.searchDomain(d);
+        if (!res?.available) {
+          setAddError(`${d} isn't available to register. Switch to "I already own it" to host it, or try another name.`);
+          setAdding(false);
+          return;
+        }
+        cart.addDomain({ domain: d, price_usd: res.price_usd, registrar: res.registrar });
       }
+      cart.addHosting({ domain: d, plan: buyPlan });
+      showAlert(`${buyPlan.name || "Hosting"} added to cart for ${d}`, { type: "success" });
+      setBuyPlan(null);
+      navigate(isAuthenticated ? "/cart" : "/checkout/account");
     } catch (err) {
-      const data = err?.response?.data;
-      setBuyResult({ _error: true, ...(data || { message: "Could not create hosting account." }) });
-      showAlert(data?.message || "Could not create hosting account.", { type: "fail" });
+      setAddError(err?.response?.data?.message || "Could not add this plan to your cart. Please try again.");
     } finally {
-      setBuying(false);
+      setAdding(false);
     }
   };
 
@@ -366,7 +367,7 @@ export default function HostingNomadly() {
                       )}
                     </div>
 
-                    <button onClick={() => openBuy(p)} className="nw-btn-primary w-full justify-center">Get hosting</button>
+                    <button onClick={() => openBuy(p)} className="nw-btn-primary w-full justify-center">Select plan</button>
                   </div>
                 );
               })}
@@ -458,7 +459,7 @@ export default function HostingNomadly() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeBuy}>
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
-              <h3 className="text-lg font-semibold text-primary dark:text-white">Get {buyPlan.name || buyPlan.plan_id}</h3>
+              <h3 className="text-lg font-semibold text-primary dark:text-white">Add {buyPlan.name || buyPlan.plan_id}</h3>
               <button onClick={closeBuy} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
@@ -473,79 +474,39 @@ export default function HostingNomadly() {
                 </p>
               </div>
 
-              {!buyResult && (
-                <>
-                  <div>
-                    <label htmlFor="h-domain" className="block text-sm font-medium text-primary dark:text-white mb-1">Primary domain</label>
-                    <input id="h-domain" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="mysite.com" className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
-                  </div>
+              <div>
+                <label htmlFor="h-domain" className="block text-sm font-medium text-primary dark:text-white mb-1">Primary domain</label>
+                <input id="h-domain" value={domain} onChange={(e) => { setDomain(e.target.value); setAddError(null); }} placeholder="mysite.com" className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-primary dark:text-white mb-1">Domain</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => setDomainMode("byo")} className={`rounded-xl border px-3 py-2.5 text-sm font-medium ${domainMode === "byo" ? "border-brand bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-brand" : "border-line dark:border-gray-700 text-primary dark:text-white"}`}>I already own it</button>
-                      <button type="button" onClick={() => setDomainMode("buy")} className={`rounded-xl border px-3 py-2.5 text-sm font-medium ${domainMode === "buy" ? "border-brand bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-brand" : "border-line dark:border-gray-700 text-primary dark:text-white"}`}>Register new</button>
-                    </div>
-                    {domainMode === "buy" && (
-                      <p className="text-xs text-secondary dark:text-gray-400 mt-1.5">The domain registration price is added to this order.</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="h-email" className="block text-sm font-medium text-primary dark:text-white mb-1">Contact email <span className="text-secondary font-normal">(optional)</span></label>
-                    <input id="h-email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="client@mysite.com" className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
-                  </div>
-
-                  {buyPlan.visitor_captcha_available && (
-                    <label className="flex items-start gap-3 rounded-xl border border-line dark:border-gray-700 px-3 py-3 cursor-pointer">
-                      <input type="checkbox" checked={captcha} onChange={(e) => setCaptcha(e.target.checked)} className="mt-0.5 h-4 w-4 accent-brand" />
-                      <span className="text-sm">
-                        <span className="font-medium text-primary dark:text-white">Enable Visitor Captcha + Geo</span>
-                        <span className="block text-secondary dark:text-gray-400">Challenge suspicious visitors and block unwanted regions.</span>
-                      </span>
-                    </label>
-                  )}
-                  <WalletNudge balance={balance} price={buyPlan.price_usd} />
-                </>
-              )}
-
-              {buyResult && !buyResult._error && buyResult.mode === "dry_run" && (
-                <div className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm">
-                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 font-semibold mb-2"><FiCheckCircle /> Simulated (test mode)</div>
-                  <p className="text-amber-800 dark:text-amber-200">This order priced at <span className="font-semibold">{money(buyResult.price_usd)}</span> and passed validation. No account was created and no funds were charged.</p>
+              <div>
+                <label className="block text-sm font-medium text-primary dark:text-white mb-1">Domain</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { setDomainMode("byo"); setAddError(null); }} className={`rounded-xl border px-3 py-2.5 text-sm font-medium ${domainMode === "byo" ? "border-brand bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-brand" : "border-line dark:border-gray-700 text-primary dark:text-white"}`}>I already own it</button>
+                  <button type="button" onClick={() => { setDomainMode("buy"); setAddError(null); }} className={`rounded-xl border px-3 py-2.5 text-sm font-medium ${domainMode === "buy" ? "border-brand bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-brand" : "border-line dark:border-gray-700 text-primary dark:text-white"}`}>Register new</button>
                 </div>
-              )}
+                {domainMode === "byo" ? (
+                  <p className="text-xs text-secondary dark:text-gray-400 mt-1.5">
+                    After payment we&apos;ll show the nameservers to set on your domain — point them at us and your site goes live.
+                  </p>
+                ) : (
+                  <p className="text-xs text-secondary dark:text-gray-400 mt-1.5">We&apos;ll check availability and add the domain registration (1 year) to your cart alongside hosting.</p>
+                )}
+              </div>
 
-              {buyResult && !buyResult._error && buyResult.mode === "live" && (
-                <div className="rounded-lg border border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 text-sm space-y-1">
-                  <div className="flex items-center gap-2 text-green-800 dark:text-green-200 font-semibold mb-1"><FiCheckCircle /> Account created</div>
-                  <p className="text-green-800 dark:text-green-200">Charged {money(buyResult.charged_usd)}. New balance {money(buyResult.wallet_balance_usd)}.</p>
-                  {buyResult.result?.cpanel_username && <p className="text-green-800 dark:text-green-200">cPanel user: <span className="font-mono">{buyResult.result.cpanel_username}</span></p>}
-                  {Array.isArray(buyResult.result?.nameservers) && (
-                    <p className="text-green-800 dark:text-green-200">Nameservers: <span className="font-mono">{buyResult.result.nameservers.join(", ")}</span></p>
-                  )}
-                </div>
-              )}
+              <WalletNudge balance={balance} price={buyPlan.price_usd} />
 
-              {buyResult && buyResult._error && (
-                <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm">
-                  <div className="flex items-center gap-2 text-red-700 dark:text-red-300 font-semibold mb-1"><FiAlertTriangle /> {buyResult.error || "Error"}</div>
-                  <p className="text-red-700 dark:text-red-300">{buyResult.message}</p>
-                  {buyResult.shortfall_usd ? (
-                    <p className="text-red-700 dark:text-red-300 mt-1">Short by {money(buyResult.shortfall_usd)} — top up your wallet and retry.</p>
-                  ) : null}
+              {addError && (
+                <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+                  <FiAlertTriangle className="mt-0.5 shrink-0" /> <span>{addError}</span>
                 </div>
               )}
             </div>
             <div className="px-6 py-4 border-t border-lightgray dark:border-gray-800 flex justify-end gap-3">
-              {!buyResult ? (
-                <>
-                  <button onClick={closeBuy} className="px-4 py-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white text-sm font-medium">Cancel</button>
-                  <button onClick={submitBuy} disabled={buying} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium disabled:opacity-60">{buying ? "Processing…" : `Get hosting · ${money(buyPlan.price_usd)}`}</button>
-                </>
-              ) : (
-                <button onClick={closeBuy} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium">Done</button>
-              )}
+              <button onClick={closeBuy} className="px-4 py-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white text-sm font-medium">Cancel</button>
+              <button onClick={addPlanToCart} disabled={adding} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium disabled:opacity-60 inline-flex items-center gap-2">
+                {adding ? "Adding…" : `Add to cart · ${money(buyPlan.price_usd)}`}
+              </button>
             </div>
           </div>
         </div>
