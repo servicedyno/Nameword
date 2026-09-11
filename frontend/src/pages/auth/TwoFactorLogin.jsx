@@ -10,8 +10,6 @@ import QRCodeDisplay from "../../components/common/QRCodeDisplay";
 import * as Yup from "yup";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
-import { mergeGuestCartIntoServer } from "../../utils/guestCart";
-import { cartAPI } from "../../api/cartApi";
 
 const TwoFactorLogin = () => {
   const { t } = useLanguage();
@@ -29,11 +27,6 @@ const TwoFactorLogin = () => {
         duration: 2500,
         type: "success",
       });
-      try {
-        await mergeGuestCartIntoServer(cartAPI);
-      } catch (e) {
-        console.warn("Merge guest cart failed:", e);
-      }
       const path = localStorage.getItem("path");
       navigate(path || "/", { replace: true });
     } catch (err) {

@@ -157,11 +157,18 @@ class RegisterController {
 					mailErr?.message || mailErr
 				);
 			}
+			// Email + password sign-up signs the user straight in (Hostinger-style
+			// checkout gate). The OTP stays persisted for optional verification later.
+			const userSession = await saveUserSession({ req, userId: user._id, loginType: "Email" });
+			const token = generateJwtToken(user, userSession._id);
+			req.session.jwt = token;
+
 			return res.status(201).json({
 				data: user,
+				token,
 				message: emailSent
-					? "OTP sent successfully."
-					: "Account created. We could not send the verification email right now — you can request a new code shortly.",
+					? "Account created. We sent a verification code to your email."
+					: "Account created.",
 				success: true,
 				emailSent,
 				expiresAt,

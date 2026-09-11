@@ -5,6 +5,7 @@ const APIRouter = require("express").Router();
 // The legacy ConnectReseller / WHM / Plesk / Cloudflare integrations have been
 // retired (routes below removed) in favour of the reseller proxy.
 APIRouter.use("/reseller", require("./reseller"));
+APIRouter.use("/checkout", require("./checkout"));
 
 APIRouter.use("/rdp", require("./rdp"));
 APIRouter.use("/rdp-subscription", require("./rdpSubscription"));

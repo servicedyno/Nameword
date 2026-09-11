@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { FiGlobe, FiCheckCircle, FiShoppingCart, FiLogIn } from "react-icons/fi";
+import { FiGlobe, FiCheckCircle, FiShoppingCart } from "react-icons/fi";
 import resellerAPI from "../../api/reseller";
-import { useAuth } from "../../hooks/useAuth";
+import { cartStore } from "../../utils/cartStore";
 
 const money = (n) =>
   n === null || n === undefined || isNaN(Number(n)) ? "\u2014" : `$${Number(n).toFixed(2)}`;
@@ -29,7 +29,8 @@ function ResultCard({ domain, available, price_usd, registrar, ctaLabel, ctaIcon
         {available && (
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRegister(domain, price_usd); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRegister(domain, price_usd, registrar); }}
+            data-testid={`home-result-add-${domain}`}
             className="nw-btn-primary nw-btn-sm"
           >
             <Icon size={15} /> {ctaLabel}
@@ -49,7 +50,6 @@ function ResultCard({ domain, available, price_usd, registrar, ctaLabel, ctaIcon
 // sent to sign in / create an account (with the domain remembered), and the
 // actual purchase (gated by the in-app wallet) happens in the authenticated area.
 export default function DomainSearchResults({ query }) {
-  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [exact, setExact] = useState(null);
   const [exactLoading, setExactLoading] = useState(false);
@@ -84,22 +84,17 @@ export default function DomainSearchResults({ query }) {
       .finally(() => { if (reqIdRef.current === myId) setSugLoading(false); });
   }, [query]);
 
-  // Start the registration flow. The real purchase (in-app wallet) lives in the
-  // authenticated area, so logged-out visitors sign in first (domain remembered).
-  const handleRegister = (domain) => {
-    const dest = `/domains?value=${encodeURIComponent(domain)}`;
-    if (!isAuthenticated) {
-      try { localStorage.setItem("path", dest); } catch (e) { /* ignore */ }
-      navigate("/sign-in");
-      return;
-    }
-    navigate(dest);
+  // Add to cart and go straight to the hosting step (Hostinger pattern). The
+  // account gate comes later, so guests can start the order right here.
+  const handleRegister = (domain, price_usd, registrar) => {
+    cartStore.addDomain({ domain, price_usd, registrar });
+    navigate(`/checkout/hosting?domain=${encodeURIComponent(domain)}`);
   };
 
   if (!String(query || "").trim()) return null;
 
-  const ctaLabel = isAuthenticated ? "Register" : "Sign in to register";
-  const ctaIcon = isAuthenticated ? FiShoppingCart : FiLogIn;
+  const ctaLabel = "Add to cart";
+  const ctaIcon = FiShoppingCart;
 
   // Drop any suggestion that duplicates the exact match (e.g. a bare keyword
   // resolves to ".com", which the suggestions list also returns).

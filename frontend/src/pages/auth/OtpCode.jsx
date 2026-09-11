@@ -9,8 +9,6 @@ import { useAuth } from "../../hooks/useAuth";
 import Loader from "../../components/common/Loader";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
-import { mergeGuestCartIntoServer } from "../../utils/guestCart";
-import { cartAPI } from "../../api/cartApi";
 
 const OtpCode = () => {
     const { t } = useLanguage();
@@ -105,11 +103,6 @@ const OtpCode = () => {
                     localStorage.removeItem("registerId");
 
                     updateUser(data?.data);
-                    try {
-                        await mergeGuestCartIntoServer(cartAPI);
-                    } catch (e) {
-                        console.warn("Merge guest cart failed:", e);
-                    }
                     const path = localStorage.getItem("path");
                     navigate(path || '/', { replace: true });
                 }

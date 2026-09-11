@@ -9,6 +9,7 @@ import { RxCross2 } from "react-icons/rx";
 import { LuGlobe, LuNetwork, LuServer, LuCloud, LuMonitor, LuMail, LuCode, LuShieldCheck } from "react-icons/lu";
 import ThemeToggleButton from "../common/ThemeToggleButton";
 import UserDropdownMenu from "../common/UserDropdownMenu";
+import CartNavButton from "../checkout/CartNavButton";
 import { useLanguage } from "../../hooks/useLanguage";
 
 // Kept product surface: Domains · DNS · cPanel Hosting · VPS · RDP · Private Email · API
@@ -123,6 +124,7 @@ const Navbar = () => {
             )}
           </div>
           <ThemeToggleButton />
+          <CartNavButton />
           {user ? (
             <UserDropdownMenu classAdd={true} />
           ) : (
@@ -136,6 +138,7 @@ const Navbar = () => {
         {/* Mobile controls */}
         <div className="flex items-center gap-1 lg:hidden">
           <ThemeToggleButton />
+          <CartNavButton />
           <button type="button" onClick={() => setMobileOpen(true)} aria-label={s.nav.openMenu} className="p-2 text-primary dark:text-white">
             <IoMenu size={26} />
           </button>

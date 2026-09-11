@@ -13,8 +13,6 @@ import { NavLink } from "react-router";
 import Loader from "../../components/common/Loader";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
-import { mergeGuestCartIntoServer } from "../../utils/guestCart";
-import { cartAPI } from "../../api/cartApi";
 
 const SignIn = () => {
   const { t } = useLanguage();
@@ -78,11 +76,6 @@ const SignIn = () => {
     if (successMessage && !loading) {
       showAlert(successMessage, { duration: 2500, type: "success" });
       await checkAuth();
-      try {
-        await mergeGuestCartIntoServer(cartAPI);
-      } catch (e) {
-        console.warn("Merge guest cart failed:", e);
-      }
       const path = localStorage.getItem("path");
       navigate(path || "/", { replace: true });
     } else if (errorMessage) {

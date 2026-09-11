@@ -4,8 +4,6 @@ import { useLocation, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { setupAxiosInterceptors } from "../api/client";
 import { useAlert } from "./AlertContext";
-import { mergeGuestCartIntoServer } from "../utils/guestCart";
-import { cartAPI } from "../api/cartApi";
 
 // Create context with default values to prevent errors if used outside provider
 const defaultAuthValue = {
@@ -127,7 +125,8 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await authAPI.login(credentials);
 
-      if (!response?.data?.isProfileVerified || response?.data?.notifyEmail) {
+      // Only an explicit email-change confirmation still routes through OTP.
+      if (response?.data?.notifyEmail) {
         localStorage.setItem("email", response.data?.email);
         localStorage.setItem("otpExpireAt", response.expiresAt);
         navigate("/otp-code", { replace: true });
@@ -146,11 +145,6 @@ export const AuthProvider = ({ children }) => {
           ...(prev || {}),
           ...response.data,
         }));
-        try {
-          await mergeGuestCartIntoServer(cartAPI);
-        } catch (e) {
-          console.warn("Merge guest cart failed:", e);
-        }
         const path = localStorage.getItem("path");
         navigate(path || "/", { replace: true });
       }
@@ -176,6 +170,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("email", response.data.email);
       localStorage.setItem("registerId", response.data.id);
       localStorage.setItem("otpExpireAt", response.expiresAt);
+      // Sign-up now returns a session: sign the user straight in.
+      if (response?.token) {
+        localStorage.setItem("user", JSON.stringify(response.data));
+        localStorage.setItem("token", response.token);
+        setUser(response.data);
+      }
       return response;
     } catch (error) {
       if (error?.response?.data?.errors) {

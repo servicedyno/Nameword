@@ -42,9 +42,14 @@ const CreateAccount = () => {
       };
 
       const data = await register(userData);
-      // Redirect to home page after successful registration
       showAlert(data?.message, { duration: 2500, type: "success" });
-      navigate("/otp-code", { replace: true });
+      // Sign-up signs the user in; fall back to OTP only when no session was issued.
+      if (data?.token) {
+        const path = localStorage.getItem("path");
+        navigate(path || "/dashboard", { replace: true });
+      } else {
+        navigate("/otp-code", { replace: true });
+      }
     } catch (error) {
       console.error("Registration failed:", error);
     } finally {

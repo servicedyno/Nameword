@@ -6,13 +6,15 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import OtpCode from "../pages/auth/OtpCode";
 import ChangeEmail from "../pages/auth/ChangeEmail";
 
-import UpsellCheckout from "../pages/UpsellCheckout";
-import Cart from "../pages/Cart";
 import AuthLayout from "../layouts/AuthLayout";
 import { Navigate } from "react-router";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 
-import PaymentCheckout from "../pages/PaymentCheckout";
+import CheckoutLayout from "../layouts/CheckoutLayout";
+import HostingUpsell from "../pages/checkout/HostingUpsell";
+import AccountGate from "../pages/checkout/AccountGate";
+import CartPage from "../pages/checkout/CartPage";
+import OrderSuccess from "../pages/checkout/OrderSuccess";
 import Hosting from "../pages/HostingNomadly";
 import VPS from "../pages/VPS";
 import RDP from "../pages/RDP";
@@ -116,20 +118,15 @@ function Router() {
       <Route path="/api" element={<Api />} />
       <Route path="/pricing" element={<Pricing />} />
 
-      <Route element={<AuthLayout />}>
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/upsell-checkout" element={<UpsellCheckout />} />
+      {/* Hostinger-style checkout funnel: search -> hosting -> account -> cart -> receipt */}
+      <Route element={<CheckoutLayout />}>
+        <Route path="/checkout/hosting" element={<HostingUpsell />} />
+        <Route path="/checkout/account" element={<AccountGate />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout/success/:id" element={<OrderSuccess />} />
       </Route>
-
-      <Route
-        element={
-          <ProtectedRoute>
-            <AuthLayout />{" "}
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/payment-checkout" element={<PaymentCheckout />} />
-      </Route>
+      <Route path="/upsell-checkout" element={<Navigate to="/cart" replace />} />
+      <Route path="/payment-checkout" element={<Navigate to="/cart" replace />} />
 
       <Route
         element={

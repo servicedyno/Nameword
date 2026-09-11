@@ -108,7 +108,9 @@ class LoginController {
 			);
 		}
 
-		if (!user.isProfileVerified || user.notifyEmail){
+		// Email verification is optional (mail delivery may be unavailable); only an
+		// explicit email-change confirmation (notifyEmail) still routes through OTP.
+		if (user.notifyEmail){
 			const { otp, expiresAt } = generateRandomOtp();
 
 			await VerificationCode.findOneAndUpdate(
