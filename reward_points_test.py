@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://0ac560f2-86ee-49b2-9add-68e042c05015.preview.emergentagent.com"
+BASE_URL = "https://nameword-dev-1.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 TIMEOUT = 30
 
