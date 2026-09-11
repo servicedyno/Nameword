@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
@@ -6,128 +6,135 @@
 
 @theme {
   /* =====================================================================
-     "Midnight Vault" design tokens — offshore, privacy-first
-     Base: deep navy-black · Panels: lifted navy · One accent: encrypted green
+     "Editorial Indigo & Obsidian" design tokens (Option 1)
+     Light-first canvas · one indigo accent · mono metadata · obsidian dark
      ===================================================================== */
 
   /* Text */
-  --color-primary: #0b1020;          /* ink on light surfaces */
+  --color-primary: #0f172a;          /* ink */
   --color-secondary: #64748b;        /* muted text */
-  --color-ink: #0b1020;
+  --color-ink: #0f172a;
   --color-ink-soft: #475569;
-  --color-on-brand: #04150f;         /* text placed on green fills (AA) */
+  --color-ink-muted: #94a3b8;
+  --color-on-brand: #ffffff;         /* text on indigo fills */
 
-  /* Surfaces (light variant = cool graphite) */
+  /* Surfaces */
   --color-surface: #ffffff;
-  --color-surface-2: #f3f6fb;
-  --color-line: #dfe5f0;
+  --color-surface-2: #f8fafc;
+  --color-surface-3: #f1f5f9;
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
 
-  /* Accent — encrypted green */
-  --color-brand: #10b981;
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-900: #064e3b;
+  /* Accent — indigo */
+  --color-brand: #4f46e5;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
 
   /* Action colours (legacy aliases -> accent) */
-  --color-darkbtn: #10b981;
-  --color-darkbtn-hover: #059669;
-  --color-darkbtn-active: #047857;
-  --color-darkbtn-100: #ecfdf5;
-  --color-darkbtn-200: #6ee7b7;
+  --color-darkbtn: #4f46e5;
+  --color-darkbtn-hover: #4338ca;
+  --color-darkbtn-active: #3730a3;
+  --color-darkbtn-100: #eef2ff;
+  --color-darkbtn-200: #a5b4fc;
 
   /* Status */
   --color-success: #10b981;
   --color-success-50: #ecfdf5;
-  --color-accent: #d97706;           /* muted amber — sparingly */
+  --color-accent: #f59e0b;           /* amber — warnings / test mode only */
   --color-accent-50: #fffbeb;
-  --color-warning: #ef4444;
+  --color-warning: #ef4444;          /* legacy: used as error red */
+  --color-danger: #ef4444;
   --color-sucess-50: #ecfdf5;
   --color-sucess-100: #a7f3d0;
   --color-sucess-400: #10b981;
 
-  /* Navy-tinted neutral scale. Overrides Tailwind's gray-* so every existing
-     dark:bg-gray-900 / dark:border-gray-800 / dark:text-gray-400 becomes vault navy. */
-  --color-gray-50: #f3f6fb;
-  --color-gray-100: #e7ecf5;
-  --color-gray-200: #d3dae8;
-  --color-gray-300: #b3bdd1;
+  /* Obsidian neutral scale. Overrides Tailwind's gray-* so every existing
+     dark:bg-gray-900 / dark:border-gray-800 / dark:text-gray-400 becomes obsidian. */
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
   --color-gray-400: #94a3b8;
   --color-gray-500: #64748b;
   --color-gray-600: #475569;
-  --color-gray-700: #26304a;
-  --color-gray-800: #1a2340;
-  --color-gray-900: #121a2f;
-  --color-gray-950: #0b1020;
+  --color-gray-700: #334155;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #0b0f19;
 
-  /* Retire indigo/teal/violet remnants by pointing them at the accent scale */
-  --color-teal-300: #6ee7b7;
-  --color-teal-400: #34d399;
-  --color-teal-500: #10b981;
-  --color-teal-600: #059669;
-  --color-teal-700: #047857;
-  --color-indigo-400: #34d399;
-  --color-indigo-500: #10b981;
-  --color-indigo-600: #059669;
-  --color-indigo-800: #047857;
-  --color-violet-500: #10b981;
-  --color-cyan-500: #10b981;
+  /* Retire teal/violet/cyan remnants by pointing them at the accent scale */
+  --color-teal-300: #a5b4fc;
+  --color-teal-400: #818cf8;
+  --color-teal-500: #6366f1;
+  --color-teal-600: #4f46e5;
+  --color-teal-700: #4338ca;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-800: #3730a3;
+  --color-violet-500: #6366f1;
+  --color-cyan-500: #06b6d4;
 
   /* Legacy palette aliases (kept so untouched screens recolour in one shot) */
-  --color-lightgray: #e7ecf5;
-  --color-lightgray-100: #dfe5f0;
-  --color-lightgray-200: #f3f6fb;
-  --color-lightgray-300: #b3bdd1;
+  --color-lightgray: #f1f5f9;
+  --color-lightgray-100: #e2e8f0;
+  --color-lightgray-200: #f8fafc;
+  --color-lightgray-300: #cbd5e1;
   --color-lightgray-500: #64748b;
   --color-lightgray-600: #64748b;
-  --color-lightgray-700: #26304a;
+  --color-lightgray-700: #334155;
   --color-active: #64748b;
-  --color-beige: #f3f6fb;
-  --color-beige-100: #e7ecf5;
-  --color-beige-200: #ecfdf5;
-  --color-beige-400: #b3bdd1;
+  --color-beige: #f8fafc;
+  --color-beige-100: #f1f5f9;
+  --color-beige-200: #eef2ff;
+  --color-beige-400: #cbd5e1;
   --color-active-border: #cbd5e1;
-  --color-hover: #f3f6fb;
-  --color-tealdark: #10b981;
-  --color-teallight: #ecfdf5;
-  --color-teallight-50: #ecfdf5;
+  --color-hover: #f8fafc;
+  --color-tealdark: #4f46e5;
+  --color-teallight: #eef2ff;
+  --color-teallight-50: #eef2ff;
   --color-teallight-400: #94a3b8;
   --color-teallight-500: #475569;
-  --color-teal-hover: #059669;
-  --color-stokecolor: #dfe5f0;
-  --color-save-badge: #d1fae5;
-  --color-skydark: #10b981;
-  --color-slatelight: #f3f6fb;
+  --color-teal-hover: #4338ca;
+  --color-stokecolor: #e2e8f0;
+  --color-save-badge: #e0e7ff;
+  --color-skydark: #4f46e5;
+  --color-slatelight: #f8fafc;
   --color-nodata: #94a3b8;
-  --color-disable: #94a3b8;
-  --color-disable-stoke: #b3bdd1;
-  --color-menu-hover: #e7ecf5;
-  --color-mutebg: #f3f6fb;
-  --color-lightbeige: #ecfdf5;
+  --color-disable: #a5b4fc;
+  --color-disable-stoke: #cbd5e1;
+  --color-menu-hover: #f1f5f9;
+  --color-mutebg: #f8fafc;
+  --color-lightbeige: #eef2ff;
   --color-golder: #475569;
-  --color-golder-50: #f3f6fb;
-  --color-golder-100: #e7ecf5;
-  --color-bodycolor: #f3f6fb;
-  --color-light-purple: #e7ecf5;
-  --color-progressbar: #e7ecf5;
-  --color-purple-light: #047857;
-  --color-bggray: #f3f6fb;
-  --color-gray-border: #dfe5f0;
+  --color-golder-50: #f8fafc;
+  --color-golder-100: #f1f5f9;
+  --color-bodycolor: #f8fafc;
+  --color-light-purple: #e0e7ff;
+  --color-progressbar: #e2e8f0;
+  --color-purple-light: #4338ca;
+  --color-bggray: #f8fafc;
+  --color-gray-border: #e2e8f0;
   --color-light-green: #d1fae5;
   --color-btn-greenlight: #a7f3d0;
-  --color-btn-purplelight: #d1fae5;
+  --color-btn-purplelight: #e0e7ff;
 
   --shadow-alert: 0px 7px 20px 0px #0000000a;
   --shadow-alert-white: 0px 7px 20px 0px #ffffff0a;
-  --shadow-glow: 0 0 0 1px rgba(16, 185, 129, 0.25), 0 12px 40px -12px rgba(16, 185, 129, 0.35);
+  --shadow-glow: 0 0 0 1px rgba(79, 70, 229, 0.2), 0 12px 40px -12px rgba(79, 70, 229, 0.35);
 
-  --font-poppins: "Poppins", sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-poppins: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
   --text-15: 15px;
   --text-13: 13px;
@@ -147,8 +154,17 @@ html.dark {
 }
 
 body {
-  @apply font-poppins bg-white text-primary dark:bg-gray-950 dark:text-gray-100;
+  @apply font-sans bg-white text-primary dark:bg-gray-950 dark:text-gray-100;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .nw-h2, .font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: rgba(79, 70, 229, 0.18);
 }
 
 /*------------------------ start css --------------------*/
@@ -268,7 +284,7 @@ select {
 }
 
 .btn-blue {
-  @apply bg-brand hover:bg-brand-400 active:bg-brand-600 text-on-brand rounded-xl w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors;
+  @apply bg-brand hover:bg-brand-700 active:bg-brand-800 text-on-brand rounded-lg w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors;
 }
 
 .search-list {
@@ -326,7 +342,7 @@ select {
 }
 
 .add-to-cart {
-  @apply bg-brand hover:bg-brand-400 active:bg-brand-600 text-on-brand rounded-xl min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors;
+  @apply bg-brand hover:bg-brand-700 active:bg-brand-800 text-on-brand rounded-lg min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors;
 }
 
 .btn-text-link {
@@ -334,7 +350,7 @@ select {
 }
 
 .btn-outline {
-  @apply border border-brand-600 text-brand-700 hover:bg-brand hover:text-on-brand rounded-xl min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-brand-300 dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors;
+  @apply border border-brand-600 text-brand-700 hover:bg-brand hover:text-on-brand rounded-lg min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-brand-300 dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors;
 }
 
 /*---------------- domain tablist --------------------*/
@@ -1044,7 +1060,15 @@ input[type="checkbox"]:checked {
     @apply py-16 sm:py-20 lg:py-24;
   }
   .nw-eyebrow {
-    @apply inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700 dark:border-brand/25 dark:bg-brand/10 dark:text-brand-300;
+    @apply inline-flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-brand-700 dark:text-brand-300;
+  }
+  .nw-eyebrow::before {
+    content: "[";
+    @apply text-brand-300 dark:text-brand-500;
+  }
+  .nw-eyebrow::after {
+    content: "]";
+    @apply text-brand-300 dark:text-brand-500;
   }
   .nw-h2 {
     @apply text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white;
@@ -1054,30 +1078,30 @@ input[type="checkbox"]:checked {
   }
 
   .nw-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .nw-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed bg-brand text-on-brand hover:bg-brand-400 shadow-sm shadow-brand/20;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed bg-brand text-white hover:bg-brand-700 active:bg-brand-800 shadow-lg shadow-brand/10 dark:bg-brand-500 dark:hover:bg-brand-400;
   }
   .nw-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed border border-line bg-white text-primary hover:border-brand/40 hover:bg-surface-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:border-brand/40 dark:hover:bg-gray-700;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed border border-line bg-white text-primary hover:border-brand/40 hover:bg-brand-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:border-brand/40 dark:hover:bg-gray-700;
   }
   .nw-btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed text-ink-soft hover:bg-surface-2 hover:text-primary dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed text-ink-soft hover:bg-surface-2 hover:text-primary dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
   }
   .nw-btn-sm {
-    @apply px-3.5 py-2 text-13 rounded-lg;
+    @apply px-3.5 py-2 text-13 rounded-md;
   }
 
   .nw-card {
-    @apply rounded-2xl border border-line bg-white p-6 transition-all duration-200 dark:border-white/[0.07] dark:bg-gray-900;
+    @apply rounded-xl border border-line bg-white p-6 shadow-sm transition-all duration-200 dark:border-white/[0.07] dark:bg-gray-900 dark:shadow-none;
   }
   .nw-card-hover {
-    @apply hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:border-brand/40 dark:hover:shadow-[0_18px_50px_-20px_rgba(16,185,129,0.35)];
+    @apply hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lg hover:shadow-brand/5 dark:hover:border-brand/40 dark:hover:shadow-[0_18px_50px_-20px_rgba(99,102,241,0.35)];
   }
 
   .nw-input {
-    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-primary placeholder:text-slate-400 focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:placeholder:text-gray-500;
+    @apply w-full rounded-lg border border-line bg-white px-4 py-3 text-primary placeholder:text-slate-400 focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:placeholder:text-gray-500;
   }
 
   .nw-badge {
@@ -1090,11 +1114,16 @@ input[type="checkbox"]:checked {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-accent-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300;
   }
   .nw-badge-success {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-success-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300;
   }
 
   .nw-chip {
     @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300;
+  }
+
+  /* Monospace metadata label (IDs, prices, statuses) */
+  .nw-mono {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft dark:text-gray-400;
   }
 
   .nw-link {
@@ -1106,16 +1135,16 @@ input[type="checkbox"]:checked {
     @apply flex shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/12 dark:text-brand-300;
   }
 
-  /* Dark, luminous hero backdrop */
+  /* Light editorial hero backdrop (obsidian in dark mode) */
   .nw-hero {
-    @apply relative overflow-hidden bg-gradient-to-b from-brand-50/50 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950;
+    @apply relative overflow-hidden bg-gradient-to-b from-brand-50/70 via-white to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950;
   }
   .nw-hero-glow {
-    @apply pointer-events-none absolute rounded-full blur-3xl bg-brand-200/40 dark:bg-brand/10;
+    @apply pointer-events-none absolute rounded-full blur-3xl bg-brand-200/50 dark:bg-brand/10;
   }
   .nw-grid-bg {
-    background-image: linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-image: linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
     background-size: 44px 44px;
     mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
   }

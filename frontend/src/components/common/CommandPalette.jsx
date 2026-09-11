@@ -2,20 +2,19 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 import {
-  LuSearch, LuArrowRight, LuLayoutDashboard, LuGlobe, LuSend, LuNetwork,
+  LuSearch, LuArrowRight, LuLayoutDashboard, LuGlobe, LuNetwork,
   LuServer, LuCloud, LuMonitor, LuMail, LuCode, LuWallet, LuGift, LuRepeat,
   LuReceipt, LuSettings, LuUser, LuLifeBuoy, LuPlus,
 } from "react-icons/lu";
 
 // Destinations + quick actions for the kept product surface. Labels come from locales/site.*.js -> app.palette
 const ITEMS = [
-  { key: "registerDomain", to: "/home", icon: LuPlus, group: "action", keywords: "buy register search domain new private whois" },
+  { key: "registerDomain", to: "/domains", icon: LuPlus, group: "action", keywords: "buy register search domain new private whois" },
   { key: "addFunds", to: "/wallet", icon: LuWallet, group: "action", keywords: "top up add funds money balance crypto card" },
   { key: "dashboard", to: "/dashboard", icon: LuLayoutDashboard, group: "goto", keywords: "overview home dashboard" },
-  { key: "domains", to: "/domain-portfolio", icon: LuGlobe, group: "goto", keywords: "portfolio domains list" },
-  { key: "dns", to: "/dns-management", icon: LuNetwork, group: "goto", keywords: "dns records nameservers zone" },
-  { key: "transfer", to: "/transfer-domain", icon: LuSend, group: "goto", keywords: "transfer in epp auth code" },
-  { key: "hosting", to: "/websites", icon: LuServer, group: "goto", keywords: "hosting cpanel websites" },
+  { key: "domains", to: "/domains", icon: LuGlobe, group: "goto", keywords: "portfolio domains list" },
+  { key: "dns", to: "/dns-manager", icon: LuNetwork, group: "goto", keywords: "dns records nameservers zone" },
+  { key: "hosting", to: "/hosting", icon: LuServer, group: "goto", keywords: "hosting cpanel websites" },
   { key: "vps", to: "/vps", icon: LuCloud, group: "goto", keywords: "server vps cloud instance offshore linux root" },
   { key: "rdp", to: "/rdp", icon: LuMonitor, group: "goto", keywords: "remote desktop rdp windows" },
   { key: "email", to: "/email", icon: LuMail, group: "goto", keywords: "email mailbox inbox private" },

@@ -43,7 +43,7 @@ export const siteFr = {
     trust: [
       { label: "2 juridictions", sub: "UE et Singapour" },
       { label: "Confidentialité WHOIS", sub: "incluse, sans supplément" },
-      { label: "Portefeuille prépayé", sub: "carte ou crypto" },
+      { label: "Portefeuille prépayé", sub: "rechargez en crypto" },
       { label: "API complète", sub: "tout le tableau de bord" },
     ],
     pillars: {

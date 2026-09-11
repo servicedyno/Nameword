@@ -1,0 +1,59 @@
+{
+  "summary": "Phase 0 test pass. Backend: 21/21 pytest tests green — public reseller endpoints return 200 without auth, protected reseller endpoints return 401 without auth and 200 with the demo Bearer token, and every VPS plan under /reseller/vps/plans has a numeric vcpus parsed from plan_id (e.g. s-2vcpu-4gb -> 2). Frontend logged-out flows are correct: /vps, /hosting, /dns-manager and /domains hide the wallet chip and Test-mode/dry-run banner, hide the 'Your …' owner sections, Deploy/Get-hosting/Register CTAs redirect logged-out visitors to /sign-in, /dns-manager is protected, home renders in light theme (no `dark` class), no Register/Transfer-in tab toggle, 'Search privately' button present, and 'top up with crypto' copy is in the trust bar. Logged-IN flows (VPS wallet chip / dry-run banner / Deploy modal / Cmd-K navigation / mobile bottom tabs / return-path) COULD NOT BE VERIFIED — the demo user gets forcibly redirected to /account-setting immediately after login (see RCA below), so every navigation to /vps or /dashboard bounces back to /account-setting. This appears to be pre-existing behaviour of the axios interceptor rather than a Phase 0 regression, but it now blocks the Phase 0 logged-in acceptance criteria and needs to be resolved before those items can be re-verified. Cloudflare 429 on the Vite dev preview also caused occasional blank pages during rapid navigation; tests were re-run sequentially with waits.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "DomainsNomadly (/domains?value=coolstartup2027app.com, logged-out)",
+        "issue": "After the auto-search fires from the ?value= query param, no result rows (Available/Taken/Register) rendered within a 10s wait window on the logged-out first-load. Owner sections and wallet chips correctly stayed hidden, but the acceptance criterion 'results render' could not be confirmed. May be a slow /reseller/domains/search call behind CF or missing loading/error UI — please verify manually.",
+        "selector": "button:has-text('Register')",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Post-login navigation for demo@nameword.local",
+        "issue": "Immediately after a successful /api/v1/auth/login, the app lands on /account-setting instead of `path || '/'`. Any subsequent client-side navigation (goto /vps, /dashboard, Cmd-K -> Domains, mobile bottom-tabs -> Domains/Hosting) also ends at /account-setting. Root cause is almost certainly the response interceptor in /app/frontend/src/api/client.js lines 63-64: a 400 with body.redirect=true triggers redirectAPIKey() which navigate()s to /account-setting?tab=api-key. The demo user's latestApiKey is null so some post-login GET (very likely an /api/v1/... call that requires x-api-key) returns 400 {redirect:true} and the interceptor hijacks the SPA. This blocks verification of: (a) VPS wallet chip [data-testid=user-wallet-chip], (b) dry-run banner [data-testid=dry-run-banner], (c) Deploy Offshore VPS modal, (d) Cmd-K -> Domains/DNS/Hosting navigation, (e) mobile bottom-tabs Domains/Hosting, (f) return-path (/vps -> /sign-in -> /vps).",
+        "affected_selectors": [
+          "[data-testid='user-wallet-chip']",
+          "[data-testid='dry-run-banner']",
+          "[data-testid='bottom-tabs']",
+          "[data-testid='command-palette']"
+        ]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_reseller_auth.py",
+    "/app/test_reports/pytest/reseller_phase0.xml"
+  ],
+  "action_items": [
+    "Investigate why demo@nameword.local triggers the axios 400+redirect=true interceptor path right after login (check network tab for the first request that returns {redirect:true} — likely an API-key-gated endpoint hit unconditionally after mount). Either (a) skip that call when latestApiKey is null, or (b) only redirect via redirectAPIKey when the user has actively requested an API-key protected feature. Without this the Phase 0 logged-in acceptance criteria (wallet chip, dry-run banner, Deploy modal, Cmd-K nav, bottom-tabs, return-path) cannot be reached.",
+    "Verify /domains?value=... renders result rows on first load without an already-authenticated session — during testing no Register buttons appeared within 10s (may be slow API, missing loading state, or CF 429 on the Vite dev preview).",
+    "Optional: consider seeding an API key on the demo user in the memory doc so testing can bypass this interceptor.",
+    "Note: many parallel Vite module requests hit Cloudflare 429 during rapid page loads (as flagged in the request). Consider a production build for reliable UI testing."
+  ],
+  "critical_code_review_comments": [
+    "/app/frontend/src/api/client.js: response interceptor treats ANY 400 with `redirect:true` as a global redirect to /account-setting?tab=api-key — this is too aggressive and hijacks the SPA for any API-key-required endpoint that is fetched implicitly on page mount. Scope the redirect to explicit user actions, or check the request URL before redirecting.",
+    "/app/frontend/src/pages/front-admin/UserManagement/AccountSettings.jsx line 46-51: useEffect calls navigate('/account-setting', {replace:true}) unconditionally on tab-param change — it strips the ?tab=... query even when the user just navigated in with a valid tab (e.g. from redirectAPIKey which sets ?tab=api-key). Guard with `if (tab)` only, and don't re-navigate when already on that URL.",
+    "/app/frontend/src/hocs/Protected.jsx correctly stores return path in localStorage 'path' — good. Phase 0 implementation matches spec.",
+    "Backend reseller controller: withVcpus parser is correct across plans; consider unit-testing the helper directly so a plan-id format change (e.g. c-4vcpu-8gb) is caught."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_reseller_auth.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21)",
+    "frontend": "~55% — all logged-out acceptance items pass; logged-in acceptance items blocked by post-login redirect to /account-setting"
+  },
+  "test_credentials": "demo@nameword.local / Demo@12345 (login API returns 200 and a valid Bearer token, verified in backend tests).",
+  "seed_data_creation": "None. Reused existing demo user on the live Railway DB.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest at /app/backend/tests/test_reseller_auth.py — run with `pytest backend/tests/test_reseller_auth.py -v` (uses REACT_APP_BACKEND_URL fallback to the preview URL and logs in as demo@nameword.local). The blocker for logged-in UI verification is the axios response interceptor in /app/frontend/src/api/client.js redirecting on 400 {redirect:true}; once the main agent fixes that (or the offending upstream call), re-run the logged-in checklist: (1) /vps must show [data-testid=user-wallet-chip] and [data-testid=dry-run-banner], plus 'Your servers'; Deploy opens modal 'Deploy Offshore VPS' (no /sign-in redirect). (2) On 390px viewport, /dashboard must render [data-testid=bottom-tabs] and Domains/Hosting tabs must navigate to /domains and /hosting. (3) Cmd/Ctrl+K opens [data-testid=command-palette]; Domains/DNS/Hosting items go to /domains, /dns-manager, /hosting. (4) Return-path: logout, /vps, Deploy -> /sign-in, sign in -> land back on /vps (localStorage 'path' is set by requireLogin in useBuyer.js). Vite dev + CF causes 429 blank pages, so navigate sequentially with 6-10s waits.",
+  "rca of the issue": "Post-login forced redirect to /account-setting: /app/frontend/src/context/AuthContext.jsx.login() correctly does `navigate(localStorage.getItem('path') || '/')` when the user is verified. However the shared axios instance has a response interceptor (client.js lines 51-68) that, on a 400 response whose body contains `redirect:true`, calls redirectAPIKey() which unconditionally navigates to `/account-setting?tab=api-key`. The demo user's latestApiKey is null, so the first API-key-gated GET fired after mount (probably a session/account/API-key metadata call) responds with 400 {redirect:true} and hijacks the SPA. Mitigation: scope the interceptor redirect to explicit user actions (e.g. only when the failing request is one the user intentionally initiated for an API-key feature), or bail out when `latestApiKey` is null instead of redirecting."
+}

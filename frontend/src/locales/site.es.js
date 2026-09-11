@@ -43,7 +43,7 @@ export const siteEs = {
     trust: [
       { label: "2 jurisdicciones", sub: "UE y Singapur" },
       { label: "Privacidad WHOIS", sub: "incluida, sin sobrecoste" },
-      { label: "Monedero prepago", sub: "tarjeta o cripto" },
+      { label: "Monedero prepago", sub: "recarga con cripto" },
       { label: "API completa", sub: "todo lo del panel" },
     ],
     pillars: {

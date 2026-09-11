@@ -23,13 +23,12 @@ const {
 	processPaymentRules,
 	dynoCheckoutURLRules,
 } = require("../../app/validations/walletRules");
-const validateAPIKey = require("../../app/middlewares/validate-apikey");
-const requireAuth = require("../../app/middlewares/require-auth");
+const sessionOrApiKey = require("../../app/middlewares/session-or-apikey");
 const router = express.Router();
 
 router.get("/dynocheckout-webhook", handleDynoPaymentWebhook);
 router.post("/dynocheckout-webhook", handleDynoPaymentWebhook);
-router.use(validateAPIKey, requireAuth);
+router.use(...sessionOrApiKey);
 router.post("/create", createWalletRules, validateRequest, createWallet);
 router.get("/get", getWalletRules, validateRequest, getWallet);
 

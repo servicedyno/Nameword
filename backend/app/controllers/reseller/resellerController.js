@@ -25,9 +25,22 @@ const enc = (v) => encodeURIComponent(v);
 const getHealth = (req, res) => forward(res, nomadly.get("/health"));
 const getAccount = (req, res) => forward(res, nomadly.get("/account"));
 
+// Upstream returns vcpus=null; the plan_id encodes it (e.g. "s-2vcpu-4gb").
+const VCPU_RE = /(\d+)\s*vcpu/i;
+const withVcpus = (upstream) => {
+  const plans = upstream?.data?.plans;
+  if (!Array.isArray(plans)) return upstream;
+  const mapped = plans.map((p) => {
+    if (p.vcpus != null) return p;
+    const m = String(p.plan_id || "").match(VCPU_RE);
+    return { ...p, vcpus: m ? Number(m[1]) : null };
+  });
+  return { ...upstream, data: { ...upstream.data, plans: mapped } };
+};
+
 // ---------- VPS (Linux) ----------
 const getVpsPlans = (req, res) =>
-  forward(res, nomadly.get("/vps/plans", { params: req.query }));
+  forward(res, nomadly.get("/vps/plans", { params: req.query }).then(withVcpus));
 const listVps = (req, res) => forward(res, nomadly.get("/vps"));
 const createVps = (req, res) => forward(res, nomadly.post("/vps", req.body || {}));
 const getVps = (req, res) =>
@@ -41,7 +54,7 @@ const getVpsCredentials = (req, res) =>
 
 // ---------- RDP (Windows) ----------
 const getRdpPlans = (req, res) =>
-  forward(res, nomadly.get("/rdp/plans", { params: req.query }));
+  forward(res, nomadly.get("/rdp/plans", { params: req.query }).then(withVcpus));
 const listRdp = (req, res) => forward(res, nomadly.get("/rdp"));
 const createRdp = (req, res) => forward(res, nomadly.post("/rdp", req.body || {}));
 const getRdp = (req, res) =>

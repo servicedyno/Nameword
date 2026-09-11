@@ -5,6 +5,8 @@ import resellerAPI from "../api/reseller";
 import WalletNudge from "../components/reseller/WalletNudge";
 import { useAlert } from "../context/AlertContext";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { useBuyer } from "../hooks/useBuyer";
+import { Link } from "react-router";
 import {
   FiShield,
   FiGlobe,
@@ -64,9 +66,7 @@ const Row = ({ label, value }) => (
 export default function HostingNomadly() {
   usePageMeta("Offshore cPanel Hosting", "Anti-Red cPanel hosting from a privacy-respecting jurisdiction.");
   const { showAlert } = useAlert();
-
-  const [mode, setMode] = useState(null);
-  const [account, setAccount] = useState(null);
+  const { isAuthenticated, mode, balance, refresh, requireLogin } = useBuyer();
 
   const [platform, setPlatform] = useState(null);
   const [plans, setPlans] = useState([]);
@@ -90,19 +90,6 @@ export default function HostingNomadly() {
   const [busyUser, setBusyUser] = useState(null);
   const [confirmUser, setConfirmUser] = useState(null);
   const [creds, setCreds] = useState(null);
-
-  const loadMeta = useCallback(async () => {
-    try {
-      const [h, a] = await Promise.allSettled([
-        resellerAPI.getHealth(),
-        resellerAPI.getAccount(),
-      ]);
-      if (h.status === "fulfilled") setMode(h.value?.mode || null);
-      if (a.status === "fulfilled") setAccount(a.value || null);
-    } catch (_) {
-      /* non-blocking */
-    }
-  }, []);
 
   const loadPlans = useCallback(async () => {
     setPlansLoading(true);
@@ -133,12 +120,15 @@ export default function HostingNomadly() {
   }, []);
 
   useEffect(() => {
-    loadMeta();
     loadPlans();
-    loadAccounts();
-  }, [loadMeta, loadPlans, loadAccounts]);
+  }, [loadPlans]);
+
+  useEffect(() => {
+    if (isAuthenticated) loadAccounts();
+  }, [isAuthenticated, loadAccounts]);
 
   const openBuy = (plan) => {
+    if (!requireLogin("/hosting")) return;
     setBuyPlan(plan);
     setDomain("");
     setDomainMode("byo");
@@ -174,7 +164,7 @@ export default function HostingNomadly() {
       if (res?.mode === "live" && res?.result?.success) {
         showAlert("Hosting account created.", { type: "success" });
         loadAccounts();
-        loadMeta();
+        refresh();
       }
     } catch (err) {
       const data = err?.response?.data;
@@ -279,11 +269,11 @@ export default function HostingNomadly() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {account && (
-                <div className="rounded-2xl border border-line bg-white px-4 py-3 text-right shadow-sm dark:border-white/[0.08] dark:bg-gray-900">
-                  <p className="text-xs text-ink-soft dark:text-gray-400">Wallet balance</p>
-                  <p className="text-lg font-bold text-primary dark:text-white">{money(account.wallet_balance_usd)}</p>
-                </div>
+              {isAuthenticated && balance != null && (
+                <Link to="/wallet" className="nw-card !px-4 !py-3 text-right hover:border-brand/40" data-testid="user-wallet-chip">
+                  <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft dark:text-gray-400">Your wallet</p>
+                  <p className="font-mono text-lg font-bold text-primary dark:text-white">{money(balance)}</p>
+                </Link>
               )}
             </div>
           </div>
@@ -292,12 +282,11 @@ export default function HostingNomadly() {
 
       <main className="nw-container py-12">
         {/* Mode banner */}
-        {mode === "dry_run" && (
+        {isAuthenticated && mode === "dry_run" && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 mb-8" data-testid="dry-run-banner">
             <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              <span className="font-semibold">Test mode.</span> Orders are validated and priced but no
-              account is created and your wallet is never charged.
+              <span className="font-semibold">Test mode.</span> The hosting provider is in test mode — orders are validated and priced, but no account is provisioned yet.
             </p>
           </div>
         )}
@@ -343,7 +332,7 @@ export default function HostingNomadly() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-lg font-semibold text-primary dark:text-white">{p.name || p.plan_id}</h3>
-                        <p className="text-xs text-ink-soft dark:text-gray-500 mt-0.5">{p.plan_id}</p>
+                        {p.duration_days ? <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft dark:text-gray-500 mt-0.5">{durationLabel(p.duration_days)} plan</p> : null}
                       </div>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${tierStyle(p.tier)}`}>{p.tier}</span>
                     </div>
@@ -392,8 +381,8 @@ export default function HostingNomadly() {
           )}
         </section>
 
-        {/* My hosting accounts */}
-        <section>
+        {/* My hosting accounts (signed-in only) */}
+        {isAuthenticated && <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-semibold text-primary dark:text-white">Your hosting accounts</h2>
             <button onClick={loadAccounts} className="flex items-center gap-2 text-sm text-darkbtn hover:text-darkbtn-hover font-medium">
@@ -461,7 +450,7 @@ export default function HostingNomadly() {
               })}
             </div>
           )}
-        </section>
+        </section>}
       </main>
 
       {/* Buy modal */}
@@ -516,7 +505,7 @@ export default function HostingNomadly() {
                       </span>
                     </label>
                   )}
-                  <WalletNudge balance={account?.wallet_balance_usd} price={buyPlan.price_usd} />
+                  <WalletNudge balance={balance} price={buyPlan.price_usd} />
                 </>
               )}
 

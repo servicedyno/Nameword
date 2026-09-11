@@ -20,8 +20,8 @@ import { walletAPI } from "../api/walletApi";
 
 const BOTTOM_TABS = [
   { key: "home", to: "/dashboard", icon: LuLayoutDashboard },
-  { key: "domains", to: "/domain-portfolio", icon: LuGlobe },
-  { key: "hosting", to: "/websites", icon: LuServer },
+  { key: "domains", to: "/domains", icon: LuGlobe },
+  { key: "hosting", to: "/hosting", icon: LuServer },
   { key: "wallet", to: "/wallet", icon: LuWallet },
   { key: "account", to: "/account-setting", icon: LuUser },
 ];

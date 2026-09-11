@@ -60,7 +60,13 @@ export const setupAxiosInterceptors = (logout, redirectAPIKey) => {
         if (!isPaymentProviderError) {
           logout();
         }
-      } else if (error.response && error.response.status === 400 && error?.response?.data?.redirect) {
+      } else if (
+        error.response &&
+        error.response.status === 400 &&
+        error?.response?.data?.redirect &&
+        error?.config?.redirectOnMissingApiKey
+      ) {
+        // Only explicit API-key features may bounce the user to the API-key settings.
         redirectAPIKey(error?.response?.data?.message);
       }
       console.error('❌ Response Error:', error);

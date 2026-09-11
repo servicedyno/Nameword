@@ -7,10 +7,9 @@ const validateRequest = require("../../app/middlewares/validate-request");
 const {
 	getTransactionsRules,
 } = require("../../app/validations/transactionRules");
-const validateAPIKey = require("../../app/middlewares/validate-apikey");
-const requireAuth = require("../../app/middlewares/require-auth");
+const sessionOrApiKey = require("../../app/middlewares/session-or-apikey");
 const router = express.Router();
-router.use(validateAPIKey, requireAuth);
+router.use(...sessionOrApiKey);
 
 router.get("/get", getTransactionsRules, validateRequest, getTransactions);
 

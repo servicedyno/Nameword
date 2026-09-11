@@ -45,7 +45,7 @@ export const siteEn = {
     trust: [
       { label: "2 jurisdictions", sub: "EU & Singapore" },
       { label: "WHOIS privacy", sub: "included, not upsold" },
-      { label: "Prepaid wallet", sub: "card or crypto" },
+      { label: "Prepaid wallet", sub: "top up with crypto" },
       { label: "Full API", sub: "everything in the dashboard" },
     ],
     pillars: {

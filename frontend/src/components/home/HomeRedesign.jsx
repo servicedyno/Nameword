@@ -30,7 +30,7 @@ import {
 
 const PRODUCT_ORDER = [
   { key: "domains", to: "/domains", icon: LuGlobe },
-  { key: "dns", to: "/dns-management", icon: LuNetwork, protectedRoute: true },
+  { key: "dns", to: "/dns-manager", icon: LuNetwork, protectedRoute: true },
   { key: "hosting", to: "/hosting", icon: LuServer },
   { key: "vps", to: "/vps", icon: LuCloud },
   { key: "rdp", to: "/rdp", icon: LuMonitor },
@@ -58,17 +58,11 @@ function Hero() {
   const { t } = useLanguage();
   const s = t.site.home;
   const navigate = useNavigate();
-  const [tab, setTab] = useState("search");
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const resultsRef = useRef(null);
 
   const submit = () => {
-    if (tab === "transfer") {
-      localStorage.setItem("path", "/transfer-domain");
-      navigate("/sign-in");
-      return;
-    }
     const q = query.trim();
     if (!q) return;
     setSubmitted(q);
@@ -91,17 +85,6 @@ function Hero() {
 
           {/* Search card */}
           <div className="mt-8 rounded-2xl border border-line bg-white p-4 shadow-lg shadow-slate-200/50 dark:border-white/[0.08] dark:bg-gray-900 dark:shadow-black/40">
-            <div className="mb-3 inline-flex rounded-lg bg-surface-2 p-1 dark:bg-gray-950">
-              {["search", "transfer"].map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setTab(k)}
-                  className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${tab === k ? "bg-white text-primary shadow-sm dark:bg-gray-800 dark:text-white" : "text-ink-soft dark:text-gray-400"}`}
-                >
-                  {s.tabs[k]}
-                </button>
-              ))}
-            </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
                 <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -118,7 +101,7 @@ function Hero() {
               </div>
               <button onClick={submit} className="nw-btn-primary sm:w-auto" data-testid="hero-search-button">
                 <LuSearch className="h-4 w-4" />
-                {tab === "search" ? s.searchBtn : s.transferBtn}
+                {s.searchBtn}
               </button>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">

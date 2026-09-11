@@ -102,7 +102,14 @@ function Router() {
       <Route path="/domain" element={<LegacyDomainRedirect />} />
       <Route path="/hosting" element={<Hosting />} />
       <Route path="/domains" element={<DomainsNomadly />} />
-      <Route path="/dns-manager" element={<DnsManagerNomadly />} />
+      <Route
+        path="/dns-manager"
+        element={
+          <ProtectedRoute>
+            <DnsManagerNomadly />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/vps" element={<VPS />} />
       <Route path="/rdp" element={<RDP />} />
       <Route path="/email" element={<Email />} />

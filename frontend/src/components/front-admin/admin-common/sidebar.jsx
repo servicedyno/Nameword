@@ -394,11 +394,6 @@ export default function Sidebar({ setIsEnlarge }) {
           return;
         }
         console.error("Failed to fetch hosting orders:", error);
-        const message =
-          error?.response?.data?.responseMsg?.message ||
-          error?.response?.data?.message ||
-          t.admin.failedToFetchHostingOrders;
-        showAlert(message, { duration: 3000, type: "warning" });
         setHostingOrders([]);
       } finally {
         if (isMounted) {
@@ -421,8 +416,8 @@ export default function Sidebar({ setIsEnlarge }) {
       domains?.[0]?.websiteName;
 
     return targetDomain
-      ? `/domain-overview/${encodeURIComponent(targetDomain)}`
-      : "/domain-overview";
+      ? `/dns-manager?domain=${encodeURIComponent(targetDomain)}`
+      : "/domains";
   };
 
   const toggleMenu = (menu) => {
@@ -639,11 +634,7 @@ export default function Sidebar({ setIsEnlarge }) {
                             }`}
                           >
                             <NavLink
-                              to={
-                                site.hostingOrder
-                                  ? "/hosting"
-                                  : "/setup-websites"
-                              }
+                              to="/hosting"
                               state={domainState}
                               className={`flex justify-between items-center ${
                                 isActive ? "active" : ""

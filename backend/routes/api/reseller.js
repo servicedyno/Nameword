@@ -1,52 +1,57 @@
 const router = require("express").Router();
 const c = require("../../app/controllers/reseller/resellerController");
+const currentUser = require("../../app/middlewares/current-user");
+const requireAuth = require("../../app/middlewares/require-auth");
 
 // Nomadly Reseller API proxy. The reseller API key lives server-side (env), so the
 // browser never sees it. Mode (dry_run vs live) is controlled by the provider.
+// Catalog/search endpoints are public; anything that lists, creates or manages
+// resources requires a signed-in user.
+const auth = [currentUser, requireAuth];
 
 // ---------- Meta ----------
 router.get("/health", c.getHealth);
-router.get("/account", c.getAccount);
+router.get("/account", ...auth, c.getAccount);
 
-// ---------- VPS (Linux) — specific paths must precede :id ----------
+// ---------- VPS (Linux) ----------
 router.get("/vps/plans", c.getVpsPlans);
-router.get("/vps", c.listVps);
-router.post("/vps", c.createVps);
-router.get("/vps/:id/credentials", c.getVpsCredentials);
-router.post("/vps/:id/action", c.vpsAction);
-router.get("/vps/:id", c.getVps);
-router.delete("/vps/:id", c.deleteVps);
+router.get("/vps", ...auth, c.listVps);
+router.post("/vps", ...auth, c.createVps);
+router.get("/vps/:id/credentials", ...auth, c.getVpsCredentials);
+router.post("/vps/:id/action", ...auth, c.vpsAction);
+router.get("/vps/:id", ...auth, c.getVps);
+router.delete("/vps/:id", ...auth, c.deleteVps);
 
 // ---------- RDP (Windows) ----------
 router.get("/rdp/plans", c.getRdpPlans);
-router.get("/rdp", c.listRdp);
-router.post("/rdp", c.createRdp);
-router.get("/rdp/:id/credentials", c.getRdpCredentials);
-router.post("/rdp/:id/action", c.rdpAction);
-router.get("/rdp/:id", c.getRdp);
-router.delete("/rdp/:id", c.deleteRdp);
+router.get("/rdp", ...auth, c.listRdp);
+router.post("/rdp", ...auth, c.createRdp);
+router.get("/rdp/:id/credentials", ...auth, c.getRdpCredentials);
+router.post("/rdp/:id/action", ...auth, c.rdpAction);
+router.get("/rdp/:id", ...auth, c.getRdp);
+router.delete("/rdp/:id", ...auth, c.deleteRdp);
 
 // ---------- Domains ----------
 router.get("/domains/search", c.searchDomain);
 router.get("/domains/suggest", c.suggestDomains);
-router.get("/domains", c.listDomains);
-router.post("/domains/register", c.registerDomain);
+router.get("/domains", ...auth, c.listDomains);
+router.post("/domains/register", ...auth, c.registerDomain);
 
-// ---------- DNS (free) — specific paths must precede generic ----------
-router.get("/dns/:domain/records", c.listDnsRecords);
-router.post("/dns/:domain/records", c.addDnsRecord);
-router.put("/dns/:domain/records", c.updateDnsRecord);
-router.delete("/dns/:domain/records", c.deleteDnsRecord);
-router.put("/dns/:domain/nameservers", c.setNameservers);
+// ---------- DNS (free) ----------
+router.get("/dns/:domain/records", ...auth, c.listDnsRecords);
+router.post("/dns/:domain/records", ...auth, c.addDnsRecord);
+router.put("/dns/:domain/records", ...auth, c.updateDnsRecord);
+router.delete("/dns/:domain/records", ...auth, c.deleteDnsRecord);
+router.put("/dns/:domain/nameservers", ...auth, c.setNameservers);
 
 // ---------- cPanel Hosting — specific paths must precede :user ----------
 router.get("/hosting/plans", c.getHostingPlans);
-router.get("/hosting", c.listHosting);
-router.post("/hosting", c.createHosting);
-router.post("/hosting/:user/suspend", c.suspendHosting);
-router.post("/hosting/:user/unsuspend", c.unsuspendHosting);
-router.get("/hosting/:user/login", c.hostingLogin);
-router.get("/hosting/:user/credentials", c.hostingCredentials);
-router.delete("/hosting/:user", c.terminateHosting);
+router.get("/hosting", ...auth, c.listHosting);
+router.post("/hosting", ...auth, c.createHosting);
+router.post("/hosting/:user/suspend", ...auth, c.suspendHosting);
+router.post("/hosting/:user/unsuspend", ...auth, c.unsuspendHosting);
+router.get("/hosting/:user/login", ...auth, c.hostingLogin);
+router.get("/hosting/:user/credentials", ...auth, c.hostingCredentials);
+router.delete("/hosting/:user", ...auth, c.terminateHosting);
 
 module.exports = router;

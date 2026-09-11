@@ -4,9 +4,8 @@ const {
 	getInvoice,
 	getInvoices,
 } = require("../../app/controllers/invoice/InvoiceController");
-const validateAPIKey = require("../../app/middlewares/validate-apikey");
-const requireAuth = require("../../app/middlewares/require-auth");
-router.use(validateAPIKey, requireAuth);
+const sessionOrApiKey = require("../../app/middlewares/session-or-apikey");
+router.use(...sessionOrApiKey);
 // @route   GET api/v1/invoices/:id
 // @desc    Get a single invoice
 // @access  Private

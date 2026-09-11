@@ -7,6 +7,7 @@ import resellerAPI from "../api/reseller";
 import WalletNudge from "../components/reseller/WalletNudge";
 import { useAlert } from "../context/AlertContext";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { useBuyer } from "../hooks/useBuyer";
 import {
   FiSearch,
   FiGlobe,
@@ -60,9 +61,7 @@ export default function DomainsNomadly() {
   usePageMeta("Domains", "Search, register and manage domains — wallet-billed at the live registrar price.");
   const { showAlert } = useAlert();
   const [searchParams] = useSearchParams();
-
-  const [mode, setMode] = useState(null);
-  const [account, setAccount] = useState(null);
+  const { isAuthenticated, mode, balance, refresh, requireLogin } = useBuyer();
 
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -80,16 +79,6 @@ export default function DomainsNomadly() {
   const [registering, setRegistering] = useState(false);
   const [regResult, setRegResult] = useState(null);
 
-  const loadMeta = useCallback(async () => {
-    try {
-      const [h, a] = await Promise.allSettled([resellerAPI.getHealth(), resellerAPI.getAccount()]);
-      if (h.status === "fulfilled") setMode(h.value?.mode || null);
-      if (a.status === "fulfilled") setAccount(a.value || null);
-    } catch (_) {
-      /* non-blocking */
-    }
-  }, []);
-
   const loadDomains = useCallback(async () => {
     setDomainsLoading(true);
     try {
@@ -103,9 +92,8 @@ export default function DomainsNomadly() {
   }, []);
 
   useEffect(() => {
-    loadMeta();
-    loadDomains();
-  }, [loadMeta, loadDomains]);
+    if (isAuthenticated) loadDomains();
+  }, [isAuthenticated, loadDomains]);
 
   const doSearch = async (e, override) => {
     if (e) e.preventDefault();
@@ -149,6 +137,7 @@ export default function DomainsNomadly() {
   }, [searchParams]);
 
   const openRegister = (domain, price_usd) => {
+    if (!requireLogin(`/domains?value=${encodeURIComponent(domain)}`)) return;
     setReg({ domain, price_usd });
     setNsChoice("cloudflare");
     setCustomNs("");
@@ -180,7 +169,7 @@ export default function DomainsNomadly() {
       if (res?.mode === "live" && res?.result?.success) {
         showAlert("Domain registered.", { type: "success" });
         loadDomains();
-        loadMeta();
+        refresh();
       }
     } catch (err) {
       const data = err?.response?.data;
@@ -223,22 +212,22 @@ export default function DomainsNomadly() {
                 </button>
               </form>
             </div>
-            {account && (
-              <div className="rounded-2xl border border-line bg-white px-4 py-3 text-right shadow-sm dark:border-white/[0.08] dark:bg-gray-900 shrink-0">
-                <p className="text-xs text-ink-soft dark:text-gray-400">Wallet balance</p>
-                <p className="text-lg font-bold text-primary dark:text-white">{money(account.wallet_balance_usd)}</p>
-              </div>
+            {isAuthenticated && balance != null && (
+              <Link to="/wallet" className="nw-card !px-4 !py-3 text-right shrink-0 hover:border-brand/40" data-testid="user-wallet-chip">
+                <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft dark:text-gray-400">Your wallet</p>
+                <p className="font-mono text-lg font-bold text-primary dark:text-white">{money(balance)}</p>
+              </Link>
             )}
           </div>
         </div>
       </section>
 
       <main className="nw-container py-12">
-        {mode === "dry_run" && (
+        {isAuthenticated && mode === "dry_run" && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 mb-8" data-testid="dry-run-banner">
             <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              <span className="font-semibold">Test mode.</span> Registrations are validated and priced but no domain is registered and your wallet is never charged.
+              <span className="font-semibold">Test mode.</span> The registrar is in test mode — orders are validated and priced, but no domain is provisioned yet.
             </p>
           </div>
         )}
@@ -271,8 +260,8 @@ export default function DomainsNomadly() {
           </section>
         )}
 
-        {/* My domains */}
-        <section>
+        {/* My domains (signed-in only) */}
+        {isAuthenticated && <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-semibold text-primary dark:text-white">Your domains</h2>
             <button onClick={loadDomains} className="flex items-center gap-2 text-sm text-darkbtn hover:text-darkbtn-hover font-medium"><FiRefreshCw size={15} /> Refresh</button>
@@ -304,7 +293,7 @@ export default function DomainsNomadly() {
               ))}
             </div>
           )}
-        </section>
+        </section>}
       </main>
 
       {/* Register modal — rendered via a portal to document.body so no ancestor
@@ -339,7 +328,7 @@ export default function DomainsNomadly() {
                       <p className="text-xs text-secondary dark:text-gray-400 mt-1">Separate with commas or spaces (at least two).</p>
                     </div>
                   )}
-                  <WalletNudge balance={account?.wallet_balance_usd} price={reg.price_usd} />
+                  <WalletNudge balance={balance} price={reg.price_usd} />
                 </>
               )}
 

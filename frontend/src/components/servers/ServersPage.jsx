@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
-import { resellerProduct, resellerAPI } from "../../api/reseller";
+import { resellerProduct } from "../../api/reseller";
 import WalletNudge from "../reseller/WalletNudge";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
+import { useBuyer } from "../../hooks/useBuyer";
+import { Link } from "react-router";
 import {
   FiServer,
   FiCpu,
@@ -84,8 +86,7 @@ export default function ServersPage({ product = "vps" }) {
   usePageMeta(copy.eyebrow, copy.tagline);
 
   const [region, setRegion] = useState("EU");
-  const [mode, setMode] = useState(null);
-  const [account, setAccount] = useState(null);
+  const { isAuthenticated, mode, balance, refresh, requireLogin } = useBuyer();
 
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -105,19 +106,6 @@ export default function ServersPage({ product = "vps" }) {
   const [creds, setCreds] = useState(null);
 
   // --- data loaders ---
-  const loadMeta = useCallback(async () => {
-    try {
-      const [h, a] = await Promise.allSettled([
-        resellerAPI.getHealth(),
-        resellerAPI.getAccount(),
-      ]);
-      if (h.status === "fulfilled") setMode(h.value?.mode || null);
-      if (a.status === "fulfilled") setAccount(a.value || null);
-    } catch (_) {
-      /* non-blocking */
-    }
-  }, []);
-
   const loadPlans = useCallback(
     async (rg) => {
       setPlansLoading(true);
@@ -151,9 +139,8 @@ export default function ServersPage({ product = "vps" }) {
   }, [api]);
 
   useEffect(() => {
-    loadMeta();
-    loadServers();
-  }, [product]);
+    if (isAuthenticated) loadServers();
+  }, [product, isAuthenticated]);
 
   useEffect(() => {
     loadPlans(region);
@@ -161,6 +148,7 @@ export default function ServersPage({ product = "vps" }) {
 
   // --- actions ---
   const openDeploy = (plan) => {
+    if (!requireLogin(`/${product}`)) return;
     setDeployPlan(plan);
     setHostname("");
     setOs(meta.osChoices ? meta.osChoices[0] : "windows");
@@ -189,7 +177,7 @@ export default function ServersPage({ product = "vps" }) {
       if (res?.mode === "live" && res?.result?.success) {
         showAlert(`${meta.title} deployed successfully.`, { type: "success" });
         loadServers();
-        loadMeta();
+        refresh();
       }
     } catch (err) {
       const data = err?.response?.data;
@@ -268,13 +256,11 @@ export default function ServersPage({ product = "vps" }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {account && (
-                <div className="rounded-2xl border border-line bg-white px-4 py-3 text-right shadow-sm dark:border-white/[0.08] dark:bg-gray-900">
-                  <p className="text-xs text-ink-soft dark:text-gray-400">{t.site.servers.wallet}</p>
-                  <p className="text-lg font-bold text-primary dark:text-white">
-                    {money(account.wallet_balance_usd)}
-                  </p>
-                </div>
+              {isAuthenticated && balance != null && (
+                <Link to="/wallet" className="nw-card !px-4 !py-3 text-right hover:border-brand/40" data-testid="user-wallet-chip">
+                  <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft dark:text-gray-400">{t.site.servers.wallet}</p>
+                  <p className="font-mono text-lg font-bold text-primary dark:text-white">{money(balance)}</p>
+                </Link>
               )}
               <div>
                 <label className="sr-only" htmlFor="region">{t.site.servers.regionLabel}</label>
@@ -298,8 +284,8 @@ export default function ServersPage({ product = "vps" }) {
       </section>
       <main className="nw-container py-12">
 
-        {/* Mode banner */}
-        {mode === "dry_run" && (
+        {/* Mode banner (signed-in only) */}
+        {isAuthenticated && mode === "dry_run" && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 mb-8" data-testid="dry-run-banner">
             <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -348,7 +334,7 @@ export default function ServersPage({ product = "vps" }) {
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-primary dark:text-white">{p.name || p.plan_id}</h3>
-                      <p className="text-xs text-ink-soft dark:text-gray-500 mt-0.5">{p.plan_id}</p>
+                      <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft dark:text-gray-500 mt-0.5">{t.site.servers.regions[region] || region}</p>
                     </div>
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200"><FiZap size={18} /></span>
                   </div>
@@ -375,8 +361,8 @@ export default function ServersPage({ product = "vps" }) {
           )}
         </section>
 
-        {/* My servers */}
-        <section>
+        {/* My servers (signed-in only) */}
+        {isAuthenticated && <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-semibold text-primary dark:text-white">{t.site.servers.yourServers}</h2>
             <button onClick={loadServers} className="flex items-center gap-2 text-sm text-darkbtn hover:text-darkbtn-hover font-medium">
@@ -434,7 +420,7 @@ export default function ServersPage({ product = "vps" }) {
               })}
             </div>
           )}
-        </section>
+        </section>}
       </main>
 
       {/* Deploy modal */}
@@ -471,7 +457,7 @@ export default function ServersPage({ product = "vps" }) {
                   {!meta.osChoices && (
                     <p className="text-sm text-secondary dark:text-gray-400">Operating system: <span className="text-primary dark:text-white font-medium">Windows</span></p>
                   )}
-                  <WalletNudge balance={account?.wallet_balance_usd} price={deployPlan.price_usd} />
+                  <WalletNudge balance={balance} price={deployPlan.price_usd} />
                 </>
               )}
 
