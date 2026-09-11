@@ -46,11 +46,6 @@ export const domainAPI = {
     return response.data;
   },
 
-  getDomainTransferDynoCheckoutUrl: async (params) => {
-    const response = await apiClient.post(ENDPOINTS.DOMAIN.TRANSFER_DYNO_CHECKOUT, params);
-    return response.data;
-  },
-
   getDomainDynoCheckoutWebhook: async (params) => {
     const response = await apiClient.get(ENDPOINTS.DOMAIN.DOMAIN_DYNO_CHECKOUT_WEBHOOK, { params });
     return response.data;
@@ -67,57 +62,6 @@ export const domainAPI = {
   },
   removeDomain: async (id) => {
     const response = await apiClient.delete(ENDPOINTS.DOMAIN.REMOVE_DOMAIN(id));
-    return response.data;
-  },
-
-  transferDomain: async (payload = {}) => {
-    const { provider, ...rest } = payload || {};
-    if (provider && provider.toLowerCase() === 'hostbay') {
-      const response = await apiClient.post(ENDPOINTS.DOMAIN.TRANSFER, {
-        provider,
-        ...rest,
-      });
-      return response.data;
-    }
-    const response = await apiClient.get(ENDPOINTS.DOMAIN.TRANSFER, { params: payload });
-    return response.data;
-  },
-
-  getTransferStatus: async (domainName) => {
-    const response = await apiClient.get(ENDPOINTS.DOMAIN.TRANSFER_STATUS, {
-      params: { domainName },
-    });
-    return response.data;
-  },
-
-  getTransferList: async () => {
-    const response = await apiClient.get(ENDPOINTS.DOMAIN.TRANSFER_LIST);
-    return response.data;
-  },
-
-  validateTransfer: async (payload = {}) => {
-    const { provider, ...rest } = payload || {};
-    if (provider && provider.toLowerCase() === 'hostbay') {
-      const response = await apiClient.post(ENDPOINTS.DOMAIN.VALIDATE_TRANSFER, {
-        provider,
-        ...rest,
-      });
-      return response.data;
-    }
-    const response = await apiClient.get(ENDPOINTS.DOMAIN.VALIDATE_TRANSFER, { params: payload });
-    return response.data;
-  },
-
-  cancelTransfer: async (payload = {}) => {
-    const { provider, ...rest } = payload || {};
-    if (provider && provider.toLowerCase() === 'hostbay') {
-      const response = await apiClient.post(ENDPOINTS.DOMAIN.CANCEL_TRANSFER, {
-        provider,
-        ...rest,
-      });
-      return response.data;
-    }
-    const response = await apiClient.get(ENDPOINTS.DOMAIN.CANCEL_TRANSFER, { params: payload });
     return response.data;
   },
 

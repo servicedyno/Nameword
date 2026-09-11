@@ -9,7 +9,7 @@ import {
 // Signed-in navigation: Overview · Domains · DNS · Hosting · VPS · RDP · Wallet · Rewards · Settings & API · Help
 const RAIL = [
   { key: "overview", to: "/dashboard", icon: LuLayoutDashboard, match: ["/dashboard"] },
-  { key: "domains", to: "/domains", icon: LuGlobe, match: ["/domains", "/domain-overview", "/contact-info", "/transfer-domain"] },
+  { key: "domains", to: "/domains", icon: LuGlobe, match: ["/domains", "/domain-overview", "/contact-info"] },
   { key: "dns", to: "/dns-manager", icon: LuNetwork, match: ["/dns-manager"] },
   { key: "hosting", to: "/hosting", icon: LuServer, match: ["/hosting", "/setup-websites", "/hosting", "/manage-plan", "/upgrade-plan", "/renew-plan"] },
   { key: "vps", to: "/vps", icon: LuCloud, match: ["/vps"] },

@@ -54,15 +54,6 @@ const HomeSearchDomain = () => {
                                 >
                                     {t.home.hero.tabs.search}
                                 </button>
-                                <button
-                                    onClick={() => setActiveTab("transfer")}
-                                    className={`tab-link ${activeTab === "transfer"
-                                            ? "bg-beige-200 text-primary"
-                                            : "dark:text-white"
-                                        }`}
-                                >
-                                    {t.home.hero.tabs.transfer}
-                                </button>
                             </div>
                             {/* Input Section */}
                             <div className="flex flex-col md:flex-row gap-4">
@@ -76,7 +67,7 @@ const HomeSearchDomain = () => {
                                     />
                                     <button type="button" className="btn-blue disabled:opacity-50 disabled:!cursor-not-allowed sm:!w-3xs !w-full gap-2" onClick={handleRedirectDomain}>
                                         <TbSearch size={16} />
-                                        {activeTab === "search" ? t.home.hero.buttons.search : t.home.hero.buttons.transfer}
+                                        {t.home.hero.buttons.search}
                                     </button>
                                 </div>
                             </div>

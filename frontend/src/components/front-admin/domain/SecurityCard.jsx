@@ -10,7 +10,7 @@ import ChangePrivacyModal from "../../modals/change-privacy-modal";
 import { useAlert } from "../../../context/AlertContext";
 import { domainAPI } from "../../../api/domains";
 import { useDomainSearch } from "../../../hooks/useDomainSearch";
-import { cartAPI } from "../../../api/cartApi";
+import { useCart } from "../../../hooks/useCart";
 import Loader from "../../common/Loader";
 import { useLanguage } from "../../../hooks/useLanguage";
 
@@ -36,6 +36,7 @@ const SecurityCard = ({
 
   const { showAlert } = useAlert();
   const navigate = useNavigate();
+  const cartCtx = useCart();
   const {
     getTldSuggestions,
     tldSuggestions,
@@ -496,48 +497,17 @@ const SecurityCard = ({
 
       setAddingToCart((prev) => ({ ...prev, [suggestion.websiteName]: true }));
       try {
-        const apiData = {
-          itemType: "domain",
-          websiteName: suggestion.websiteName,
-          action: "register",
-          availability: suggestion.available,
-          years: 1,
-          provider: "openprovider",
-          price: {
-            amount: suggestion.registrationFee,
-            currency: "USD",
-          },
-          renew: {
-            amount: suggestion.renewalfee || suggestion.registrationFee,
-            currency: "USD",
-          },
-        };
-
-        const result = await cartAPI.addToCart(apiData);
-
-        if (result?.success === true) {
-          showAlert(result?.message || t.domain.domainAddedSuccess, {
-            duration: 2500,
-            type: "success",
-          });
-
-          try {
-            const refreshed = await cartAPI.getListAddToCart();
-            const data = refreshed?.data || refreshed;
-            window.dispatchEvent(
-              new CustomEvent("cart:updated:payload", { detail: data })
-            );
-          } catch {
-            window.dispatchEvent(new Event("cart:updated"));
-          }
-
-          navigate("/add-to-cart", { state: { item: suggestion } });
-        } else {
-          showAlert(result?.message || t.admin.failedToAddDomainToCart, {
-            duration: 2500,
-            type: "error",
-          });
-        }
+        // New checkout funnel: add to the shared client cart, then go to /cart.
+        cartCtx.addDomain({
+          domain: suggestion.websiteName,
+          price_usd: suggestion.registrationFee,
+          registrar: suggestion.provider || "openprovider",
+        });
+        showAlert(t.domain.domainAddedSuccess, {
+          duration: 2500,
+          type: "success",
+        });
+        navigate("/cart");
       } catch {
         showAlert(t.admin.failedToAddDomainToCart, {
           duration: 2500,
@@ -551,7 +521,7 @@ const SecurityCard = ({
         });
       }
     },
-    [addingToCart, navigate, showAlert]
+    [addingToCart, navigate, showAlert, cartCtx, t]
   );
 
   const handleFetchAuthCode = useCallback(async () => {

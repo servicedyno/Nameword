@@ -87,7 +87,6 @@ const HelpSupport = () => {
     // { id: "most-popular", label: t.helpSupport.sidebar.mostPopular },
     { id: "discover-domain", label: t.helpSupport.sidebar.discoverDomain },
     { id: "dns", label: t.helpSupport.sidebar.dns },
-    { id: "transfer-domains", label: t.helpSupport.sidebar.transferDomains },
     { id: "renew-domains", label: t.helpSupport.sidebar.renewDomains },
     { id: "manage-contact", label: t.helpSupport.sidebar.manageContact },
     { id: "secure-domains", label: t.helpSupport.sidebar.secureDomains },
@@ -105,7 +104,6 @@ const HelpSupport = () => {
     const sectionMap = {
       "discover-domain": "discoverDomain",
       "dns": "dns",
-      "transfer-domains": "transferDomains",
       "renew-domains": "renewDomains",
       "manage-contact": "manageContact",
       "secure-domains": "secureDomains",

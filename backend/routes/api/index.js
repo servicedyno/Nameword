@@ -25,7 +25,6 @@ APIRouter.use("/ssh", require("./ssh-keys"));
 APIRouter.use("/admin", require("./admin"));
 APIRouter.use("/auth", require("./auth"));
 APIRouter.use("/user-session", require("./userSessionRoutes"));
-APIRouter.use("/cart", require("./cart"));
 APIRouter.use("/chat", require("./chat"));
 
 APIRouter.use(require("./api-keys"));

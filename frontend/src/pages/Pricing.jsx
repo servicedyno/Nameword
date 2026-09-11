@@ -256,7 +256,6 @@ export default function Pricing() {
                   <th className="px-5 py-3.5">Extension</th>
                   <th className="px-5 py-3.5">Register</th>
                   <th className="px-5 py-3.5 hidden sm:table-cell">Renew</th>
-                  <th className="px-5 py-3.5 hidden sm:table-cell">Transfer</th>
                   <th className="px-5 py-3.5 text-right">&nbsp;</th>
                 </tr>
               </thead>
@@ -264,14 +263,14 @@ export default function Pricing() {
                 {tldLoading ? (
                   [0, 1, 2, 3, 4, 5].map((i) => (
                     <tr key={i} className="animate-pulse">
-                      <td className="px-5 py-4" colSpan={5}>
+                      <td className="px-5 py-4" colSpan={4}>
                         <div className="h-4 w-full rounded bg-lightgray dark:bg-gray-800" />
                       </td>
                     </tr>
                   ))
                 ) : tldRows.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-ink-soft dark:text-gray-400">
+                    <td colSpan={4} className="px-5 py-8 text-center text-ink-soft dark:text-gray-400">
                       Live per-TLD pricing is temporarily unavailable. Try the search above — availability and price are checked live.
                     </td>
                   </tr>
@@ -285,7 +284,6 @@ export default function Pricing() {
                       </td>
                       <td className="px-5 py-4 font-bold text-brand-700 dark:text-brand-300">{money(r.price)}</td>
                       <td className="px-5 py-4 hidden sm:table-cell text-ink-soft dark:text-gray-400">{money(r.price)}/yr</td>
-                      <td className="px-5 py-4 hidden sm:table-cell text-ink-soft dark:text-gray-400">{money(r.price)}</td>
                       <td className="px-5 py-4 text-right">
                         <button
                           onClick={() => navigate(`/domain?value=${encodeURIComponent(`yourbrand${r.tld}`)}`)}
