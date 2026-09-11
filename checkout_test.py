@@ -11,7 +11,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://c9b751a1-ecd2-4e27-a826-f94dc4aff662.preview.emergentagent.com/api/v1"
+BASE_URL = "https://nameword-config.preview.emergentagent.com/api/v1"
 BUYER_EMAIL = "buyer@nameword.local"
 BUYER_PASSWORD = "Buyer@12345"
 TIMEOUT = 40  # 30s for domain search + buffer
