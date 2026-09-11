@@ -42,6 +42,16 @@ export const siteEn = {
     heroFloat: { title: "WHOIS privacy included", sub: "on every eligible domain" },
     heroFloat2: { title: "You pick the jurisdiction", sub: "EU or Singapore today" },
     needServers: "Need a server instead?",
+    rating: "Trusted across 2 jurisdictions",
+    trustNote: "No card stored · pay from your prepaid wallet",
+    showcase: {
+      live: "Live",
+      tabs: { domains: "Domains", hosting: "Hosting", servers: "VPS · RDP", manage: "Manage" },
+      domains: { available: "Available", taken: "Taken" },
+      hosting: { title: "Offshore cPanel", region: "EU · Frankfurt", status: "Active", disk: "Disk", bandwidth: "Bandwidth" },
+      servers: { title: "Deploy a server", region: "SG · Singapore", status: "Running", cpu: "vCPU", ram: "RAM", ssd: "SSD" },
+      manage: { title: "DNS records", propagated: "Propagated", wallet: "Wallet" },
+    },
     trust: [
       { label: "2 jurisdictions", sub: "EU & Singapore" },
       { label: "WHOIS privacy", sub: "included, not upsold" },

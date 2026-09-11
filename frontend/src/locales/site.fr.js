@@ -40,6 +40,16 @@ export const siteFr = {
     heroFloat: { title: "Confidentialité WHOIS incluse", sub: "sur chaque domaine éligible" },
     heroFloat2: { title: "Vous choisissez la juridiction", sub: "UE ou Singapour aujourd'hui" },
     needServers: "Besoin d'un serveur ?",
+    rating: "Approuvé dans 2 juridictions",
+    trustNote: "Aucune carte conservée · payez depuis votre portefeuille prépayé",
+    showcase: {
+      live: "En direct",
+      tabs: { domains: "Domaines", hosting: "Hébergement", servers: "VPS · RDP", manage: "Gérer" },
+      domains: { available: "Disponible", taken: "Pris" },
+      hosting: { title: "cPanel Offshore", region: "UE · Francfort", status: "Actif", disk: "Disque", bandwidth: "Bande passante" },
+      servers: { title: "Déployez un serveur", region: "SG · Singapour", status: "En cours", cpu: "vCPU", ram: "RAM", ssd: "SSD" },
+      manage: { title: "Enregistrements DNS", propagated: "Propagé", wallet: "Portefeuille" },
+    },
     trust: [
       { label: "2 juridictions", sub: "UE et Singapour" },
       { label: "Confidentialité WHOIS", sub: "incluse, sans supplément" },

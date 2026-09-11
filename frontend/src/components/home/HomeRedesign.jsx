@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
+import { motion as Motion, useReducedMotion } from "motion/react";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../hooks/useAuth";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { IMAGES } from "../marketing/marketing-ui";
 import DomainSearchResults from "../domain/DomainSearchResults";
+import HeroShowcase from "./HeroShowcase";
 import {
   LuGlobe,
   LuNetwork,
@@ -22,6 +24,7 @@ import {
   LuMapPin,
   LuTerminal,
   LuShieldCheck,
+  LuStar,
   LuGift,
   LuBadgeCheck,
   LuLayers,
@@ -58,6 +61,7 @@ function Hero() {
   const { t } = useLanguage();
   const s = t.site.home;
   const navigate = useNavigate();
+  const reduced = useReducedMotion();
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const resultsRef = useRef(null);
@@ -69,22 +73,64 @@ function Hero() {
     setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
 
+  // Split the headline on its first comma so the trailing clause reads as a highlight
+  // (works for EN "…, private by default." / ES "…, privado…" / FR "…, privé…").
+  const idx = s.heading.indexOf(",");
+  const head1 = idx >= 0 ? s.heading.slice(0, idx + 1) : s.heading;
+  const head2 = idx >= 0 ? s.heading.slice(idx + 1).trim() : "";
+
+  const leftContainer = {
+    animate: { transition: { staggerChildren: reduced ? 0 : 0.09, delayChildren: 0.04 } },
+  };
+  const fadeUp = {
+    initial: { opacity: 0, y: reduced ? 0 : 16 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+  };
+
   return (
     <section className="nw-hero">
       <div className="absolute inset-0 nw-grid-bg opacity-70 dark:opacity-100" />
       <div className="nw-hero-glow -top-32 -right-24 h-96 w-96" />
       <div className="nw-hero-glow top-64 -left-32 h-80 w-80 opacity-60" />
-      <div className="nw-container relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-2 lg:gap-12 lg:py-24">
+      <div className="nw-container relative grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:py-24">
         {/* Left */}
-        <div>
-          <span className="nw-eyebrow mb-5"><LuLock className="h-3.5 w-3.5" /> {s.eyebrow}</span>
-          <h1 className="text-4xl font-bold leading-[1.08] tracking-tight text-primary dark:text-white sm:text-5xl lg:text-6xl">
-            {s.heading}
-          </h1>
-          <p className="mt-5 max-w-xl text-lg text-ink-soft dark:text-gray-400">{s.subheading}</p>
+        <Motion.div variants={leftContainer} initial="initial" animate="animate">
+          <Motion.div variants={fadeUp} className="mb-5 flex flex-wrap items-center gap-3">
+            <span className="nw-eyebrow"><LuLock className="h-3.5 w-3.5" /> {s.eyebrow}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-3 py-1 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300">
+              <span className="flex items-center gap-0.5 text-amber-400">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <LuStar key={i} className="h-3.5 w-3.5 fill-current" />
+                ))}
+              </span>
+              {s.rating}
+            </span>
+          </Motion.div>
+
+          <Motion.h1
+            variants={fadeUp}
+            className="text-4xl font-bold leading-[1.08] tracking-tight text-primary dark:text-white sm:text-5xl lg:text-6xl"
+          >
+            {head1}
+            {head2 && (
+              <>
+                {" "}
+                <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent dark:from-brand-400 dark:to-brand-200">
+                  {head2}
+                </span>
+              </>
+            )}
+          </Motion.h1>
+
+          <Motion.p variants={fadeUp} className="mt-5 max-w-xl text-lg text-ink-soft dark:text-gray-400">
+            {s.subheading}
+          </Motion.p>
 
           {/* Search card */}
-          <div className="mt-8 rounded-2xl border border-line bg-white p-4 shadow-lg shadow-slate-200/50 dark:border-white/[0.08] dark:bg-gray-900 dark:shadow-black/40">
+          <Motion.div
+            variants={fadeUp}
+            className="mt-8 rounded-2xl border border-line bg-white p-4 shadow-lg shadow-slate-200/50 dark:border-white/[0.08] dark:bg-gray-900 dark:shadow-black/40"
+          >
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
                 <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -111,51 +157,24 @@ function Hero() {
                 </span>
               ))}
             </div>
-          </div>
+          </Motion.div>
 
-          <div className="mt-5 flex items-center gap-4">
-            <button onClick={() => navigate("/vps")} className="inline-flex items-center gap-1.5 text-15 font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200">
+          <Motion.div variants={fadeUp} className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <span className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
+              <LuShieldCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {s.trustNote}
+            </span>
+            <button
+              onClick={() => navigate("/vps")}
+              className="inline-flex items-center gap-1.5 text-15 font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
+              data-testid="hero-need-servers-link"
+            >
               {s.needServers} <LuArrowRight className="h-4 w-4" />
             </button>
-          </div>
-        </div>
+          </Motion.div>
+        </Motion.div>
 
-        {/* Right visual */}
-        <div className="relative">
-          <div className="relative overflow-hidden rounded-3xl border border-line shadow-2xl shadow-slate-300/40 dark:border-white/[0.08] dark:shadow-black/60">
-            <img src={IMAGES.hero} alt="Data centre corridor at night" className="h-[320px] w-full object-cover sm:h-[440px]" loading="eager" />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-950/85 via-gray-950/30 to-transparent" />
-            <div className="absolute inset-0 ring-1 ring-inset ring-brand/20" />
-            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between text-white">
-              <div>
-                <p className="text-xs uppercase tracking-wider text-gray-300">{t.site.servers.regionLabel}</p>
-                <p className="text-sm font-semibold">EU · SG</p>
-              </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/15 px-3 py-1 text-xs font-semibold text-brand-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand-400" /> TLS
-              </span>
-            </div>
-          </div>
-          {/* Floating cards */}
-          <div className="absolute -bottom-5 left-4 flex items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/95 sm:left-6">
-            <span className="nw-icon h-10 w-10 rounded-full">
-              <LuShieldCheck className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-primary dark:text-white">{s.heroFloat.title}</p>
-              <p className="text-13 text-ink-soft dark:text-gray-400">{s.heroFloat.sub}</p>
-            </div>
-          </div>
-          <div className="absolute -top-4 right-4 hidden items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/95 sm:flex">
-            <span className="nw-icon h-10 w-10 rounded-full">
-              <LuMapPin className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-primary dark:text-white">{s.heroFloat2.title}</p>
-              <p className="text-13 text-ink-soft dark:text-gray-400">{s.heroFloat2.sub}</p>
-            </div>
-          </div>
-        </div>
+        {/* Right visual — animated storyboard */}
+        <HeroShowcase />
       </div>
 
       {submitted && (

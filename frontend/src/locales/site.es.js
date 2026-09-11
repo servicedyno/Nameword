@@ -40,6 +40,16 @@ export const siteEs = {
     heroFloat: { title: "Privacidad WHOIS incluida", sub: "en todo dominio elegible" },
     heroFloat2: { title: "Tú eliges la jurisdicción", sub: "UE o Singapur hoy" },
     needServers: "¿Necesitas un servidor?",
+    rating: "De confianza en 2 jurisdicciones",
+    trustNote: "Sin tarjeta guardada · paga desde tu monedero prepago",
+    showcase: {
+      live: "En vivo",
+      tabs: { domains: "Dominios", hosting: "Hosting", servers: "VPS · RDP", manage: "Gestionar" },
+      domains: { available: "Disponible", taken: "Ocupado" },
+      hosting: { title: "cPanel Offshore", region: "UE · Fráncfort", status: "Activo", disk: "Disco", bandwidth: "Ancho de banda" },
+      servers: { title: "Despliega un servidor", region: "SG · Singapur", status: "En marcha", cpu: "vCPU", ram: "RAM", ssd: "SSD" },
+      manage: { title: "Registros DNS", propagated: "Propagado", wallet: "Monedero" },
+    },
     trust: [
       { label: "2 jurisdicciones", sub: "UE y Singapur" },
       { label: "Privacidad WHOIS", sub: "incluida, sin sobrecoste" },
