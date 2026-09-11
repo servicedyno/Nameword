@@ -33,3 +33,6 @@ Source of truth for prioritized backlog. Static problem statement lives in `PRD.
   (wallet **is** charged, order recorded, nothing provisioned upstream). Only Nomadly flips this to `live`.
 - Domain+hosting cart (~$69) exceeds seeded buyer wallet ($50) → correctly returns
   `402 insufficient_wallet_balance` (shortfall $19). Re-seed: `node scripts/seed_test_users.js` (resets to $50).
+
+## Done (current session)
+- **Short sign-up everywhere**: `/create-account` (`pages/auth/CreateAccount.jsx`) rewritten from the OLD long form (name/username/email/phone+country/password/confirm) to the SHORT form (email + password + confirm + "Continue with Google" + Sign In link), matching the checkout `AccountGate` and the "email + password + Google only" design decision. Backend `registerSimpleRules` only requires email+password, so all CTAs (Navbar, Home, Pricing, Email page, marketing CtaBand/PricingTiers, SignIn link) that point to `/create-account` now show the short page. Verified live via screenshot.

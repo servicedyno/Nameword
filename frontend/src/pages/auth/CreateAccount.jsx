@@ -3,27 +3,23 @@ import { google } from "../../components/common/icons";
 import { LuLock } from "react-icons/lu";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link, NavLink } from "react-router";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
-
-import PasswordStrengthMeter from "../../components/common/PasswordStrengthMeter";
-import ErrorComponent from "../../components/common/ErrorComponent";
 import { useAuth } from "../../hooks/useAuth";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-import { NavLink } from "react-router";
+import ErrorComponent from "../../components/common/ErrorComponent";
 import Loader from "../../components/common/Loader";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
 
+// Short sign-up: email + password + Google only (matches the checkout AccountGate
+// experience and the product design decision). Backend `registerSimpleRules`
+// requires only email + password; username/mobile are optional.
 const CreateAccount = () => {
   const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isMobileFocused, setIsMobileFocused] = useState(true);
 
   const { register, error, clearError } = useAuth();
   const navigate = useNavigate();
@@ -33,10 +29,7 @@ const CreateAccount = () => {
     setLoading(true);
     try {
       const userData = {
-        name: values.name,
-        username: values.username,
-        email: values.email,
-        mobile: "+" + values.mobile,
+        email: values.email.trim(),
         password: values.password,
         passwordConfirmation: values.passwordConfirmation,
       };
@@ -82,36 +75,18 @@ const CreateAccount = () => {
         {error && <ErrorComponent error={error} />}
 
         <Formik
-          initialValues={{
-            name: "",
-            username: "",
-            email: "",
-            mobile: "91",
-            password: "",
-            passwordConfirmation: "",
-            phoneCountryCode: "",
-          }}
+          initialValues={{ email: "", password: "", passwordConfirmation: "" }}
           validationSchema={Yup.object().shape({
-            name: Yup.string().trim().required(t.auth.nameRequired || 'Name is required'),
-            username: Yup.string().trim().required(t.auth.usernameRequired || 'Username is required'),
-            mobile: Yup.string()
-              .trim()
-              .required(t.auth.mobileFieldRequired || 'Mobile field is required.').test('is-valid', t.auth.enterValidPhoneNumber || 'Enter a valid phone number', function (value) {
-                const { phoneCountryCode } = this.parent;
-                const phoneNumber = parsePhoneNumberFromString(`+${value || ''}`, phoneCountryCode?.toUpperCase() || 'US');
-                return phoneNumber?.isValid() || false;
-              }),
-            email: Yup.string().email(t.auth.invalidEmailAddress || 'Please enter a valid email address').required(t.auth.emailRequired || 'Email is required'),
+            email: Yup.string()
+              .email(t.auth.invalidEmailAddress || "Please enter a valid email address")
+              .required(t.auth.emailRequired || "Email is required"),
             password: Yup.string()
-              .min(8, t.auth.passwordMinLength || 'Password must contain at least 8 characters')
-              .matches(/[!@#$%^&*(),.?":{}|<>]/, t.auth.passwordSpecialChar || 'Password must include at least one special symbol')
-              .matches(/[a-z]/, t.auth.passwordLowercase || 'Password must include a lowercase letter')
-              .matches(/[A-Z]/, t.auth.passwordUppercase || 'Password must include an uppercase letter')
-              .matches(/[0-9]/, t.auth.passwordNumber || 'Password must include at least one number')
-              .required(t.auth.passwordRequired || 'Password is required'),
+              .min(8, t.auth.passwordMinLength || "Password should be at least 8 characters long.")
+              .max(64, t.auth.passwordMaxLength || "Password exceeds the maximum length of 64 characters.")
+              .required(t.auth.passwordRequired || "Password is required"),
             passwordConfirmation: Yup.string()
-              .oneOf([Yup.ref('password'), null], t.auth.passwordsMustMatch || 'Passwords must match')
-              .required(t.auth.confirmPasswordRequired || 'Please confirm your password'),
+              .oneOf([Yup.ref("password")], t.auth.passwordsDoNotMatch || "Passwords do not match.")
+              .required(t.auth.confirmPasswordRequired || "Please confirm your password."),
           })}
           onSubmit={handleSubmit}
         >
@@ -124,105 +99,15 @@ const CreateAccount = () => {
             isSubmitting,
             isValid,
             dirty,
-            setFieldValue,
-            setFieldTouched,
-            validateField,
           }) => (
             <Form className="gap-2.5 flex flex-col w-full">
-              {/* Name */}
-              <div
-                className={`relative ${
-                  errors.name && touched.name ? "input-error" : ""
-                }`}
-              >
-                <Field
-                  type="text"
-                  name="name"
-                  className={`input-field peer ${
-                    errors.name && touched.name
-                      ? "border-red-500 dark:border-red-400"
-                      : ""
-                  }`}
-                  id="name"
-                  value={values.name}
-                  onChange={(e) => {
-                    // handleChange(e);
-                    if (error) clearError();
-                    const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, '');
-                    setFieldValue('name', filteredValue);
-                  }}
-                  onBlur={handleBlur}
-                  disabled={loading}
-                />
-                <label
-                  htmlFor="name"
-                  className={`absolute left-5 transition-all font-medium ${
-                    values.name
-                      ? "top-2 text-xs text-gray-600"
-                      : "top-4 text-13 text-primary dark:text-gray-500 "
-                  } peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                >
-                  {t.auth.name || "Name *"}
-                </label>
-                <ErrorMessage
-                  name="name"
-                  component="p"
-                  className="text-warning pl-5 text-xs font-medium mt-1"
-                />
-              </div>
-              {/* username */}
-              <div
-                className={`relative ${
-                  errors.username && touched.username ? "input-error" : ""
-                }`}
-              >
-                <Field
-                  type="text"
-                  name="username"
-                  className={`input-field peer ${
-                    errors.username && touched.username
-                      ? "border-red-500 dark:border-red-400"
-                      : ""
-                  }`}
-                  id="username"
-                  value={values.username}
-                  onChange={(e) => {
-                    handleChange(e);
-                    if (error) clearError();
-                  }}
-                  onBlur={handleBlur}
-                  disabled={loading}
-                />
-                <label
-                  htmlFor="username"
-                  className={`absolute left-5 transition-all font-medium ${
-                    values.username
-                      ? "top-2 text-xs text-gray-600"
-                      : "top-4 text-13 text-primary dark:text-gray-500 "
-                  } peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                >
-                  {t.auth.username || "Username *"}
-                </label>
-                <ErrorMessage
-                  name="username"
-                  component="p"
-                  className="text-warning pl-5 text-xs font-medium mt-1"
-                />
-              </div>
-
               {/* Email */}
-              <div
-                className={`relative ${
-                  errors.email && touched.email ? "input-error" : ""
-                }`}
-              >
+              <div className={`relative ${errors.email && touched.email ? "input-error" : ""}`}>
                 <Field
                   type="email"
                   name="email"
                   className={`input-field peer ${
-                    errors.email && touched.email
-                      ? "border-red-500 dark:border-red-400"
-                      : ""
+                    errors.email && touched.email ? "border-red-500 dark:border-red-400" : ""
                   }`}
                   id="email"
                   value={values.email}
@@ -250,75 +135,13 @@ const CreateAccount = () => {
                 />
               </div>
 
-              {/* mobile */}
-              <div
-                className={`relative react-tel-flag ${
-                  errors.mobile && touched.mobile ? "input-error" : ""
-                }`}
-              >
-                <PhoneInput
-                  country={"in"}
-                  // containerClass={`input-field peer ${errors.mobile && touched.mobile ? 'border-red-500 dark:border-red-400' : ''}`}
-                  value={values.mobile}
-                  onChange={(value, data) => {
-                    setFieldValue("mobile", value);
-                    setFieldValue("phoneCountryCode", data.countryCode);
-                    if (error) clearError();
-                    setTimeout(() => {
-                      setFieldTouched("mobile", true);
-                      validateField("mobile");
-                    }, 0);
-                  }}
-                  specialLabel=""
-                  placeholder=""
-                  inputProps={{
-                    name: "mobile",
-                    className: `input-field mobile-number peer ${
-                      errors.mobile && touched.mobile
-                        ? "border-red-500 dark:border-red-400"
-                        : ""
-                    }`,
-                    onFocus: () => setIsMobileFocused(true),
-                    onBlur: () => {
-                      setIsMobileFocused(false);
-                      setFieldTouched("mobile", true); // ✅ manually mark as touched
-                    },
-                  }}
-                  enableSearch={true}
-                  searchPlaceholder={t.auth.searchCountries || "Search countries..."}
-                  searchNotFound={t.auth.noCountryFound || "No country found"}                     
-                />
-                <label
-                  htmlFor="mobile"
-                  className={`absolute left-12 transition-all font-medium ${
-                    values.mobile || isMobileFocused
-                      ? "top-2 text-xs text-gray-600"
-                      : "top-4 text-13 text-primary dark:text-gray-500 "
-                  } peer-focus:top-2 peer-focus:text-xs peer-focus:text-gray-600 peer-placeholder-shown:text-secondary`}
-                  onClick={() => setIsMobileFocused(true)}
-                >
-                  {t.auth.mobileNumber || "Mobile number *"}
-                </label>
-                {errors.mobile && touched.mobile && (
-                  <p className="text-warning pl-5 text-xs font-medium mt-1">
-                    {errors.mobile}
-                  </p>
-                )}
-              </div>
-
-              {/* password */}
-              <div
-                className={`relative ${
-                  errors.password && touched.password ? "input-error" : ""
-                }`}
-              >
+              {/* Password */}
+              <div className={`relative ${errors.password && touched.password ? "input-error" : ""}`}>
                 <Field
                   type={showPassword ? "text" : "password"}
                   name="password"
                   className={`input-field peer ${
-                    errors.password && touched.password
-                      ? "border-red-500 dark:border-red-400"
-                      : ""
+                    errors.password && touched.password ? "border-red-500 dark:border-red-400" : ""
                   }`}
                   id="password"
                   value={values.password}
@@ -352,16 +175,11 @@ const CreateAccount = () => {
                   className="text-warning pl-5 text-xs font-medium mt-1"
                 />
               </div>
-              {(values.password) && (
-                <PasswordStrengthMeter password={values.password} />
-              )}
 
               {/* Confirm Password */}
               <div
                 className={`relative ${
-                  errors.passwordConfirmation && touched.passwordConfirmation
-                    ? "input-error"
-                    : ""
+                  errors.passwordConfirmation && touched.passwordConfirmation ? "input-error" : ""
                 }`}
               >
                 <Field
@@ -386,11 +204,7 @@ const CreateAccount = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-5 top-5 text-primary dark:text-gray-500 cursor-pointer"
                 >
-                  {showConfirmPassword ? (
-                    <FiEye size={18} />
-                  ) : (
-                    <FiEyeOff size={18} />
-                  )}
+                  {showConfirmPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
                 </button>
                 <label
                   htmlFor="passwordConfirmation"
@@ -435,15 +249,9 @@ const CreateAccount = () => {
               <button
                 type="submit"
                 className={`add-to-cart max-w-full ${
-                  !(isValid && dirty)
-                    ? "disable cursor-not-allowed"
-                    : ""
+                  !(isValid && dirty) ? "disable cursor-not-allowed" : ""
                 }`}
-                disabled={
-                  loading ||
-                  isSubmitting ||
-                  !(isValid && dirty)
-                }
+                disabled={loading || isSubmitting || !(isValid && dirty)}
               >
                 {t.auth.createAccount || "Create Account"} <TbArrowRight size={18} />
               </button>
@@ -458,16 +266,17 @@ const CreateAccount = () => {
 
         {/* Social Buttons */}
         <button
-          className={`btn-outline max-w-full ${
-            loading ? "disable" : ""
-          }`}
+          className={`btn-outline max-w-full ${loading ? "disable" : ""}`}
           onClick={handleLogin}
           disabled={loading}
         >
           <img src={google} alt="Google" className="w-5 h-5" />
           {t.auth.continueWithGoogle || "Continue with Google"}
         </button>
-        <p className="mt-2 flex items-start gap-2 rounded-xl border border-brand/15 bg-brand-50/60 px-3 py-2.5 text-xs text-brand-800 dark:border-brand/20 dark:bg-brand/10 dark:text-brand-200" data-testid="auth-privacy-line">
+        <p
+          className="mt-2 flex items-start gap-2 rounded-xl border border-brand/15 bg-brand-50/60 px-3 py-2.5 text-xs text-brand-800 dark:border-brand/20 dark:bg-brand/10 dark:text-brand-200"
+          data-testid="auth-privacy-line"
+        >
           <LuLock className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {t.site.auth.privacyLine}
         </p>
 
