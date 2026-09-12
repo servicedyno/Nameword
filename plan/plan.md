@@ -1,267 +1,134 @@
-# Nameword — Product, Checkout & Provisioning Audit + Recommendations
+# Full User-Journey Test Plan — Nameword (up to payment, no real purchase)
 
-This document reviews the four products (Domains, Hosting, VPS, RDP) end‑to‑end —
-selection, ordering, checkout, payment, provisioning and post‑purchase management —
-lists the gaps and UX problems found in the live app today, and proposes a
-prioritized set of fixes. It is written so you can decide **what to green‑light**,
-in what order, and where to push back. Nothing here has been built yet.
+## 1. Objective
+Exercise every customer-facing journey in the app from onboarding through to the
+moment money would move — for every product and every payment method — and produce a
+single pass/fail report. No real charge, no real crypto send, and no real server/domain
+provisioning happens in this pass. Actual paid transactions are a separate, later round.
 
----
+## 2. What "no real purchase" means here (the main decision to confirm)
+The app has a built-in safe **Test mode**: while the upstream provider is in dry-run, a
+banner reads *"your wallet is charged exactly as in live mode and the order is recorded,
+but nothing is provisioned."* This gives two possible stopping points. They differ in how
+much gets validated, so please pick one:
 
-## 1. How each product works today (baseline)
+- **Option A — Stop at the review screen (nothing moves at all).**
+  Each journey is driven to the final cart/checkout screen showing the correct total,
+  wallet balance, points discount and an armed "Pay" button — but "Pay" is never clicked.
+  Safest and literally "up to the point of payment," but the server-side order creation,
+  points redemption and wallet debit are not exercised.
 
-**Shared shopping model.** All four products share one browser‑stored cart and one
-checkout funnel (search → optional hosting → sign‑in → cart → pay). Payment is a
-**prepaid wallet only**: the wallet is topped up separately (card/crypto via
-DynoPay) and the order then debits the wallet. The provider (Nomadly) currently
-runs in **test mode** ("dry_run"): the wallet is charged exactly as in live mode,
-the order is recorded, but nothing is actually provisioned upstream.
+- **Option B — Use the built-in Test mode (recommended for wallet & points).**
+  For payments that draw on **in-app wallet balance and reward points only** (both are
+  pre-seeded fake credit), actually click "Pay." In Test mode this records an order and
+  deducts the fake balance but provisions nothing and moves no real money. This validates
+  the entire loop — checkout → points redemption → wallet debit → order history →
+  renewals — and the fake balance is reset afterward. **No external/real payment ever
+  happens under this option.**
 
-- **Domains** — Public search with instant exact‑match + alternative‑TLD
-  suggestions and real pricing. "Add to cart" → hosting upsell → checkout. After
-  purchase the only management action offered is "Manage DNS". Registration is
-  **1 year only**; WHOIS privacy and Cloudflare DNS are advertised as included.
-- **Hosting** — Storefront with 3 Anti‑Red cPanel plans (7‑day / monthly). Buy
-  flow attaches hosting to a domain (bring‑your‑own or register in the same order).
-  Post‑purchase: list accounts with Login, Reveal credentials, Suspend, Terminate.
-- **VPS** — Plan grid (vCPU/RAM/SSD) by region (EU, SG), configure modal
-  (hostname + OS) → add to cart → checkout. Post‑purchase: Start / Stop / Reboot /
-  Reveal credentials / Destroy.
-- **RDP** — Same as VPS but Windows (no OS choice, user = Administrator).
+**External payments are always Option A regardless of the above:** anything that leaves
+the app to a hosted crypto/card page or wallet top-up is driven only up to the point where
+the checkout link / crypto address is generated and the redirect is about to happen. We
+verify the hand-off is produced; we never complete the external payment. That is the
+boundary reserved for the later "real payment" round.
 
----
+**Proposed default: Option B for wallet + points, Option A (hand-off only) for everything
+external.** Confirm, or choose Option A across the board.
 
-## 2. Cross‑cutting issues (affect every product)
+## 3. Journeys covered
 
-These are the highest‑impact items. The first is a **security/privacy defect**.
+### Onboarding & account access
+- Sign up with email + password (new account each run).
+- Email verification step (the code is available for the test to read even though
+  outbound email is not configured — see §6).
+- Sign in / sign out; session behavior.
+- Forgot password → reset password.
+- Google sign-in (start + redirect only — see §6).
+- Telegram sign-in / link (UI presence only — see §6).
+- Two-factor login prompt (where enabled).
+- Change email, change password.
+- Deactivate / reactivate / delete account (verified carefully so as not to destroy the
+  seeded test accounts).
 
-### C1 — "My items" show *every customer's* resources (critical)
-Each product's post‑purchase list ("Your domains", "Your servers", "Your hosting
-accounts") is loaded from the provider's **account‑wide** list, not scoped to the
-signed‑in buyer. Consequently any logged‑in user can currently see — and for
-servers **Start/Stop/Reboot/Destroy and reveal passwords for** — resources that
-belong to other customers. Orders are already recorded per user, but the
-management screens ignore that ownership.
-**Recommendation:** derive every "my X" view and every management action from the
-buyer's own order/ownership records; store the provider resource identifiers on
-the order at provisioning time; reject any action on a resource the user doesn't
-own. This must be fixed before the app is used by more than one real customer.
+### Product ordering — each taken to the payment step
+- **Domain registration** — search, availability + live price, add to cart, nameserver
+  choice (Cloudflare / registrar / custom), proceed to pay.
+- **cPanel hosting** — plan selection incl. the 7-day / monthly options, with a new
+  domain and with a bring-your-own domain, proceed to pay.
+- **VPS** — plan, region, OS, disk and billing cycle, proceed to pay.
+- **RDP** — plan and subscription, proceed to pay.
+- **Mixed cart** — domain + hosting together, to confirm bundle pricing to the pay step.
 
-### C2 — No renewals / expiry lifecycle for anything sold through the current flow
-Domains (1‑year), hosting (7‑day/monthly) and servers (monthly) all expire, but the
-current order flow creates one‑off orders with **no renewal, no auto‑renew, no
-expiry reminders, and no "days left / next charge" anywhere**. (A legacy
-subscription/auto‑renew system exists in the code but is wired to a different,
-now‑unused provider, so it does not cover anything sold today.)
-**Recommendation:** introduce a lifecycle for purchased items — expiry date shown
-on each item, manual "Renew" (wallet‑paid), optional auto‑renew from wallet, and
-reminder emails before expiry. Decide whether auto‑renew is on or off by default.
+### Domain / DNS management (owned-item journeys, no purchase)
+- DNS records view/add/edit/delete, nameserver changes, domain forwarding, WHOIS,
+  privacy/lock toggles — driven as far as the current provider allows in dry-run.
 
-### C3 — Provisioning is synchronous and has no status tracking
-Provisioning runs inside the checkout request, one item at a time. In test mode
-this is instant, but a **live** VPS/RDP/hosting build can take minutes — long
-enough for the request to time out and for the buyer to be charged with an unclear
-result. The receipt reads item status once and never updates; there is no
-background reconciliation and no provider status callbacks.
-**Recommendation:** make provisioning asynchronous — record the order as paid
-immediately, provision in the background, show a live "provisioning → active"
-status on the receipt and dashboard (poll and/or provider webhook), and add a
-retry path for a failed item instead of only refunding.
+### Account management
+- Dashboard, order history, services & renewals (renew + auto-renew toggle to the pay
+  step), billing / invoices (view + download), wallet transactions, refunds history,
+  API keys (create/list/revoke), active sessions (view + sign-out), notification
+  preferences, promo-code entry, tax/VAT display.
 
-### C4 — Payment is wallet‑only, which forces a detour on the first purchase
-There is no way to pay for an order directly. A first‑time buyer with an empty
-wallet must: build the cart → hit a "you're short" wall → leave to the wallet page
-→ top up (with a minimum amount) → return → pay. This is significant drop‑off
-versus the "enter card, done" flow shoppers expect. Payment also depends on a
-single provider with no fallback, no tax/VAT applied at checkout (even though the
-pieces exist), no promo‑code field in the cart, and USD‑only pricing.
-**Recommendation (decision needed):** either (a) keep wallet‑first but make top‑up
-inline in the cart (top up the exact shortfall without leaving the page) and
-auto‑resume payment, or (b) add "pay now by card/crypto" directly on the order in
-addition to wallet. See open decisions in §9.
+## 4. Payment-method coverage (the "point of payment" per method)
+For every product above, the following are checked where the app offers them:
 
----
+| Method | How far it is taken |
+|---|---|
+| In-app **Wallet** balance | Review with correct total + balance; then per §2 (Option B: pay in Test mode; Option A: stop before pay). |
+| **Reward points** (pay with points) | Apply points, confirm discount and adjusted total; full and partial redemption; then per §2. |
+| **Wallet funding / top-up** (hosted crypto/card) | Open top-up, choose amount, reach the generated hosted-checkout link / redirect — stop there. Never pay. |
+| **Crypto** (currency list + payment address) | Reach supported-currency selection and generated address/QR — stop there. Never send. |
+| **Per-product hosted checkout** (crypto/card link) | Reach the generated checkout link / redirect — stop there. Never pay. |
+| **Insufficient balance path** | Confirm the "top up & pay" prompt appears and routes correctly. |
 
-## 3. Domains
+## 5. Accounts & data
+- Seeded accounts are used (one with wallet credit, one with reward points) plus a fresh
+  sign-up per run for the onboarding path.
+- If Test mode debits are used (Option B), seeded wallet/points balances are restored at
+  the end so the accounts are reusable.
+- All runs are on this preview environment against the live database that is already
+  connected.
 
-**Selection / ordering — mostly good.** Fast exact match + streaming alternatives,
-clear availability/pricing, sticky cart bar, and a natural domain→hosting upsell.
+## 6. Known integration limits (reported as "blocked / needs key", not as failures)
+These are currently placeholders or need external setup, so those journeys are verified
+only up to the point they hand off to the provider:
+- **Outbound email** (verification, password-reset, order emails): not deliverable yet.
+  The test reads the verification / reset codes directly so onboarding still completes.
+- **Google sign-in**: the redirect to Google works; completing it requires this
+  environment's callback URL to be whitelisted in the Google account first.
+- **Telegram sign-in, SMS/mobile OTP**: providers are placeholders; UI is checked but the
+  flow cannot complete.
+- **Hosted crypto/card checkout & wallet top-up (DynoPay)**: reachable to the hand-off;
+  full completion needs the remaining DynoPay company ID / webhook secret and is part of
+  the later real-payment round. If even the hand-off cannot be generated, it is reported
+  as a blocker.
 
-**Gaps & issues:**
-- **Management is essentially DNS‑only.** After buying, a domain owner cannot
-  renew, enable/disable WHOIS privacy, lock/unlock the domain, get the transfer
-  (EPP/auth) code, transfer a domain in or out, edit registrant/contact details,
-  or change registrar nameservers from the current screen — only edit DNS records.
-  A full‑featured domain manager (renew, auto‑renew, privacy, lock, nameservers,
-  forwarding, bulk actions, expiry, status) **exists in the codebase but is
-  disconnected** from the current provider, so customers can't use it.
-- **1‑year only.** No multi‑year registration and no renewal term choice.
-- **"WHOIS privacy included" and "Instant activation" are advertised** but there is
-  no place to verify privacy is on, and in test mode nothing activates.
-- **"Your domains" is not scoped to the buyer** (see C1) and shows minimal info (no
-  expiry, no status, no privacy/lock state).
+## 7. Scope boundaries
+- **In scope:** all customer-facing journeys listed above, to the payment step.
+- **Out of scope (confirm):** completing any real or external payment; real upstream
+  provisioning; the internal admin/back-office dashboard; performance, load and security
+  testing.
 
-**Recommendations (in priority order):**
-1. Scope "Your domains" to the buyer; show expiry, auto‑renew and lock/privacy
-   state, and a clear status.
-2. Add core registrar management: **Renew** (wallet‑paid, term choice),
-   **auto‑renew** toggle, **WHOIS privacy** on/off, **registrar lock** on/off,
-   **transfer/EPP code** retrieval, and **registrar nameserver** editing — reusing
-   the existing management UI, re‑pointed to the current provider.
-3. Add **multi‑year registration** at checkout if the provider prices it.
-4. Later: domain **transfer‑in** flow, contact/registrant management, and DNS
-   niceties (presets for email/website, DNSSEC).
-*(Feasibility of items 2–3 depends on which of these the provider actually
-supports — see §9 D4.)*
+## 8. Deliverable
+- A pass/fail matrix of **journey × payment method**, each cell noting exactly where the
+  flow stopped, with screenshots at the decisive steps.
+- A prioritized list of blockers (with the specific missing key or setup for each).
+- A short "ready for real-payment round" checklist of the exact points where the next
+  round should resume.
 
----
+## 9. Assumptions (change any before approval)
+- A1. Default stopping behavior is **§2 Option B for wallet/points, Option A for all
+  external payments**.
+- A2. The internal admin dashboard is **not** included.
+- A3. Placeholder-backed flows (email delivery, Google completion, Telegram, SMS, hosted
+  crypto/card completion) are expected to stop at the provider hand-off and are reported
+  as blockers, not failures.
+- A4. Seeded test accounts and this preview environment/live DB are acceptable to test
+  against; balances are reset afterward if Test-mode payments are used.
 
-## 4. Hosting
-
-**Selection / ordering — good.** Clear plans, sensible domain bundling, and the
-upsell placement is strong.
-
-**Gaps & issues:**
-- **Account list is not scoped to the buyer** (see C1) and, more seriously,
-  Suspend/Terminate act on the provider's global accounts — destructive actions
-  that must be ownership‑gated.
-- **No renewal / plan change.** A 7‑day or monthly plan cannot be renewed or
-  upgraded/downgraded from the UI; nothing warns before expiry (C2).
-- **No add‑on domain management, no SSL status, no usage/quota view** in the current
-  flow, even though plans advertise add‑on domains and Anti‑Red features. (Rich
-  hosting management exists in the code but for the legacy provider.)
-- **"Instant activation from your wallet" is promised** but in test mode nothing is
-  provisioned, and there is no provisioning progress shown.
-
-**Recommendations:**
-1. Ownership‑gate the hosting list and all actions (Login/Credentials/Suspend/
-   Terminate) to the buyer (C1).
-2. Add **renew** and **upgrade/downgrade** (wallet‑paid) with expiry + auto‑renew
-   (C2), and surface **provisioning status** (C3).
-3. Add **add‑on domain** management, **SSL status**, and a basic **usage** panel if
-   the provider exposes them.
-4. Make the "Login to cPanel" and credentials flow robust (single sign‑on link,
-   password reset) rather than revealing a stored password.
-
----
-
-## 5. VPS
-
-**Selection / ordering — good.** Clean plan grid, region selector, configure modal.
-
-**Gaps & issues:**
-- **Ownership defect is worst here** (C1): the "Your servers" list is provider‑wide
-  and exposes Start/Stop/Reboot/**Destroy** and **password reveal** for servers the
-  user does not own.
-- **Thin lifecycle & management.** Only power actions + credentials + destroy. No
-  **renewal/expiry** (C2), no **resize/upgrade**, no **rebuild/reinstall OS**, no
-  **snapshots/backups**, no **console/VNC**, no **bandwidth/usage** metrics, no
-  **password reset** (password is shown in plaintext in a modal), and no reverse
-  DNS / IP management.
-- **Region choice is EU/SG only**, and billing is described as "monthly" with no
-  term options or price‑per‑term clarity.
-- **No provisioning progress** after purchase (C3); a "provisioning" server has no
-  guidance on how long or what to expect.
-
-**Recommendations:**
-1. Ownership‑gate the list and every power/credential/destroy action (C1) — treat
-   as release‑blocking.
-2. Add **expiry + renew + auto‑renew** and **provisioning status** (C2, C3).
-3. Add the management actions customers expect for a VPS: **rebuild/reinstall**,
-   **resize**, **snapshot/backup**, **console access**, **password reset**, and
-   **usage metrics** — scoped to what the provider supports (see §9 D4).
-4. Improve credentials UX: one‑time reveal / reset rather than a persistent
-   plaintext password; SSH‑key option at deploy.
-
----
-
-## 6. RDP
-
-Mirrors VPS with Windows specifics, and shares the **same critical ownership
-defect** (C1) and the same thin lifecycle (no renew/expiry, no rebuild, no console,
-plaintext password reveal).
-
-**Recommendations:** same as VPS §5 (ownership‑gating, lifecycle, provisioning
-status, credentials hygiene), plus RDP‑specific niceties later: downloadable
-`.rdp` connection file, and clear "connect from Windows/Mac" guidance.
-
----
-
-## 7. Checkout & payments (deep dive)
-
-**What works:** re‑pricing the cart live at payment, an atomic wallet debit that
-can't overdraft, idempotent "pay" (no double charge on retry), reward‑points
-redemption with a clear slider, proportional refunds for failed items, and honest
-test‑mode banners.
-
-**Problems:**
-- **Wallet‑only detour (C4)** — the biggest conversion risk, especially first
-  purchase.
-- **VPS/RDP are second‑class in the funnel.** The guided funnel is domain‑centric
-  (its empty states and "add another" all push domains); servers are added from
-  their product page into a cart designed around domains, with no server‑oriented
-  guidance.
-- **Cart is per‑device only.** It lives in the browser, so it's lost on device
-  switch or storage clear, and isn't restored after signing in on another device.
-- **No tax/VAT, no promo code at checkout, USD‑only.** Tax and promo building
-  blocks exist but aren't applied in the cart.
-- **No order confirmation email / receipt delivery** on completion (email sending
-  is configured but not used at checkout).
-- **Receipt is static** — provisioning status doesn't update after the first load
-  (C3).
-
-**Recommendations:**
-1. Resolve the payment model (§9 D1) — inline top‑up of the exact shortfall with
-   auto‑resume, and/or direct card/crypto pay‑per‑order.
-2. Send an **order confirmation + receipt email**, and make the receipt reflect
-   live provisioning status.
-3. Add **promo code** and, if you charge tax, **VAT/tax** to the cart; consider
-   multi‑currency display.
-4. Give servers a **first‑class configure→checkout path** and persist the cart to
-   the account so it survives across devices.
-
----
-
-## 8. Proposed roadmap (priority tiers)
-
-**P0 — must fix before real customers / going live**
-- C1 Ownership‑scoping across Domains, Hosting, VPS, RDP (security/privacy).
-- C3 Asynchronous provisioning + live status + failed‑item retry.
-- Confirm live vs test mode and what the provider will actually provision.
-
-**P1 — core parity customers expect**
-- C2 Renewals, auto‑renew, expiry dates + reminder emails (all products).
-- C4 Payment friction fix (inline top‑up and/or direct card/crypto).
-- Domain registrar management (renew/privacy/lock/EPP/nameservers) re‑connected.
-- Hosting renew/upgrade + provisioning status; VPS/RDP renew + credentials hygiene.
-- Order confirmation emails; cart persisted to the account.
-
-**P2 — depth & delight**
-- Multi‑year domains, transfer‑in, contact management, DNSSEC.
-- Hosting add‑on domains / SSL / usage.
-- VPS/RDP rebuild, resize, snapshots, console, usage metrics, SSH keys, `.rdp` file.
-- Tax/VAT, promo codes, multi‑currency, server‑first checkout funnel.
-
----
-
-## 9. Open decisions for you
-
-- **D1 — Payment model:** (a) keep wallet‑first but add **inline top‑up + auto‑resume**
-  in the cart, (b) add **direct card/crypto pay‑per‑order** alongside the wallet, or
-  (c) both. *Assumption if unspecified: (a) now, (b) later.*
-- **D2 — Auto‑renew default:** on or off by default for domains/hosting/servers.
-  *Assumption if unspecified: off by default, opt‑in.*
-- **D3 — Scope of this engagement:** do you want (i) just the deep audit above
-  delivered, (ii) the **P0 release‑blockers** fixed, or (iii) P0 + P1? *Assumption
-  if unspecified: proceed with P0 first, then review.*
-- **D4 — Provider capabilities:** which actions the upstream provider actually
-  supports (domain renew/privacy/lock/transfer/multi‑year; VPS/RDP rebuild/resize/
-  snapshot/console; hosting renew/upgrade/addon/SSL) determines what's buildable vs.
-  what must be hidden or stubbed. This needs confirmation before P1/P2 work.
-- **D5 — Live vs test mode:** whether to switch the provider to live (real
-  provisioning + real charges) and when. *Assumption if unspecified: stay in test
-  mode until P0 is done.*
-
-*Note: this review is grounded in the current running app. Items that depend on the
-upstream provider (D4) are called out; where the provider can't do something, the
-recommendation is to hide/disable it cleanly rather than show a dead control.*
+## 10. Decisions to confirm
+1. §2 stopping behavior — accept the proposed default, or require "stop before pay"
+   everywhere?
+2. Is the admin/back-office area in or out of scope?
+3. Is it acceptable to place **Test-mode (non-real) orders** on the live database using
+   the seeded fake wallet/points balance (Option B), given balances are restored after?
