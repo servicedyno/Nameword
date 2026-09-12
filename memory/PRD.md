@@ -1,5 +1,10 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ⏳ ONGOING TASK (2026-06) — READ `/app/memory/REMOVE_EMAIL_TASK.md` FIRST
+Status: **NOT STARTED** (only exploration done; no code changed).
+User asked to: (1) remove the "Private Email" product **everywhere it's advertised** (landing page + nav + footer + Pricing page + command palette) and **delete the `/email` page/route**, keeping all account/auth email; (2) change cPanel billing copy "monthly or annual" → "7 days or monthly" on the landing product card and the Hosting page feature copy (do NOT touch the functional Monthly/Annual toggle).
+Full exact edit list (files, line numbers, EN/FR/ES strings) + verification steps are in **`/app/memory/REMOVE_EMAIL_TASK.md`**. Note: frontend is a PROD build — run `sudo supervisorctl restart frontend` (~30s) after edits before testing.
+
 ## ✅ Landing Page Re-Image — COMPLETE (2026-06, tested 100%)
 - User choices: AI-generated cinematic imagery (indigo/obsidian palette, abstract tech + privacy motifs, no faces, no padlocks); keep animated HeroShowcase panel over image + gradient.
 - Imagery: 12 custom images generated (Gemini image model), converted to web-optimised WebP in `frontend/public/img/landing/` (hero, map, security, cta, rewards, domains, dns, hosting, vps, rdp, email, api; ~600 KB total). Paths in `components/home/landing/images.js`. Hero preloaded via `<link rel=preload>` in index.html.
