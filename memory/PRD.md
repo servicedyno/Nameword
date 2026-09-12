@@ -1,5 +1,11 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## 🎨 ACTIVE TASK (2026-06) — "Keyhole N" Logo Redesign — IN PROGRESS, NOT COMPLETE
+- User selected Concept 2 "Keyhole N". Full spec, file map, code snippets, raster steps and verification checklist are in **`/app/memory/LOGO_IMPLEMENTATION.md`** — the next agent should read that first and execute it end-to-end.
+- Progress so far: only `/app/frontend/src/assets/logo/favicon.svg` has been replaced with the new Keyhole-N mark. Everything else (lockups, BrandLogo component, component wire-ups, favicon PNGs, OG image, email `logo.png`, index.html) is PENDING.
+- Palette: indigo `#4F46E5` badge, slate `#0F172A` wordmark (light), `#F8FAFC` wordmark (dark). Flat only — no gradients/3D/padlock/cloud. Badge stays indigo in dark mode (do NOT reuse the `.dark .dark-mode { filter: brightness(100) }` hack on it).
+
+
 ## ⚠️ PROVIDER CLARIFICATION (2026-06, from user) — READ FIRST
 - ALL products — Domains, DNS, Hosting (cPanel), VPS, RDP — are served by the **Nomadly reseller API** (`NOMADLY_API_KEY = rsk_live_...` in `/app/backend/.env`).
 - **HostBay is NOT used.** Ignore HostBay-based hosting flows in `HostingPlansController.js` / `hostbay/mapping.js` — the live hosting/domain/VPS/RDP data must come from the Nomadly reseller endpoints (`/api/v1/reseller/*`, see `frontend/src/api/reseller.js`).
