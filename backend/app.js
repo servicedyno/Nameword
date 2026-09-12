@@ -73,6 +73,8 @@ require("./app/jobs/syncHostbayOrderStatus");
 require("./app/jobs/domainExpiryReminder");
 // Hosting Expiry Reminder
 require("./app/jobs/hostingExpiryReminder");
+// C3: async provisioning safety-net worker
+require("./app/jobs/provisioningWorker");
 require("./app/models/User");
 require("./app/models/UserSession");
 require("./app/models/Wallet");

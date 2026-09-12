@@ -9,5 +9,8 @@ router.post("/quote", currentUser, CheckoutController.quote);
 router.post("/orders", currentUser, requireAuth, CheckoutController.createOrder);
 router.get("/orders", currentUser, requireAuth, CheckoutController.listOrders);
 router.get("/orders/:id", currentUser, requireAuth, CheckoutController.getOrder);
+// C3: async provisioning — live status poll + failed-item retry.
+router.get("/orders/:id/status", currentUser, requireAuth, CheckoutController.getOrderStatus);
+router.post("/orders/:id/items/:idx/retry", currentUser, requireAuth, CheckoutController.retryItem);
 
 module.exports = router;

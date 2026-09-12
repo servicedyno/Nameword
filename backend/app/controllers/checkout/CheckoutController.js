@@ -298,6 +298,65 @@ async function provisionItem(item, mode, email) {
   }
 }
 
+// --- C3: reconcile an order's display aggregates + reward-points ledger -------
+// Wallet debits/credits already happen inline during provisioning/refund/retry;
+// this only recomputes the order's stored aggregates from its items and applies
+// an idempotent delta to the points a buyer earned (never double-grants).
+async function recomputeOrderFinancials(order) {
+  const userId = order.userId;
+  const items = order.items || [];
+  const netCash = round2(items.reduce((s, i) => s + (Number(i.cash_charged_usd) || 0), 0));
+  const refundedCash = round2(items.reduce((s, i) => s + (Number(i.refunded_usd) || 0), 0));
+  const committedPointsUsd = round2(items.reduce((s, i) => s + (Number(i.points_charged_usd) || 0), 0));
+
+  order.charged_usd = netCash;
+  order.refunded_usd = refundedCash;
+  const pv = pointValueUsd();
+  order.points_restored = pv > 0 ? round2(Math.max(0, order.points_discount_usd - committedPointsUsd) / pv) : 0;
+
+  // Earn points only on cash kept by successfully provisioned items.
+  const earnCash = round2(
+    items
+      .filter((i) => i.status === "active" || i.status === "test_mode")
+      .reduce((s, i) => s + (Number(i.cash_charged_usd) || 0), 0)
+  );
+  const target = round2(earnCash * purchaseRewardRate());
+  const delta = round2(target - (Number(order.points_earned) || 0));
+  if (delta > 0) await logPoints(userId, delta, "credit");
+  else if (delta < 0) await logPoints(userId, -delta, "debit");
+  order.points_earned = target;
+
+  const failed = items.filter((i) => i.status === "failed").length;
+  order.status = items.length && failed === items.length ? "failed" : failed > 0 ? "partial" : "paid";
+
+  const after = await Wallet.findOne({ userId });
+  order.wallet_balance_after_usd = round2(walletUsd(after));
+}
+
+// --- C3: best-effort live provider status for one item (status poll) ---------
+async function syncItemLive(item) {
+  try {
+    if (item.type === "domain") {
+      if (item.status === "active") item.live_status = "active";
+      return;
+    }
+    if (item.type === "vps" || item.type === "rdp") {
+      if (!item.provider_id || item.status !== "active") return;
+      const r = await nomadly.get(`/${item.type}/${encodeURIComponent(item.provider_id)}`, { timeout: 10000 });
+      const d = r.data || {};
+      const live = String(d.live?.status || d.status || "").toLowerCase();
+      if (live) item.live_status = live;
+    } else if (item.type === "hosting") {
+      if (!item.provider_username || item.status !== "active") return;
+      const r = await nomadly.get(`/hosting/${encodeURIComponent(item.provider_username)}`, { timeout: 10000 });
+      const d = r.data || {};
+      item.live_status = d.suspended ? "suspended" : "active";
+    }
+  } catch (_) {
+    /* best-effort — a slow/failed provider read must never break the poll */
+  }
+}
+
 const serviceFor = (item) =>
   item.type === "domain"
     ? "Domain Registration"
@@ -354,14 +413,21 @@ class CheckoutController {
     }
   }
 
-  // Auth: charge the in-app wallet, then provision every item upstream.
+  // Auth: charge the in-app wallet, record the order as PENDING, return 201
+  // immediately, then provision every item in the BACKGROUND (C3). The heavy
+  // per-item provider calls no longer block the checkout response — the receipt
+  // page polls GET /orders/:id/status until each item reaches a terminal state.
   static async createOrder(req, res) {
     const userId = req.user.id;
     const clientOrderId = req.body?.client_order_id ? String(req.body.client_order_id).slice(0, 80) : null;
     try {
       if (clientOrderId) {
         const existing = await Order.findOne({ userId, clientOrderId });
-        if (existing) return res.json({ success: true, idempotent: true, order: existing });
+        if (existing) {
+          return res
+            .status(existing.provisioning === "complete" ? 200 : 202)
+            .json({ success: true, idempotent: true, order: existing });
+        }
       }
 
       const [items, mode] = await Promise.all([priceItems(req.body?.items), getMode()]);
@@ -413,6 +479,24 @@ class CheckoutController {
         });
       }
 
+      // Split the committed cash + points across items so each can be refunded /
+      // retried independently later (C3). Reconcile rounding on the last item.
+      let cashAcc = 0;
+      let ptsAcc = 0;
+      items.forEach((it, i) => {
+        it.status = "pending";
+        it.attempts = 0;
+        if (i < items.length - 1 && subtotal_usd > 0) {
+          it.cash_charged_usd = round2(it.price_usd * (charged_usd / subtotal_usd));
+          it.points_charged_usd = round2(it.price_usd - it.cash_charged_usd);
+        } else {
+          it.cash_charged_usd = round2(charged_usd - cashAcc);
+          it.points_charged_usd = round2(points_discount_usd - ptsAcc);
+        }
+        cashAcc = round2(cashAcc + it.cash_charged_usd);
+        ptsAcc = round2(ptsAcc + it.points_charged_usd);
+      });
+
       const order = new Order({
         userId,
         clientOrderId,
@@ -422,74 +506,109 @@ class CheckoutController {
         points_redeemed,
         points_discount_usd,
         charged_usd,
+        points_earned: 0,
         transactionId: tx ? tx._id : undefined,
+        provisioning: "pending",
+        provisioningLockedAt: null,
+      });
+      await order.save();
+
+      // Provision off-request; a safety-net cron re-picks any order left stuck.
+      setImmediate(() => {
+        CheckoutController.processOrder(order._id).catch((e) =>
+          console.error("[checkout] background processOrder failed:", e?.message || e)
+        );
       });
 
-      let refunded = 0; // cash refunded to wallet
-      let pointsRestored = 0; // reward points restored on failed items
+      return res.status(201).json({ success: true, order });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // C3: background provisioner. Idempotent + lock-guarded so the in-request
+  // kick-off and the safety-net cron never double-provision the same item.
+  static async processOrder(orderId) {
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000);
+    const order = await Order.findOneAndUpdate(
+      {
+        _id: orderId,
+        provisioning: { $in: ["pending", "processing"] },
+        $or: [{ provisioningLockedAt: null }, { provisioningLockedAt: { $lte: cutoff } }],
+      },
+      { $set: { provisioning: "processing", provisioningLockedAt: new Date() } },
+      { new: true }
+    );
+    if (!order) return; // already complete, or claimed by another worker
+
+    try {
+      const user = await User.findById(order.userId);
+      const email = user?.email;
+      const tx = order.transactionId;
+
       for (const item of order.items) {
-        const result = await provisionItem(item, mode, req.user.email);
+        if (item.status !== "pending") continue;
+        item.attempts = (Number(item.attempts) || 0) + 1;
+        const result = await provisionItem(item, order.mode, email);
         item.status = result.status;
         item.message = result.message;
         item.upstream = result.upstream;
-        // Capture upstream identifiers so every "my X" view + management action
-        // can be ownership-scoped to this buyer (C1). In dry_run these stay empty
-        // and a stable synthetic ref (`<orderId>:<index>`) is used instead.
+        item.provisionedAt = new Date();
         Object.assign(item, ownership.extractProviderIds(item.type, result.upstream));
+
         if (result.status === "failed") {
-          // Refund a failed item proportionally across the cash + points it was paid with.
-          const cashShare =
-            subtotal_usd > 0 ? round2(item.price_usd * (charged_usd / subtotal_usd)) : round2(item.price_usd);
-          const pointsShareUsd = round2(item.price_usd - cashShare);
-          if (cashShare > 0) {
-            await creditWallet(userId, cashShare, `refund:${order.orderNumber || (tx && tx._id) || "order"}:${item.domain || item.plan_id || item.type}`);
+          // Refund the cash + points currently committed to THIS item.
+          const cash = round2(Number(item.cash_charged_usd) || 0);
+          const ptsUsd = round2(Number(item.points_charged_usd) || 0);
+          if (cash > 0) {
+            await creditWallet(
+              order.userId,
+              cash,
+              `refund:${order.orderNumber}:${item.domain || item.plan_id || item.type}`
+            );
           }
-          if (pointsShareUsd > 0 && pointValueUsd() > 0) {
-            const restore = round2(pointsShareUsd / pointValueUsd());
-            await logPoints(userId, restore, "credit");
-            pointsRestored = round2(pointsRestored + restore);
+          if (ptsUsd > 0 && pointValueUsd() > 0) {
+            await logPoints(order.userId, round2(ptsUsd / pointValueUsd()), "credit");
           }
-          item.refunded_usd = round2(item.price_usd);
-          refunded = round2(refunded + cashShare);
+          item.refunded_usd = round2(cash + ptsUsd);
+          item.cash_charged_usd = 0;
+          item.points_charged_usd = 0;
         } else {
           try {
             await createPaymentRecord({
-              userId,
+              userId: order.userId,
               service: serviceFor(item),
               title: titleFor(item),
               amount: item.price_usd,
               currency: "USD",
               paymentMethod: "wallet_balance",
               status: "completed",
-              transactionId: tx ? tx._id : null,
-              metadata: { checkout: true, mode, itemType: item.type, domain: item.domain, plan_id: item.plan_id || null },
+              transactionId: tx || null,
+              metadata: {
+                checkout: true,
+                mode: order.mode,
+                itemType: item.type,
+                domain: item.domain,
+                plan_id: item.plan_id || null,
+                orderNumber: order.orderNumber,
+              },
             });
           } catch (e) {
             console.error("[checkout] payment record failed:", e?.message || e);
           }
         }
+        order.markModified("items");
+        await order.save(); // persist per-item progress so the status poll sees it
       }
 
-      const failedCount = order.items.filter((i) => i.status === "failed").length;
-      order.refunded_usd = refunded;
-      order.points_restored = pointsRestored;
-      order.status = failedCount === order.items.length ? "failed" : failedCount > 0 ? "partial" : "paid";
-
-      // Earn reward points on the NET cash actually kept by the business.
-      const netCash = round2(Math.max(0, charged_usd - refunded));
-      const points_earned = round2(netCash * purchaseRewardRate());
-      if (points_earned > 0) {
-        await logPoints(userId, points_earned, "credit");
-      }
-      order.points_earned = points_earned;
-
-      const after = await Wallet.findOne({ userId });
-      order.wallet_balance_after_usd = round2(walletUsd(after));
+      await recomputeOrderFinancials(order);
+      order.provisioning = "complete";
+      order.provisioningLockedAt = null;
+      order.markModified("items");
       await order.save();
-
-      return res.status(201).json({ success: true, order });
     } catch (err) {
-      return CheckoutController.fail(res, err);
+      console.error("[checkout] processOrder error:", err?.message || err);
+      // Leave the lock to expire; the safety-net cron reclaims and finishes it.
     }
   }
 
@@ -512,6 +631,133 @@ class CheckoutController {
       const order = await Order.findOne({ _id: id, userId: req.user.id });
       if (!order) throw new HttpError(404, "not_found", "Order not found.");
       return res.json({ success: true, order });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // C3: lightweight poll for the receipt page. Best-effort live provider sync;
+  // in dry_run there are no provider ids so this returns the stored statuses.
+  static async getOrderStatus(req, res) {
+    try {
+      const id = String(req.params.id || "");
+      if (!/^[a-f0-9]{24}$/i.test(id)) throw new HttpError(404, "not_found", "Order not found.");
+      const order = await Order.findOne({ _id: id, userId: req.user.id });
+      if (!order) throw new HttpError(404, "not_found", "Order not found.");
+
+      // Best-effort live provider sync — LIVE mode only (dry_run has no provider
+      // ids). We do NOT persist here: saving a second copy of the order would
+      // race the background worker's save and trigger a version conflict. The
+      // cached live_status is a convenience that the worker owns; the poll just
+      // computes+returns the freshest value.
+      if (order.mode === "live") {
+        await Promise.allSettled((order.items || []).map((it) => syncItemLive(it)));
+      }
+
+      const items = (order.items || []).map((it, idx) => ({
+        idx,
+        type: it.type,
+        title: titleFor(it),
+        status: it.status,
+        live_status: it.live_status || null,
+        message: it.message || null,
+        provider_id: it.provider_id || null,
+        provider_username: it.provider_username || null,
+        panel_url: it.panel_url || null,
+        server_ip: it.server_ip || null,
+        refunded_usd: round2(Number(it.refunded_usd) || 0),
+        attempts: Number(it.attempts) || 0,
+        price_usd: round2(Number(it.price_usd) || 0),
+      }));
+      const anyPending = items.some((i) => i.status === "pending");
+      const wallet = await Wallet.findOne({ userId: req.user.id });
+      return res.json({
+        success: true,
+        order_id: String(order._id),
+        order_number: order.orderNumber,
+        mode: order.mode,
+        provisioning: order.provisioning,
+        settled: order.provisioning === "complete" && !anyPending,
+        status: order.status,
+        items,
+        charged_usd: round2(Number(order.charged_usd) || 0),
+        refunded_usd: round2(Number(order.refunded_usd) || 0),
+        points_earned: round2(Number(order.points_earned) || 0),
+        points_restored: round2(Number(order.points_restored) || 0),
+        wallet_balance_usd: round2(walletUsd(wallet)),
+      });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // C3: retry a single FAILED item. Re-charges its price in cash (the original
+  // cash + points were already refunded on failure), then re-provisions it.
+  static async retryItem(req, res) {
+    const userId = req.user.id;
+    try {
+      const id = String(req.params.id || "");
+      const idx = parseInt(req.params.idx, 10);
+      if (!/^[a-f0-9]{24}$/i.test(id)) throw new HttpError(404, "not_found", "Order not found.");
+      const order = await Order.findOne({ _id: id, userId });
+      if (!order) throw new HttpError(404, "not_found", "Order not found.");
+      if (!Number.isInteger(idx) || idx < 0 || idx >= order.items.length) {
+        throw new HttpError(404, "not_found", "Order item not found.");
+      }
+      const item = order.items[idx];
+      if (item.status !== "failed") {
+        throw new HttpError(409, "not_retryable", "Only a failed item can be retried.");
+      }
+
+      const price = round2(Number(item.price_usd) || 0);
+      const wallet = await debitWallet(userId, price);
+      if (!wallet) {
+        const current = await Wallet.findOne({ userId });
+        const balance = round2(walletUsd(current));
+        return res.status(402).json({
+          success: false,
+          error: "insufficient_wallet_balance",
+          message: "Top up your wallet to retry this item.",
+          payable_usd: price,
+          wallet_balance_usd: balance,
+          shortfall_usd: round2(price - balance),
+        });
+      }
+      await Transaction.create({
+        userId,
+        walletId: wallet._id,
+        amount: price,
+        currency: "USD",
+        type: "debit",
+        method: "wallet_balance",
+        reference: `retry:${order.orderNumber}:${idx}`,
+        status: "completed",
+        from: "nameword",
+      });
+
+      // Reset the item to pending with fresh committed cash (no points on retry).
+      item.status = "pending";
+      item.message = "Retrying…";
+      item.refunded_usd = 0;
+      item.cash_charged_usd = price;
+      item.points_charged_usd = 0;
+      item.upstream = undefined;
+      item.provider_id = undefined;
+      item.provider_username = undefined;
+      item.panel_url = undefined;
+      item.server_ip = undefined;
+      item.live_status = undefined;
+      order.provisioning = "pending";
+      order.provisioningLockedAt = null;
+      order.markModified("items");
+      await order.save();
+
+      setImmediate(() => {
+        CheckoutController.processOrder(order._id).catch((e) =>
+          console.error("[checkout] retry processOrder failed:", e?.message || e)
+        );
+      });
+      return res.status(202).json({ success: true, order });
     } catch (err) {
       return CheckoutController.fail(res, err);
     }

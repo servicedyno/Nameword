@@ -33,6 +33,12 @@ const orderItemSchema = new mongoose.Schema(
     provider_username: { type: String },  // hosting: cPanel username (live mode)
     panel_url: { type: String },           // hosting: control panel URL (if provided)
     server_ip: { type: String },           // hosting/server: IP (if provided)
+    // --- C3: async provisioning bookkeeping ---
+    cash_charged_usd: { type: Number, default: 0 },   // cash currently committed to this item
+    points_charged_usd: { type: Number, default: 0 }, // points (as USD value) committed to this item
+    attempts: { type: Number, default: 0 },           // provisioning attempts (incl. retries)
+    provisionedAt: { type: Date },                     // last provisioning attempt time
+    live_status: { type: String },                     // cached live provider status (status poll)
   },
   { _id: false }
 );
@@ -56,6 +62,14 @@ const orderSchema = new mongoose.Schema(
     refunded_usd: { type: Number, default: 0 },
     wallet_balance_after_usd: { type: Number },
     transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+    // --- C3: background provisioning lifecycle ---
+    provisioning: {
+      type: String,
+      enum: ["pending", "processing", "complete"],
+      default: "pending",
+      index: true,
+    },
+    provisioningLockedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
