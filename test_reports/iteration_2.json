@@ -1,0 +1,33 @@
+{
+  "summary": "Frontend-only testing of the Nameword landing redesign at '/'. Verified every required data-testid, image, navigation, inline domain search (real reseller API), dark mode, mobile (390) and tablet (768) responsive behaviour, and scroll-reveal animations. All 15+ landing images load (naturalWidth > 0) once lazy-loaded, all sections visible, no console errors, no horizontal overflow at any breakpoint. Landing page ships as-designed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/landing_desktop.png",
+    "/app/test_reports/dark_hero.png",
+    "/app/test_reports/dark_security.png",
+    "/app/test_reports/dark_rewards.png",
+    "/app/test_reports/dark_cta.png",
+    "/app/test_reports/mobile_hero.png",
+    "/app/test_reports/mobile_products.png",
+    "/app/test_reports/mobile_cta.png",
+    "/app/test_reports/tablet_hero.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Landing images use loading='lazy' including the hero image on some sections. Above-the-fold hero.webp already uses eager load — good. Consider preloading map.webp/security.webp with <link rel=preload> for better LCP on marketing pages.",
+    "In FinalCta.jsx the domain search results are rendered OUTSIDE the Reveal panel and cause the layout to grow downward; this is correct but keep in mind Playwright/UX flows: after a search the 'Create your account' link shifts. Non-blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "not required (public landing)",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All landing testids verified: hero-heading, hero-domain-input, hero-search-button, hero-search-results, hero-showcase, hero-showcase-tab-{domains|hosting|servers|manage}, hero-need-servers-link, trust-bar, trust-item-0..3, product-card-{domains|hosting|vps|rdp|email|dns|api}, products-pricing-link, why-map-visual, pillar-0..4, step-0..2, tld-card-{com|net|org|io|co|xyz|shop|store}, tld-register-com, pricing-search-cta, pricing-full-table, security-band, security-item-0..4, rewards-band, perk-0..3, rewards-cta, final-cta, cta-domain-input, cta-search-button, cta-search-results, cta-create-account-link. Navigation verified: product cards -> /domains,/hosting,/vps,/rdp,/email,/api; product-card-dns (logged out) -> /sign-in; hero-need-servers-link -> /vps; tld-register-com -> /domains?value=yourname.com; pricing-full-table -> /pricing; pricing-search-cta -> /domains; rewards-cta -> /create-account; cta-create-account-link -> /create-account. Inline domain search hits /api/v1/reseller/domains/search and returns Available/Taken cards for both hero and final CTA within ~5-8s. Dark mode (localStorage theme=dark, nw_theme_v2=1) renders correctly with legible text on security/rewards/cta dark image bands. Mobile 390 and tablet 768 have zero horizontal overflow; hero stacks vertically; product cards single column; trust bar 2 columns on mobile. Reveal (whileInView) animations reach opacity 1 for every section when scrolled into view.",
+  "rca of the issue": "No issues found."
+}

@@ -211,13 +211,20 @@ const SCENE_COMPONENTS = {
 
 /* ---------- carousel shell ---------- */
 
-export default function HeroShowcase() {
+export default function HeroShowcase({ onDark = false }) {
   const { t } = useLanguage();
   const s = t.site.home;
   const sc = s.showcase;
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  const tabActive = onDark
+    ? "border-white/25 bg-white/15 text-white backdrop-blur-md"
+    : "border-brand/40 bg-brand-50 text-brand-700 dark:border-brand/40 dark:bg-brand/15 dark:text-brand-300";
+  const tabIdle = onDark
+    ? "border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+    : "border-line text-ink-soft hover:text-primary dark:border-white/10 dark:text-gray-400 dark:hover:text-white";
 
   useEffect(() => {
     if (paused) return undefined;
@@ -259,16 +266,14 @@ export default function HeroShowcase() {
               onClick={() => setActive(i)}
               data-testid={`hero-showcase-tab-${def.key}`}
               className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
-                isActive
-                  ? "border-brand/40 bg-brand-50 text-brand-700 dark:border-brand/40 dark:bg-brand/15 dark:text-brand-300"
-                  : "border-line text-ink-soft hover:text-primary dark:border-white/10 dark:text-gray-400 dark:hover:text-white"
+                isActive ? tabActive : tabIdle
               }`}
             >
               <def.icon className="h-3.5 w-3.5" /> {sc.tabs[def.key]}
               {isActive && !reduced && !paused && (
                 <Motion.span
                   key={active}
-                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-brand"
+                  className={`absolute inset-x-0 bottom-0 h-0.5 origin-left ${onDark ? "bg-brand-300" : "bg-brand"}`}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: INTERVAL / 1000, ease: "linear" }}
@@ -284,7 +289,9 @@ export default function HeroShowcase() {
         initial={{ opacity: 0, y: reduced ? 0 : 24, scale: reduced ? 1 : 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="relative overflow-hidden rounded-3xl border border-line bg-white shadow-2xl shadow-slate-300/40 dark:border-white/[0.08] dark:bg-gray-900 dark:shadow-black/60"
+        className={`relative overflow-hidden rounded-3xl border border-line bg-white dark:border-white/[0.08] dark:bg-gray-900 ${
+          onDark ? "shadow-2xl shadow-black/50" : "shadow-2xl shadow-slate-300/40 dark:shadow-black/60"
+        }`}
       >
         {/* Chrome */}
         <div className="flex items-center gap-2 border-b border-line px-4 py-3 dark:border-white/[0.06]">
@@ -336,7 +343,7 @@ export default function HeroShowcase() {
       <Motion.div
         animate={reduced ? {} : { y: [0, 9, 0] }}
         transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-        className="absolute -top-4 right-2 hidden items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/95 sm:flex"
+        className="absolute -top-[4.5rem] right-0 hidden items-center gap-3 rounded-2xl border border-line bg-white/95 px-4 py-3 shadow-xl backdrop-blur dark:border-white/[0.08] dark:bg-gray-900/95 sm:flex"
       >
         <span className="nw-icon h-10 w-10 rounded-full">
           <LuMapPin className="h-5 w-5" />

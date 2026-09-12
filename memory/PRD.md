@@ -1,6 +1,17 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
-## 🎨 ACTIVE TASK (2026-06) — "Keyhole N" Logo Redesign — IN PROGRESS, NOT COMPLETE
+## ✅ Landing Page Re-Image — COMPLETE (2026-06, tested 100%)
+- User choices: AI-generated cinematic imagery (indigo/obsidian palette, abstract tech + privacy motifs, no faces, no padlocks); keep animated HeroShowcase panel over image + gradient.
+- Imagery: 12 custom images generated (Gemini image model), converted to web-optimised WebP in `frontend/public/img/landing/` (hero, map, security, cta, rewards, domains, dns, hosting, vps, rdp, email, api; ~600 KB total). Paths in `components/home/landing/images.js`. Hero preloaded via `<link rel=preload>` in index.html.
+- Code: `components/home/HomeRedesign.jsx` now only composes sections from `components/home/landing/`: Hero (image "stage" behind HeroShowcase, `onDark` prop added to HeroShowcase; floaters repositioned bottom-left / top-right above tabs), TrustBar (hairline grid w/ icons), Products (6 image cards + wide API card w/ curl chip; DNS card gated to /sign-in when logged out), WhyNameword (map slab + numbered editorial list), HowItWorks (dashed connector + big faded numerals), PricingTeaser (8 TLD cards on grid bg), SecurityBand (full-bleed dark image band + glass checklist), RewardsBand (copy + perks + blended image), FinalCta (image panel + glass DomainSearchForm + create-account link). Shared: `DomainSearchForm.jsx`, `Reveal.jsx` (motion whileInView).
+- Section order per plan: Hero → Trust → Products → Why → How → Pricing → Security → Rewards → CTA → Footer. Copy/i18n strings unchanged (EN/ES/FR keep working). All interactive elements have data-testids (see `/app/test_reports/iteration_2.json` context field).
+- Tested: `/app/test_reports/iteration_2.json` — frontend 100%: images, navigation, inline search (real reseller API), dark mode, 390/768 responsive (no overflow), reveal animations. Legacy `components/home/{claim-online,domain-extend-launch,how-it-works,our-clients,points-banner,pricing-plans,security-beyond,domain-search-section}.jsx` are unused leftovers (safe to delete later).
+- Frontend served as PROD build (`/app/frontend/.prod` present → `yarn build && vite preview`); after code changes run `sudo supervisorctl restart frontend` (~30s) to rebuild.
+
+## NEXT (from backlog)
+- P1 Verify Brevo sender (outbound email), P1 Google OAuth redirect whitelisting for pod URL, P1 DynoPay top-up smoke test, P2 backend health sweep.
+
+## 🎨 (superseded) "Keyhole N" Logo Redesign — COMPLETE (see section at bottom)
 - User selected Concept 2 "Keyhole N". Full spec, file map, code snippets, raster steps and verification checklist are in **`/app/memory/LOGO_IMPLEMENTATION.md`** — the next agent should read that first and execute it end-to-end.
 - Progress so far: only `/app/frontend/src/assets/logo/favicon.svg` has been replaced with the new Keyhole-N mark. Everything else (lockups, BrandLogo component, component wire-ups, favicon PNGs, OG image, email `logo.png`, index.html) is PENDING.
 - Palette: indigo `#4F46E5` badge, slate `#0F172A` wordmark (light), `#F8FAFC` wordmark (dark). Flat only — no gradients/3D/padlock/cloud. Badge stays indigo in dark mode (do NOT reuse the `.dark .dark-mode { filter: brightness(100) }` hack on it).
