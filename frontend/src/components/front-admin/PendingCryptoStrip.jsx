@@ -5,6 +5,17 @@ import { walletAPI } from "../../api/walletApi";
 import WalletModal from "../modals/wallet-modal";
 import { useAlert } from "../../context/AlertContext";
 
+// "in ~2h 45m" / "in ~40m" until the address window closes; null if unknown/past.
+function expiresIn(iso) {
+  if (!iso) return null;
+  const ms = new Date(iso).getTime() - Date.now();
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  const mins = Math.round(ms / 60000);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h > 0 ? `~${h}h ${m}m` : `~${m}m`;
+}
+
 // "Awaiting crypto" strip: surfaces unfinished crypto top-ups so a user can
 // reopen the address/QR and finish paying (or dismiss it).
 export default function PendingCryptoStrip() {
@@ -72,6 +83,9 @@ export default function PendingCryptoStrip() {
               <p className="text-xs text-amber-800/80 dark:text-amber-200/70">
                 {p.cryptoAmount ? `Send ${p.cryptoAmount} ${p.currency} to finish topping up your wallet. ` : `Finish topping up your wallet in ${p.currency}. `}
                 {p.status === "confirming" ? "Payment detected — confirming on-chain…" : "We haven't seen your payment yet."}
+                {expiresIn(p.expireAt) && (
+                  <span className="text-amber-700/70 dark:text-amber-200/60"> · expires in {expiresIn(p.expireAt)}</span>
+                )}
               </p>
             </div>
           </div>

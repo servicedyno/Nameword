@@ -939,7 +939,7 @@ const createCryptoTopup = async (req, res) => {
 		await CryptoTopup.create({
 			userId, paymentId: d.transaction_id, currency: d.currency || cur,
 			cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum,
-			address: d.address, qrCode: d.qr_code || null, status: "pending", meta: meta_data,
+			address: d.address, qrCode: d.qr_code || null, status: "pending", expireAt: new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000), meta: meta_data,
 		});
 
 		return res.status(201).json({
@@ -957,6 +957,44 @@ const createCryptoTopup = async (req, res) => {
 			message: error?.response?.data?.message || error?.message || "Failed to create crypto top-up.",
 		});
 	}
+};
+
+// Reconcile one crypto top-up against the provider: credits the wallet if the
+// payment cleared, syncs the record's status, and expires it past its window.
+// Shared by the status endpoint and the lifecycle job (so a user who paid but
+// closed the tab is still credited). Mutates + saves the passed record.
+const reconcileCryptoTopup = async (record) => {
+	if (!record || record.status === "credited") return { status: record?.status, credited: false };
+	let statusData = null;
+	try {
+		const ps = await getPaymentStatus(record.paymentId);
+		statusData = ps?.data || null;
+	} catch (e) {
+		statusData = null;
+	}
+	if (statusData) {
+		const rawStatus = String(statusData.payment_status || statusData.status || "").toLowerCase();
+		const isPaid = statusData.is_paid === true || ["paid", "confirmed", "settled", "successful", "success", "completed"].includes(rawStatus);
+		const txHash = statusData.incoming_tx_hash || null;
+		if (isPaid) {
+			const result = await creditWalletTopup({ userId: record.userId, amountUsd: record.amountUsd, paymentId: record.paymentId, transactionReference: txHash || record.paymentId, paymentMode: "crypto" });
+			record.status = "credited";
+			record.txHash = txHash;
+			if (result.transactionId) record.creditTransactionId = result.transactionId;
+			await record.save();
+			return { status: "credited", credited: true, txHash };
+		}
+		let friendly = record.status;
+		if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
+		else if (rawStatus === "expired") friendly = "expired";
+		else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
+		if (friendly !== record.status) { record.status = friendly; await record.save(); }
+	}
+	if (["pending", "confirming"].includes(record.status) && record.expireAt && new Date(record.expireAt) <= new Date()) {
+		record.status = "expired";
+		await record.save();
+	}
+	return { status: record.status, credited: false };
 };
 
 // GET /api/v1/wallet/crypto-topup/:paymentId/status  — polls DynoPay and credits on confirmation
@@ -1018,12 +1056,11 @@ const getCryptoTopupStatus = async (req, res) => {
 const listPendingCryptoTopups = async (req, res) => {
 	try {
 		const userId = req.user.id;
-		const maxAgeMin = Math.max(5, Number(process.env.CRYPTO_TOPUP_RESUME_MINUTES) || 60);
-		const cutoff = new Date(Date.now() - maxAgeMin * 60 * 1000);
+		const now = new Date();
 		const rows = await CryptoTopup.find({
 			userId,
 			status: { $in: ["pending", "confirming"] },
-			createdAt: { $gte: cutoff },
+			expireAt: { $gt: now },
 		}).sort({ createdAt: -1 }).limit(10);
 		const data = rows.map((r) => ({
 			paymentId: r.paymentId,
@@ -1034,6 +1071,7 @@ const listPendingCryptoTopups = async (req, res) => {
 			qrCode: r.qrCode || null,
 			status: r.status,
 			createdAt: r.createdAt,
+			expireAt: r.expireAt,
 		}));
 		return res.status(200).json({ success: true, data });
 	} catch (error) {
@@ -1072,6 +1110,7 @@ module.exports = {
 	createCryptoTopup,
 	getCryptoTopupStatus,
 	creditWalletTopup,
+	reconcileCryptoTopup,
 	listPendingCryptoTopups,
 	cancelCryptoTopup,
 };

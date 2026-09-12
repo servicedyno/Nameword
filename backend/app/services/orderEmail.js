@@ -98,11 +98,20 @@ function buildHtml({ order, name }) {
 
 async function sendOrderConfirmation({ to, order, name }) {
   if (!to || !order) return;
+  let attachments;
+  try {
+    const { generateOrderReceiptPDF } = require("../utils/orderReceiptPdf");
+    const pdf = await generateOrderReceiptPDF(order, { name, email: to });
+    if (pdf) attachments = [{ filename: `Nameword-${order.orderNumber || order._id}.pdf`, content: pdf.toString("base64") }];
+  } catch (e) {
+    console.error("[orderEmail] PDF generation failed (sending without attachment):", e?.message || e);
+  }
   try {
     await mailer.sendMail({
       to,
       subject: `Your Nameword order ${order.orderNumber || ""}`.trim(),
       html: buildHtml({ order, name }),
+      attachments,
     });
   } catch (e) {
     // Outbound email only delivers once a verified Brevo sender is configured.

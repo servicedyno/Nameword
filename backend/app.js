@@ -75,6 +75,7 @@ require("./app/jobs/domainExpiryReminder");
 require("./app/jobs/hostingExpiryReminder");
 // C3: async provisioning safety-net worker
 require("./app/jobs/provisioningWorker");
+require("./app/jobs/cryptoTopupLifecycle");
 // C2: renewal reminders + auto-renew sweep
 require("./app/jobs/nomadlyLifecycle");
 require("./app/models/User");

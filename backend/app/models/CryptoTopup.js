@@ -18,6 +18,8 @@ const cryptoTopupSchema = new mongoose.Schema(
       default: "pending",
       index: true,
     },
+    expireAt: { type: Date, default: null, index: true },
+    reminderSentAt: { type: Date, default: null },
     txHash: { type: String, default: null },
     creditTransactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction", default: null },
     meta: { type: Object, default: {} },

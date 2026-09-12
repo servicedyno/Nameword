@@ -2,7 +2,7 @@ const env = require("../../start/env");
 const { TransactionalEmailsApi, SendSmtpEmail } = require("@getbrevo/brevo");
 
 const transporter = {
-	sendMail : async({ to: email, subject, html}) => {
+	sendMail : async({ to: email, subject, html, attachments }) => {
 		let emailAPI = new TransactionalEmailsApi();
 		emailAPI.authentications.apiKey.apiKey = env.BREVO_API_KEY;
 
@@ -11,6 +11,9 @@ const transporter = {
 		message.htmlContent = html;
 		message.sender = { email: env.BREVO_EMAIL, name: env.MAIL_NAME };
 		message.to = [{ email: email }];
+		if (Array.isArray(attachments) && attachments.length) {
+			message.attachment = attachments.map((a) => ({ name: a.filename || a.name, content: a.content }));
+		}
 
 		try {
 			const res = await emailAPI.sendTransacEmail(message);
