@@ -44,6 +44,16 @@ export const walletAPI = {
         return response.data;
     },
 
+    listPendingCryptoTopups: async () => {
+        const response = await apiClient.get(ENDPOINTS.WALLET.CRYPTO_TOPUPS_PENDING);
+        return response.data;
+    },
+
+    cancelCryptoTopup: async (paymentId) => {
+        const response = await apiClient.post(ENDPOINTS.WALLET.CRYPTO_TOPUP_CANCEL(paymentId));
+        return response.data;
+    },
+
     getSupportedCurrencies: async () => {
         const response = await apiClient.get(ENDPOINTS.WALLET.SUPPORTED_CURRENCY);
         return response.data;

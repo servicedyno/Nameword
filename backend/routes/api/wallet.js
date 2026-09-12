@@ -9,6 +9,8 @@ const {
 	getHostbayWalletTransactions,
 	createCryptoTopup,
 	getCryptoTopupStatus,
+	listPendingCryptoTopups,
+	cancelCryptoTopup,
 } = require("../../app/controllers/wallet/WalletController");
 const {
 	getPaymentHistory,
@@ -44,7 +46,9 @@ router.post(
 	getDynocheckoutUrl
 );
 router.post("/crypto-topup", cryptoTopupRules, validateRequest, createCryptoTopup);
+router.get("/crypto-topups/pending", listPendingCryptoTopups);
 router.get("/crypto-topup/:paymentId/status", getCryptoTopupStatus);
+router.post("/crypto-topup/:paymentId/cancel", cancelCryptoTopup);
 // Payment history - new implementation
 router.get("/transactions", getPaymentHistory);
 router.get("/transactions/:id", getPaymentById);

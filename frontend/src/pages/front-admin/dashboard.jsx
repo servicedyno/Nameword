@@ -8,6 +8,7 @@ import { useDomainSearch } from "../../hooks/useDomainSearch";
 import { useDomain } from "../../hooks/useDomain";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useLanguage } from "../../hooks/useLanguage";
+import PendingCryptoStrip from "../../components/front-admin/PendingCryptoStrip";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -97,6 +98,9 @@ const Dashboard = () => {
       {/* <AlertMessage /> */}
 
       <div className="space-y-7">
+        {/* Pending crypto top-ups the user can resume */}
+        <PendingCryptoStrip />
+
         {/* Dashboard title */}
         <div className="flex flex-col gap-2 title-section">
           <h2>{t.admin.dashboardGreeting.replace("{name}", user?.name || "")}</h2>

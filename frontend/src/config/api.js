@@ -141,6 +141,8 @@ export const ENDPOINTS = {
     DYNO_WEBHOOK: '/wallet/dynocheckout-webhook',
     CRYPTO_TOPUP: '/wallet/crypto-topup',
     CRYPTO_TOPUP_STATUS: (paymentId) => `/wallet/crypto-topup/${paymentId}/status`,
+    CRYPTO_TOPUPS_PENDING: '/wallet/crypto-topups/pending',
+    CRYPTO_TOPUP_CANCEL: (paymentId) => `/wallet/crypto-topup/${paymentId}/cancel`,
     SUPPORTED_CURRENCY: '/payment/getSupportedCurrency',
     TRANSACTIONS: '/wallet/transactions',
     REFUNDS: '/wallet/refunds',

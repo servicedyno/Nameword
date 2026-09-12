@@ -27,11 +27,11 @@ const NETWORK_HINT = {
   POLYGON: "Polygon",
 };
 
-const WalletModal = ({ onClose, onSuccess, presetAmount }) => {
+const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
   const { t } = useLanguage();
   const { showAlert } = useAlert();
 
-  const [step, setStep] = useState("amount"); // "amount" | "pay"
+  const [step, setStep] = useState(resumePayment ? "pay" : "amount"); // "amount" | "pay"
   const [currencies, setCurrencies] = useState([]);
   const [currency, setCurrency] = useState("");
   const [amount, setAmount] = useState(
@@ -40,8 +40,8 @@ const WalletModal = ({ onClose, onSuccess, presetAmount }) => {
       : ""
   );
   const [submitting, setSubmitting] = useState(false);
-  const [pay, setPay] = useState(null); // { paymentId, address, currency, cryptoAmount, amountUsd, qrCode }
-  const [status, setStatus] = useState("waiting"); // waiting | confirming | credited | expired | failed
+  const [pay, setPay] = useState(resumePayment || null); // { paymentId, address, currency, cryptoAmount, amountUsd, qrCode }
+  const [status, setStatus] = useState(resumePayment?.status === "confirming" ? "confirming" : "waiting"); // waiting | confirming | credited | expired | failed
   const [credited, setCredited] = useState(false);
   const [copied, setCopied] = useState("");
   const successRef = useRef(false);

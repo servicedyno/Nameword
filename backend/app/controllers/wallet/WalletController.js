@@ -939,7 +939,7 @@ const createCryptoTopup = async (req, res) => {
 		await CryptoTopup.create({
 			userId, paymentId: d.transaction_id, currency: d.currency || cur,
 			cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum,
-			address: d.address, status: "pending", meta: meta_data,
+			address: d.address, qrCode: d.qr_code || null, status: "pending", meta: meta_data,
 		});
 
 		return res.status(201).json({
@@ -1014,6 +1014,53 @@ const getCryptoTopupStatus = async (req, res) => {
 	}
 };
 
+// GET /api/v1/wallet/crypto-topups/pending — unfinished crypto top-ups the user can resume
+const listPendingCryptoTopups = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const maxAgeMin = Math.max(5, Number(process.env.CRYPTO_TOPUP_RESUME_MINUTES) || 60);
+		const cutoff = new Date(Date.now() - maxAgeMin * 60 * 1000);
+		const rows = await CryptoTopup.find({
+			userId,
+			status: { $in: ["pending", "confirming"] },
+			createdAt: { $gte: cutoff },
+		}).sort({ createdAt: -1 }).limit(10);
+		const data = rows.map((r) => ({
+			paymentId: r.paymentId,
+			address: r.address,
+			currency: r.currency,
+			cryptoAmount: r.cryptoAmount,
+			amountUsd: r.amountUsd,
+			qrCode: r.qrCode || null,
+			status: r.status,
+			createdAt: r.createdAt,
+		}));
+		return res.status(200).json({ success: true, data });
+	} catch (error) {
+		return res.status(500).json({ success: false, message: error?.message || "Failed to load pending top-ups." });
+	}
+};
+
+// POST /api/v1/wallet/crypto-topup/:paymentId/cancel — dismiss an unfinished top-up
+const cancelCryptoTopup = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const { paymentId } = req.params;
+		const record = await CryptoTopup.findOne({ paymentId, userId });
+		if (!record) return res.status(404).json({ success: false, message: "Top-up not found." });
+		if (record.status === "credited") {
+			return res.status(409).json({ success: false, message: "This payment was already credited." });
+		}
+		if (["pending", "confirming"].includes(record.status)) {
+			record.status = "failed";
+			await record.save();
+		}
+		return res.status(200).json({ success: true, data: { paymentId, status: record.status } });
+	} catch (error) {
+		return res.status(500).json({ success: false, message: error?.message || "Failed to cancel top-up." });
+	}
+};
+
 module.exports = {
 	createWallet,
 	getWallet,
@@ -1025,4 +1072,6 @@ module.exports = {
 	createCryptoTopup,
 	getCryptoTopupStatus,
 	creditWalletTopup,
+	listPendingCryptoTopups,
+	cancelCryptoTopup,
 };
