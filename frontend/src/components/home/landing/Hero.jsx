@@ -1,26 +1,21 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { motion as Motion, useReducedMotion } from "motion/react";
-import { LuLock, LuStar, LuShieldCheck, LuArrowRight } from "react-icons/lu";
+import { LuLock, LuStar, LuShieldCheck, LuArrowRight, LuMapPin, LuEyeOff, LuWallet } from "react-icons/lu";
 import { useLanguage } from "../../../hooks/useLanguage";
 import DomainSearchResults from "../../domain/DomainSearchResults";
 import HeroShowcase from "../HeroShowcase";
 import DomainSearchForm from "./DomainSearchForm";
 import { LANDING_IMG } from "./images";
 
+const TRUST_ICONS = [LuMapPin, LuShieldCheck, LuEyeOff, LuWallet];
+
 function HeroStage() {
   return (
     <div className="relative mt-4 lg:mt-0" data-testid="hero-stage">
       <div className="absolute inset-x-0 -top-6 -bottom-6 overflow-hidden rounded-[2rem] bg-gray-950 sm:-inset-x-6 sm:-top-14 lg:-inset-x-8 lg:-bottom-12">
-        <img
-          src={LANDING_IMG.hero}
-          alt=""
-          aria-hidden="true"
-          fetchPriority="high"
-          className="h-full w-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-900/70 via-gray-950/40 to-gray-950/85" />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent to-transparent" />
+        <img src={LANDING_IMG.hero} alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover object-center opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-900/60 via-gray-950/45 to-gray-950/80" />
         <div className="absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
       </div>
       <div className="relative px-3 py-6 sm:px-6 sm:py-8">
@@ -55,11 +50,10 @@ export default function Hero() {
 
   return (
     <section className="nw-hero">
-      <div className="absolute inset-0 nw-grid-bg opacity-70 dark:opacity-100" />
-      <div className="nw-hero-glow -top-32 -right-24 h-96 w-96" />
-      <div className="nw-hero-glow top-64 -left-32 h-80 w-80 opacity-60" />
+      <div className="absolute inset-0 nw-grid-bg opacity-40 dark:opacity-80" />
+      <div className="nw-hero-glow -top-32 -right-24 h-96 w-96 opacity-70" />
 
-      <div className="nw-container relative grid items-center gap-16 py-14 sm:py-20 lg:grid-cols-2 lg:gap-14 lg:py-28">
+      <div className="nw-container relative grid items-center gap-16 py-14 sm:py-20 lg:grid-cols-2 lg:gap-14 lg:py-24">
         <Motion.div variants={container} initial="initial" animate="animate">
           <Motion.div variants={fadeUp} className="mb-5 flex flex-wrap items-center gap-3">
             <span className="nw-eyebrow"><LuLock className="h-3.5 w-3.5" /> {s.eyebrow}</span>
@@ -118,8 +112,26 @@ export default function Hero() {
         <HeroStage />
       </div>
 
+      {/* Slim trust row — folds the old boxed trust strip into the hero */}
+      <div className="nw-container relative">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-7 dark:border-white/[0.06] md:grid-cols-4" data-testid="hero-trust-row">
+          {s.trust.map((it, i) => {
+            const Icon = TRUST_ICONS[i] || LuShieldCheck;
+            return (
+              <div key={it.label} className="flex items-center gap-3" data-testid={`trust-item-${i}`}>
+                <span className="nw-icon h-10 w-10 shrink-0"><Icon className="h-5 w-5" /></span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-primary dark:text-white">{it.label}</p>
+                  <p className="text-xs text-ink-soft dark:text-gray-400">{it.sub}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {submitted && (
-        <div ref={resultsRef} className="nw-container relative scroll-mt-24 pb-16" data-testid="hero-search-results">
+        <div ref={resultsRef} className="nw-container relative scroll-mt-24 pb-16 pt-12" data-testid="hero-search-results">
           <DomainSearchResults query={submitted} />
         </div>
       )}

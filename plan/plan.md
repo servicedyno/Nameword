@@ -1,76 +1,87 @@
-# Nameword — Inline Quick-Order UX
+# Landing Page Cleanup + Privacy-First Repositioning — Plan
 
 ## Goal
-Let a signed-in customer search, add, and pay for products (domains first, then
-hosting) inline — without being thrown across full-page steps — while keeping the
-detailed cart for anything advanced. Make every "buy" button honest about whether
-checkout will be one tap or need a top-up.
+The public landing page feels busy and cluttered. Make it **cleaner and calmer**, and
+**reposition it around privacy and freedom** as the core message (offshore,
+DMCA-ignored, no takedown/compliance tone). Every real capability stays (domain
+search, product catalog, pricing, rewards, sign-up). Pricing, accounts, checkout, and
+backend behavior are untouched — this is the logged-out landing page only.
 
-## Usability gaps today (what the current flow does)
-1. **Dashboard search kicks the user out of the app.** Searching a domain from the
-   signed-in dashboard sends them to the public marketing page to see results,
-   losing the sidebar, wallet, and their place.
-2. **Every add takes over the whole screen.** Adding a suggested domain, a search
-   result, or a hosting plan immediately navigates to the full cart page. The user
-   can't add a second item or keep looking without bouncing back and forth.
-3. **No cart is ever visible in the signed-in area.** There's no cart button, no
-   item-count badge, no quick peek at what's already added.
-4. **No fast path for a returning customer.** Even buying a single domain when the
-   wallet already has money means moving through search → cart → pay across
-   multiple screens.
-5. **The price-vs-wallet reality is hidden until the cart.** The user doesn't see
-   "you have $X, this is $Y" at the moment of adding, so they can't tell if it's
-   one tap or a top-up until they've navigated away.
+## Why it feels busy today
+The page is **9 stacked sections**, with clear repetition and heavy visuals:
 
-## What will be built
-A. **Inline domain search on the dashboard.** Type a name and see the exact match,
-   availability, price, and alternative extensions right there — no page change.
-   Adding an item feeds the mini-cart (below) instead of a full navigation.
+1. Hero (headline + domain search + a large dark image showcase)
+2. Trust strip (4 items: location, privacy, wallet, API)
+3. Products (6 cards, each a photo tile)
+4. Why Nameword (a world-map image + 5 numbered "pillars")
+5. How it works (3 steps)
+6. Pricing teaser (8 TLD price cards)
+7. Security band (full-screen dark photo + privacy checklist)
+8. Rewards band (wallet/rewards photo + 4 perks)
+9. Final CTA (full-screen dark photo + the domain search **again**)
 
-B. **Slide-in mini-cart + cart button with a live item-count badge** in the top bar,
-   available from anywhere in the signed-in app. Adding anything opens/updates it.
-   It shows the line items, subtotal, and current wallet balance, and lets the user
-   finish the order right there with **"Pay from wallet"** or **"Pay with crypto"**
-   (the crypto address/QR flow already exists). The full cart page stays for
-   changing nameservers or spending reward points.
+Main sources of clutter:
+- **Domain search shows up twice** (hero and final CTA).
+- **Privacy is told three times** (trust strip → a pillar → the whole Security band).
+- **Wallet/rewards is told twice** (trust strip → a pillar → the whole Rewards band).
+- **Dense grids**: 8 pricing cards, 6 product cards, 5 pillars.
+- **Four full-bleed dark photo bands** plus grid-pattern backgrounds, glow blobs, and
+  gradient overlays layered on nearly every block.
 
-C. **Wallet-aware buy buttons.** On suggestion and result cards (and in the drawer),
-   the button reflects the user's balance: **"Buy now"** (single confirm) when the
-   wallet covers it, or **"Pay with crypto"** when it doesn't, with the price shown
-   against the wallet balance so there are no surprises.
+## Positioning & copy (privacy-first) — CONFIRMED
+- **Rewrite the landing headlines and section copy to lead with privacy and freedom**:
+  offshore jurisdiction, private WHOIS, no logs, "we don't take your content down",
+  DMCA-ignored. Privacy becomes the hero message, not a side feature.
+- **Remove any "anti-abuse / compliance / takedown" tone.** Anything that reads as
+  restrictive or corporate is replaced with privacy/freedom framing.
+- **Footer: add a visible "DMCA Ignored" line/badge** on the landing footer, alongside
+  the offshore/privacy points.
+- Existing photography/imagery is reused (no new photo shoots); only wording and layout
+  change. Claims stay truthful to what the product already does.
 
-D. **(Optional — see decision 2) One-tap quick-buy that skips the cart** entirely for
-   simple single-item orders (a domain on default nameservers, or hosting for a
-   domain already owned), completing straight from the drawer.
+## Proposed cleaner version
+Consolidate to about **6 focused sections**, remove the duplicates, calm the
+decoration, and thread the privacy-first message through. All existing links/actions
+are preserved — just fewer, clearer moments.
 
-Everything is responsive; the drawer works on mobile as a bottom/side sheet.
+1. **Hero** — one clear focal point: a privacy-first headline + the domain search (the
+   primary action). Trim decorative layers (fewer glows/overlays) and quiet the side
+   image so it doesn't compete. Fold the 4 trust points into a single slim row here
+   instead of a separate boxed section.
+2. **Products** — keep all products, presented as a lighter, calmer grid (less heavy
+   photo/gradient treatment). Keeps the "from $X" price and links.
+3. **Why + How (privacy-led)** — one combined section on why us / how it works. Trim
+   pillars from 5 to the 3–4 strongest, keep the 3 steps compact, and **fold the
+   privacy points in here** so the separate dark Security band goes away. This is where
+   offshore / no-logs / DMCA-ignored / freedom is spelled out.
+4. **Pricing teaser** — the most popular TLDs only (see decision D), no background
+   pattern, one clear link to the full pricing table.
+5. **Rewards** — one calm band for the prepaid wallet + rewards, single call to action.
+6. **Final CTA** — one closing prompt (sign up / start), **without repeating the
+   domain search** from the hero.
 
-## Decisions to confirm
-1. **Should the mini-cart drawer actually complete payment (wallet + crypto), or just
-   be a faster review that still sends the user to the full cart to pay?**
-   Recommended: complete payment in the drawer — that's the point of "quick orders".
-2. **Include the one-tap quick-buy that skips the cart for simple single items?**
-   Recommended: yes, with sensible defaults the user can change later.
-3. **For a quick-bought domain, default the nameservers to Nameword's parking/DNS
-   (editable afterward in domain management)?** Recommended: yes.
-4. **Which products get inline quick-add first?** Recommended: domains + hosting now;
-   VPS/RDP kept on their existing pages for later.
+Across all of it: fewer full-bleed dark photo bands (target ~2 instead of 4),
+consistent spacing, and lighter/less-layered backgrounds — clean and privacy-focused,
+still polished, not stripped bare.
 
-## Assumptions (chosen unless you say otherwise)
-- The full cart page and current checkout stay; this adds faster paths alongside them.
-- Reward-points redemption and nameserver customization remain on the full cart page,
-  kept out of the quick path to keep it simple.
-- The public (logged-out) landing search stays discovery-only — no wallet shown there,
-  and adding still routes guests through sign-in/account as it does now.
-- Pricing, order, wallet, and crypto behavior are unchanged; this is a front-end
-  presentation and flow change over the existing capabilities.
+## Decisions to confirm (recommended defaults will be used unless you change them)
+- **A. How far to go.** Consolidate to ~6 sections and remove duplicates (recommended)
+  vs. light-touch declutter of all 9 vs. very minimal ~4 sections.
+- **B. Duplicate domain search.** Keep it only in the hero and make the final CTA a
+  simple sign-up prompt (recommended), or keep the search in both places.
+- **C. Security section.** Fold privacy into the "Why" pillars and drop the separate
+  dark Security band (recommended), or keep Security as its own section.
+- **D. Pricing cards.** Show ~5–6 popular TLDs instead of 8 (recommended:
+  .com/.net/.org/.io/.co/.xyz), or keep all 8.
+- **E. Visual direction.** Reduce dark photo bands and heavy gradients for a cleaner,
+  lighter feel (recommended), or keep the image-heavy look and only cut section count.
+
+## Decided (from the conversation)
+- Privacy-first: **yes** — rewrite headlines/section copy to lead with privacy & freedom.
+- Tone: **remove** anti-abuse/compliance/takedown framing; lean into privacy & freedom.
+- Footer: add a visible **"DMCA Ignored"** line/badge on the landing footer.
 
 ## Out of scope
-- Any change to pricing, provisioning, or payment logic.
-- VPS/RDP inline quick-add (unless you choose to include them now).
-- The logged-out marketing funnel beyond the existing behavior.
-
-## Success criteria
-- A signed-in user can search a domain, add it, and pay — with no full-page jump.
-- The cart is reachable from anywhere in the app and shows a live item count.
-- Buy buttons state upfront whether checkout is one tap or needs a top-up.
+- Pricing, accounts, checkout, or any backend behavior.
+- New photography (existing imagery is reused).
+- The signed-in app — this is the logged-out landing page (and its footer) only.

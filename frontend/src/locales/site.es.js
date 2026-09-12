@@ -334,6 +334,7 @@ export const siteEs = {
 
   footer: {
     tagline: "Alojamiento offshore, privado por defecto. Dominios, DNS y servidores desde jurisdicciones que respetan la privacidad, pagados desde un monedero prepago.",
+    dmca: "DMCA Ignorado",
     products: "Productos",
     company: "Empresa",
     support: "Soporte",

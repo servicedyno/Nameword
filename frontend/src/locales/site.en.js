@@ -1,11 +1,12 @@
-// Brand & marketing copy — "Offshore hosting, private by default."
-// Tone: calm, precise, adult. Use: private, discreet, offshore, jurisdiction, encrypted, minimal, yours, transparent.
-// Never: anonymous, bulletproof, untraceable, DMCA-ignored, "no questions asked".
+// Brand & marketing copy — privacy-first, freedom-forward.
+// Tone: calm, confident, adult. Lead with: privacy, freedom, offshore, jurisdiction,
+// DMCA-ignored, "your content stays up", prepaid crypto wallet.
+// Avoid restrictive/corporate "compliance / takedown / abuse" framing on the landing page.
 export const siteEn = {
   meta: {
-    title: "Nameword — Offshore hosting, private by default",
+    title: "Nameword — Offshore, private & DMCA-ignored hosting",
     description:
-      "Register private domains, run your DNS and deploy offshore VPS, RDP and cPanel hosting from privacy-respecting jurisdictions.",
+      "Offshore domains and hosting built for privacy and freedom: private WHOIS, minimal logs, DMCA-ignored, and a prepaid crypto wallet. Your content stays up — yours to keep.",
   },
 
   nav: {
@@ -29,20 +30,20 @@ export const siteEn = {
   },
 
   home: {
-    eyebrow: "Offshore · Private · Yours",
-    heading: "Offshore hosting, private by default.",
+    eyebrow: "Offshore · Private · DMCA-Ignored",
+    heading: "Privacy and freedom, hosted offshore.",
     subheading:
-      "Register domains, run your DNS, and deploy servers and cPanel hosting from privacy-respecting jurisdictions — minimal data collection, WHOIS privacy included, and a prepaid wallet that doesn't follow you around.",
+      "Register domains and deploy servers and cPanel hosting from offshore, privacy-first jurisdictions. Private WHOIS, minimal logs, DMCA-ignored, and a prepaid crypto wallet — we don't take your content down.",
     tabs: { search: "Register", transfer: "Transfer in" },
     placeholder: "yourname.com",
-    searchBtn: "Search privately",
+    searchBtn: "Search domains",
     transferBtn: "Start transfer",
-    heroChips: ["WHOIS privacy included", "Privacy jurisdictions", "Prepaid wallet"],
-    heroFloat: { title: "WHOIS privacy included", sub: "on every eligible domain" },
-    heroFloat2: { title: "You pick the jurisdiction", sub: "Privacy jurisdictions" },
+    heroChips: ["Private WHOIS included", "Offshore & DMCA-ignored", "Prepaid crypto wallet"],
+    heroFloat: { title: "Private WHOIS included", sub: "on every eligible domain" },
+    heroFloat2: { title: "You pick the jurisdiction", sub: "Offshore & private" },
     needServers: "Need a server instead?",
-    rating: "Trusted across 2 jurisdictions",
-    trustNote: "No card stored · pay from your prepaid wallet",
+    rating: "Offshore & privacy-first",
+    trustNote: "No card stored · pay from your prepaid crypto wallet",
     showcase: {
       live: "Live",
       tabs: { domains: "Domains", hosting: "Hosting", servers: "VPS · RDP", manage: "Manage" },
@@ -52,42 +53,38 @@ export const siteEn = {
       manage: { title: "DNS records", propagated: "Propagated", wallet: "Wallet" },
     },
     trust: [
-      { label: "2 jurisdictions", sub: "Privacy jurisdictions" },
-      { label: "WHOIS privacy", sub: "included, not upsold" },
+      { label: "Offshore", sub: "privacy-first jurisdictions" },
+      { label: "DMCA-ignored", sub: "your content stays up" },
+      { label: "Private WHOIS", sub: "included, not upsold" },
       { label: "Prepaid wallet", sub: "top up with crypto" },
-      { label: "Full API", sub: "everything in the dashboard" },
     ],
     pillars: {
       eyebrow: "Why Nameword",
-      title: "Built for people who value discretion",
-      lead: "Founders, journalists, agencies, expats, developers — anyone who wants infrastructure that keeps to itself.",
+      title: "Built for privacy and freedom",
+      lead: "For founders, publishers, developers and anyone who wants infrastructure that stays out of the way — and stays up.",
       items: [
         {
-          title: "Offshore by design",
-          desc: "Infrastructure in privacy-respecting jurisdictions. You choose where your data lives.",
+          title: "Offshore & DMCA-ignored",
+          desc: "Infrastructure in privacy-first offshore jurisdictions. We don't process takedown notices — your content stays online.",
         },
         {
           title: "Private by default",
-          desc: "WHOIS privacy on domains. We collect only what's needed to run your service, and nothing is sold or shared for marketing.",
+          desc: "Private WHOIS on domains, minimal logs, and nothing sold or shared. Privacy is never a paid add-on here.",
         },
         {
           title: "You hold the keys",
-          desc: "Full root and admin access on VPS and RDP, your own DNS, no lock-in. Transfer or export at any time.",
+          desc: "Full root and admin on VPS and RDP, your own DNS, no lock-in. Export or transfer whenever you like.",
         },
         {
-          title: "Discreet billing that gives back",
-          desc: "A prepaid wallet, no surprise renewals, card or crypto top-ups — and loyalty rewards credited straight back to your wallet.",
-        },
-        {
-          title: "Built for operators",
-          desc: "A real API for everything you can do in the dashboard, transparent per-TLD pricing and straight answers on abuse handling.",
+          title: "Prepaid & private billing",
+          desc: "A prepaid crypto wallet with no card on file and no surprise renewals — plus loyalty rewards straight back to your balance.",
         },
       ],
     },
     products: {
       eyebrow: "The platform",
-      title: "Everything you need. Nothing that watches you.",
-      lead: "Six focused products, one prepaid wallet, one quiet dashboard.",
+      title: "Everything you need — nothing that watches you.",
+      lead: "Focused products, one prepaid crypto wallet, one quiet dashboard.",
       explore: "Explore",
       items: {
         domains: { title: "Private Domains", desc: "Register and transfer across hundreds of TLDs with WHOIS privacy included on eligible extensions.", price: "live per-TLD pricing" },
@@ -111,23 +108,24 @@ export const siteEn = {
     },
     steps: {
       eyebrow: "How it works",
-      title: "Private in three steps",
+      title: "Live in three steps",
       items: [
-        { title: "Choose your name and jurisdiction", desc: "Search a domain, pick a privacy jurisdiction for your servers, and add WHOIS privacy — included." },
-        { title: "Fund your wallet once", desc: "Top up by card or crypto. Everything you order is paid from the balance, so there are no recurring card pulls." },
-        { title: "Deploy and hold the keys", desc: "Point your DNS, deploy cPanel, VPS or RDP, and keep root access. Export or transfer whenever you like." },
+        { title: "Pick your name & jurisdiction", desc: "Search a domain and choose an offshore, privacy-first jurisdiction. Private WHOIS is included." },
+        { title: "Fund your wallet with crypto", desc: "Top up once with crypto or card. Everything is paid from your balance — no recurring card pulls." },
+        { title: "Deploy and hold the keys", desc: "Point DNS, deploy cPanel, VPS or RDP, and keep full root. Your content stays up, yours to move anytime." },
       ],
     },
     privacy: {
-      eyebrow: "Private by default",
-      title: "Only the data needed to run your service",
-      lead: "Privacy here is a default, not a premium tier. It shows up in how we bill, what we store, and where your servers live.",
+      eyebrow: "Privacy & freedom",
+      title: "Privacy and freedom, by default",
+      lead: "Not a premium tier — it's how we run everything: where your servers live, what we log, and how we handle takedowns.",
       items: [
-        "WHOIS privacy included on eligible domains",
-        "Infrastructure in privacy-respecting jurisdictions",
-        "Two-factor authentication and login alerts on every account",
-        "TLS on every hosting account, mailbox and dashboard session",
-        "Full root/admin access — your keys, your servers, no lock-in",
+        "Private WHOIS included on eligible domains",
+        "Offshore, privacy-first jurisdictions you choose",
+        "DMCA-ignored — we don't take your content down",
+        "Minimal logs; nothing sold or shared for marketing",
+        "Full root/admin — your keys, your servers, no lock-in",
+        "Prepaid crypto wallet — no card kept on file",
       ],
     },
     loyalty: {
@@ -138,8 +136,8 @@ export const siteEn = {
       perks: ["Points on every purchase", "Redeem on renewals", "Membership tiers", "Nothing to opt into"],
     },
     cta: {
-      title: "Claim your name — quietly.",
-      lead: "Search a private domain and be live from a privacy-respecting jurisdiction in minutes.",
+      title: "Claim your space — offshore and private.",
+      lead: "Create your account and be live from a privacy-first, DMCA-ignored jurisdiction in minutes.",
       placeholder: "yourname.com",
       button: "Search",
     },
@@ -350,7 +348,8 @@ export const siteEn = {
   },
 
   footer: {
-    tagline: "Offshore hosting, private by default. Domains, DNS and servers from privacy-respecting jurisdictions — paid from a prepaid wallet.",
+    tagline: "Offshore hosting for privacy and freedom. Domains, DNS and servers from privacy-first jurisdictions — DMCA-ignored, paid from a prepaid crypto wallet.",
+    dmca: "DMCA Ignored",
     products: "Products",
     company: "Company",
     support: "Support",
@@ -373,7 +372,7 @@ export const siteEn = {
     },
     payments: "We accept",
     rights: "Nameword. All rights reserved.",
-    jurisdictionNote: "Infrastructure in privacy-respecting jurisdictions.",
+    jurisdictionNote: "Offshore infrastructure in privacy-first jurisdictions.",
   },
 
   legal: {

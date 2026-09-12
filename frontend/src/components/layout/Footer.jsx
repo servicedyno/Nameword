@@ -1,7 +1,7 @@
 import { etherium, AMEX } from "../common/icons";
 import BrandLogo from "../common/BrandLogo";
 import { FaXTwitter, FaBitcoin, FaCcVisa } from "react-icons/fa6";
-import { LuMail, LuMapPin } from "react-icons/lu";
+import { LuMail, LuMapPin, LuShieldCheck } from "react-icons/lu";
 import { NavLink, useNavigate, useLocation } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../hooks/useAuth";
@@ -50,6 +50,12 @@ const Footer = () => {
                 <LuMail className="h-4 w-4 text-brand-600 dark:text-brand-400" /> hello@nameword.com
               </a>
             </div>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-13 font-semibold text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300"
+              data-testid="footer-dmca-badge"
+            >
+              <LuShieldCheck className="h-4 w-4" /> {s.footer.dmca}
+            </span>
             <div className="flex items-center gap-2.5">
               <a href="https://x.com/namewordcom" target="_blank" rel="noreferrer" aria-label="X" className="social-link"><FaXTwitter /></a>
             </div>

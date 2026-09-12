@@ -11,8 +11,6 @@ const TLDS = [
   { tld: ".io", price: "244", renew: "244" },
   { tld: ".co", price: "59", renew: "59" },
   { tld: ".xyz", price: "19", renew: "19" },
-  { tld: ".shop", price: "30", renew: "30" },
-  { tld: ".store", price: "160", renew: "160" },
 ];
 
 export default function PricingTeaser() {
@@ -20,20 +18,19 @@ export default function PricingTeaser() {
   const s = t.site.home.pricing;
   const navigate = useNavigate();
   return (
-    <section id="pricing" className="relative overflow-hidden bg-surface-2 dark:bg-gray-900/40">
-      <div className="absolute inset-0 nw-grid-bg opacity-60" />
-      <div className="nw-container relative nw-section">
+    <section id="pricing" className="nw-section bg-surface-2 dark:bg-gray-900/40">
+      <div className="nw-container">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
           <h2 className="nw-h2">{s.title}</h2>
           <p className="nw-lead mt-4">{s.lead}</p>
         </Reveal>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TLDS.map((d, i) => {
             const id = d.tld.slice(1);
             return (
-              <Reveal key={d.tld} delay={(i % 4) * 0.06} className="flex">
+              <Reveal key={d.tld} delay={(i % 3) * 0.06} className="flex">
                 <div className="nw-card nw-card-hover flex w-full flex-col" data-testid={`tld-card-${id}`}>
                   <div className="flex items-center justify-between">
                     <span className="font-display text-2xl font-bold text-primary dark:text-white">{d.tld}</span>

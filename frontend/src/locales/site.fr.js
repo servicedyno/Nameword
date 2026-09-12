@@ -334,6 +334,7 @@ export const siteFr = {
 
   footer: {
     tagline: "Hébergement offshore, privé par défaut. Domaines, DNS et serveurs depuis des juridictions respectueuses de la vie privée — payés depuis un portefeuille prépayé.",
+    dmca: "DMCA Ignoré",
     products: "Produits",
     company: "Entreprise",
     support: "Support",

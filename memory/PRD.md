@@ -177,6 +177,18 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Landing cleanup + privacy-first repositioning (2026-06) — DONE, verified (logged-out landing only)
+- Approved plan (recommended defaults): declutter the public landing from 9 → 6 sections, remove duplicates, calm the decoration, and rewrite copy to lead with privacy & freedom (offshore, private WHOIS, no logs, DMCA-ignored, "your content stays up"); add a visible "DMCA Ignored" footer badge. Pricing/accounts/checkout/backend untouched.
+- Structure (`components/home/HomeRedesign.jsx`): now Hero → Products → WhyNameword (Why+How+Privacy) → PricingTeaser → RewardsBand → FinalCta. REMOVED the separate TrustBar, HowItWorks and SecurityBand sections (deleted those 3 orphaned files under components/home/landing/).
+- `Hero.jsx`: privacy-first headline ("Privacy and freedom, hosted offshore."), DMCA-ignored eyebrow/subheading/chips; trimmed decoration (one glow, lighter grid); folded the 4 trust points into a slim inline row (data-testid hero-trust-row / trust-item-N). Domain search kept ONLY here.
+- `Products.jsx`: lighter icon-led cards (removed the heavy dark photo tiles), 3-col grid, kept all products + API card (light mono snippet) + prices/links.
+- `WhyNameword.jsx`: combined Why + How + Privacy in one calm light section — 4 privacy-led pillars, a "Privacy & Freedom" checklist (folds in the old dark Security band; includes "DMCA-ignored — we don't take your content down"), and a compact 3-step "Live in three steps". No dark photo band here.
+- `PricingTeaser.jsx`: 6 popular TLDs (.com/.net/.org/.io/.co/.xyz), removed the grid-pattern background, single clear links to search + full pricing.
+- `FinalCta.jsx`: single closing prompt (Create account + Browse domains) — REMOVED the duplicate domain search. Dark photo bands now ~2 (hero + final CTA).
+- `Footer.jsx`: added a visible "DMCA Ignored" badge (data-testid footer-dmca-badge) + privacy-first tagline/jurisdiction note.
+- Copy: rewrote `locales/site.en.js` home + footer to privacy/freedom tone (removed compliance/takedown framing); added `footer.dmca` to site.en/es/fr so the badge renders in all 3 languages (ES/FR landing body copy left as-is — English is the primary target; key structure unchanged so nothing breaks).
+- VERIFIED: `yarn build` clean (0 errors) after deleting orphans; FE rebuilt + restarted. Structure checks (all 6 section test-ids present, old trust-bar/security-band absent, 6 TLD cards, single search, privacy list includes DMCA line, footer badge = "DMCA Ignored") + desktop 1920 & mobile 390 screenshots — clean, calm, no horizontal scroll (scrollWidth==clientWidth==390; the flagged hero-glow is clipped, false positive). Presentational change; interactive bits (hero search, CTAs) reuse unchanged components — not run through testing_agent.
+
 ### Inline Quick-Order UX — mini-cart drawer + inline search + wallet-aware buys (2026-06) — DONE, tested
 - Approved plan: let signed-in customers search, add, and pay inline (no full-page jumps), keep the full cart for nameservers/points; make buy buttons honest about one-tap vs top-up. User expanded scope to include VPS/RDP inline quick-add AND the logged-out funnel (both a+b). VPS/RDP defaults EU/Ubuntu & EU/Windows (region selectable EU/SG via reseller API — confirmed already supported).
 - NEW `context/CartUIContext.jsx` (`CartUIProvider`/`useCartUI`): global drawer open state + live wallet balance (refreshes on `wallet:updated`); AUTO-OPENS the drawer whenever cart item count increases (suppressed on /cart & /checkout). Wrapped around `Router` in `App.jsx`; `<MiniCartDrawer/>` rendered globally.
