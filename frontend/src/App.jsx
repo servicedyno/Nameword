@@ -7,11 +7,13 @@ import { useLocation } from "react-router";
 import { ApiKeyProvider } from "./context/ApiKeyContext";
 import { AlertProvider } from "./context/AlertContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { CartUIProvider } from "./context/CartUIContext";
+import MiniCartDrawer from "./components/cart/MiniCartDrawer";
 
-validateEnvironment();   
+validateEnvironment();
 
-function App() {                          
-  const { pathname } = useLocation();                                                                                                                      
+function App() {
+  const { pathname } = useLocation();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -23,7 +25,10 @@ function App() {
         <AlertProvider>
           <AuthProvider>
             <ApiKeyProvider>
-              <Router />
+              <CartUIProvider>
+                <Router />
+                <MiniCartDrawer />
+              </CartUIProvider>
             </ApiKeyProvider>
           </AuthProvider>
         </AlertProvider>

@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router";
+import { NavLink } from "react-router";
 import PropTypes from "prop-types";
 import { cart, brandprotection } from "../../common/icons";
 import { FiCheck, FiRefreshCw, FiX } from "react-icons/fi";
@@ -35,7 +35,6 @@ const SecurityCard = ({
   const [addingToCart, setAddingToCart] = useState({});
 
   const { showAlert } = useAlert();
-  const navigate = useNavigate();
   const cartCtx = useCart();
   const {
     getTldSuggestions,
@@ -502,7 +501,7 @@ const SecurityCard = ({
 
       setAddingToCart((prev) => ({ ...prev, [suggestion.websiteName]: true }));
       try {
-        // New checkout funnel: add to the shared client cart, then go to /cart.
+        // Add to the shared client cart — the mini-cart drawer opens automatically.
         cartCtx.addDomain({
           domain: suggestion.websiteName,
           price_usd: suggestion.registrationFee,
@@ -512,7 +511,6 @@ const SecurityCard = ({
           duration: 2500,
           type: "success",
         });
-        navigate("/cart");
       } catch {
         showAlert(t.admin.failedToAddDomainToCart, {
           duration: 2500,
@@ -808,7 +806,7 @@ const SecurityCard = ({
           <ChangePrivacyModal
             onClose={handleClosePrivacyModal}
             domainName={domainName}
-            planOptions={privacyPlans}
+            planOptions={[]}
             initialPlanId="full"
             expirationDate={modalExpirationDate}
             onCheckout={handlePrivacyCheckout}

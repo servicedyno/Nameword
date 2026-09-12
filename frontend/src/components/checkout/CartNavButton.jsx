@@ -1,16 +1,16 @@
-import { useNavigate } from "react-router";
 import { LuShoppingCart } from "react-icons/lu";
 import { useCart } from "../../hooks/useCart";
+import { useCartUI } from "../../context/CartUIContext";
 
-// Header cart button with live item count. /cart itself gates guests to the
-// account step, so this is safe to show to everyone.
+// Header cart button with a live item count. Opens the slide-in mini-cart from
+// anywhere in the app (public or signed-in).
 export default function CartNavButton({ className = "" }) {
   const { count } = useCart();
-  const navigate = useNavigate();
+  const { open } = useCartUI();
   return (
     <button
       type="button"
-      onClick={() => navigate("/cart")}
+      onClick={open}
       aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
       className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-primary hover:bg-surface-2 dark:text-gray-200 dark:hover:bg-white/[0.06] transition-colors ${className}`}
       data-testid="nav-cart-button"

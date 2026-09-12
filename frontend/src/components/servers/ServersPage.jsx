@@ -8,7 +8,7 @@ import { usePageMeta } from "../../hooks/usePageMeta";
 import { useBuyer } from "../../hooks/useBuyer";
 import { useCart } from "../../hooks/useCart";
 import { regionLabel } from "../../utils/regions";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import {
   FiServer,
   FiCpu,
@@ -90,7 +90,6 @@ export default function ServersPage({ product = "vps" }) {
   const [region, setRegion] = useState("EU");
   const { isAuthenticated, mode, balance } = useBuyer();
   const cart = useCart();
-  const navigate = useNavigate();
 
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -173,7 +172,6 @@ export default function ServersPage({ product = "vps" }) {
     });
     showAlert(`${configPlan.name || configPlan.plan_id} added to cart.`, { type: "success" });
     setConfigPlan(null);
-    navigate("/cart");
   };
 
   const doAction = async (id, action) => {

@@ -1,7 +1,9 @@
 // components/AdminCard.jsx
 import { IoFlashOutline, IoClose } from "react-icons/io5";
-import { useNavigate } from "react-router";
+import { FaBitcoin } from "react-icons/fa";
 import { useCart } from "../../../hooks/useCart";
+import { useCartUI } from "../../../context/CartUIContext";
+import { useAuth } from "../../../hooks/useAuth";
 import { useAlert } from "../../../context/AlertContext";
 import { useState } from "react";
 import { useLanguage } from "../../../hooks/useLanguage";
@@ -16,8 +18,9 @@ const AdminCard = ({
   onHide,
   suggestion,
 }) => {
-  const navigate = useNavigate();
   const cart = useCart();
+  const { balance } = useCartUI();
+  const { isAuthenticated } = useAuth();
   const { showAlert } = useAlert();
   const [isAdding, setIsAdding] = useState(false);
   const { t } = useLanguage();
@@ -28,7 +31,7 @@ const AdminCard = ({
 
     setIsAdding(true);
     try {
-      // New checkout funnel: add to the shared client cart, then go to /cart.
+      // Add to the shared client cart — the mini-cart drawer opens automatically.
       cart.addDomain({
         domain: suggestion.websiteName,
         price_usd: suggestion.registrationFee,
@@ -38,7 +41,6 @@ const AdminCard = ({
         duration: 2500,
         type: "success",
       });
-      navigate("/cart");
     } catch {
       showAlert(t.admin.failedToAddDomainToCart, {
         duration: 2500,
@@ -96,8 +98,12 @@ const AdminCard = ({
       <div
         className={`flex items-center admin-btn ${moreOptions ? "gap-2" : ""}`}
       >
-        <a href="#" className="add-to-cart" onClick={handleBuyNow}>
-          {isAdding ? t.admin.adding : t.admin.buyNow}
+        <a href="#" className="add-to-cart" onClick={handleBuyNow} data-testid={`admin-card-buy-${title || "suggestion"}`}>
+          {isAdding
+            ? t.admin.adding
+            : isAuthenticated && balance != null && Number(balance) < Number(price)
+              ? (<span className="inline-flex items-center gap-1.5"><FaBitcoin /> Pay with crypto</span>)
+              : t.admin.buyNow}
         </a>
         {moreOptions && (
           <a href="#" className="btn-outline" onClick={handleMoreOptionsClick}>
