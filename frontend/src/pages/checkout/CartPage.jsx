@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { FiAlertTriangle, FiArrowRight, FiGlobe, FiPlus, FiServer, FiTrash2, FiCreditCard, FiRefreshCw, FiGift } from "react-icons/fi";
+import { FaBitcoin } from "react-icons/fa";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { usePageMeta } from "../../hooks/usePageMeta";
@@ -131,6 +132,7 @@ export default function CartPage() {
   const [payError, setPayError] = useState(null);
   const [redeemPoints, setRedeemPoints] = useState(0);
   const [showTopup, setShowTopup] = useState(false);
+  const [topupPreset, setTopupPreset] = useState(0);
   const clientOrderId = useRef(newClientOrderId());
 
   const orderPayload = useMemo(() => cart.toPayload(), [cart.items]);
@@ -234,6 +236,15 @@ export default function CartPage() {
       refreshQuote();
       pay();
     }, 600);
+  };
+
+  // C4: dedicated "Pay with crypto" on the cart. Funds the wallet via the native
+  // crypto flow (address + QR + polling), then auto-completes the order in one step.
+  // Preset = the full order amount (any leftover stays as wallet credit).
+  const payWithCrypto = () => {
+    setPayError(null);
+    setTopupPreset(payable);
+    setShowTopup(true);
   };
 
   const onRemove = (id) => {
@@ -350,14 +361,9 @@ export default function CartPage() {
                     </span>
                   </div>
                   {shortfall > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => { setPayError(null); setShowTopup(true); }}
-                      className="nw-btn-secondary nw-btn-sm mt-3 w-full"
-                      data-testid="cart-topup-button"
-                    >
-                      Top up {money(Math.max(10, Math.ceil(shortfall)))} & pay
-                    </button>
+                    <p className="mt-3 text-xs text-ink-soft dark:text-gray-400" data-testid="cart-shortfall-hint">
+                      Not enough wallet balance — use <span className="font-medium text-primary dark:text-white">Pay with crypto</span> below to fund your wallet and complete this order in one step.
+                    </p>
                   )}
                 </div>
                 {payError && (
@@ -366,6 +372,17 @@ export default function CartPage() {
                 <button type="button" onClick={pay} disabled={!canPay} className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" data-testid="cart-pay-button">
                   {paying ? "Processing…" : quoting ? "Updating prices…" : payable <= 0 ? `Pay with ${appliedPoints} points` : `Pay ${money(payable)} from wallet`}
                 </button>
+                {payable > 0 && (
+                  <button
+                    type="button"
+                    onClick={payWithCrypto}
+                    disabled={paying || quoting || hasProblems || customNsIncomplete || cart.count === 0}
+                    className="nw-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                    data-testid="cart-pay-crypto-button"
+                  >
+                    <FaBitcoin size={16} /> Pay {money(payable)} with crypto
+                  </button>
+                )}
                 <button type="button" onClick={refreshQuote} disabled={quoting} className="inline-flex w-full items-center justify-center gap-2 text-xs text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white" data-testid="cart-refresh-quote">
                   <FiRefreshCw size={12} className={quoting ? "animate-spin" : ""} /> Prices are re-checked live at payment
                 </button>
@@ -377,7 +394,7 @@ export default function CartPage() {
 
       {showTopup && (
         <WalletModal
-          presetAmount={shortfall}
+          presetAmount={topupPreset}
           onClose={() => setShowTopup(false)}
           onSuccess={handleTopupSuccess}
         />

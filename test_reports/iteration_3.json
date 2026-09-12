@@ -1,0 +1,33 @@
+{
+  "summary": "Frontend E2E testing of the new /cart 'Pay with crypto' button + /account-information routing cleanup. Ran 6 scenarios against the live preview URL as buyer@nameword.local. All 6 passed: (1) sufficient-wallet cart shows both cart-pay-button and cart-pay-crypto-button enabled with matching totals; (2) crypto button opens WalletModal with amount preset to the order total ($39); (3) shortfall cart (3x $39 = $117 vs $21/$60 wallet) correctly disables cart-pay-button, renders cart-shortfall-hint, keeps cart-pay-crypto-button enabled, and modal presets to the shortfall ($96, well above the $10 minimum); (4) direct nav to /account-information redirects to '/' with no 'Hi, Jaden!' / apple.br placeholder content; (5) Command Palette (Ctrl+K) → search 'info' → Account Information entry lands on /account-setting?tab=account-information with the real tab rendered and no placeholder; (6) Pay-from-wallet end-to-end successfully created an order and navigated to /checkout/success/<orderId>. Wallet was spent in TEST 6.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "WalletModal — Get address (crypto top-up)",
+        "issue": "walletAPI.getSupportedCurrencies() appears slow/unresponsive in the preview env: the 'Pay with' select stays on 'Loading coins…' for the lifetime of the modal, so the 'Get address' button remains disabled and the address/QR/status pane cannot be reached. Consistent with the review note that provider errors here are a known external-dependency limitation, but flagging so main agent can confirm whether GET /wallet/supported-currencies (or equivalent DynoPay call) is healthy in this environment. Modal preset amount and open/close behaviour are correct.",
+        "affected_selectors": ["topup-currency-select", "topup-generate-address", "topup-address", "topup-qr", "topup-status"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Re-seed buyer wallet: run `node /app/backend/scripts/seed_test_users.js` — TEST 6 spent $39 (wallet went from $60 to $21).",
+    "Investigate why /api/v1 supported-currencies call is slow/failing in the preview env (blocks live crypto address generation). UI-side flow itself is wired correctly."
+  ],
+  "critical_code_review_comments": [
+    "CartPage.jsx handleTopupSuccess() calls setTimeout(pay, 600) after refreshQuote(). refreshQuote is async and updates React state; the subsequent pay() may still read a stale `payable` derived from a not-yet-updated `quote`. Consider awaiting the refresh (or gating pay on the fresh quote) so post-topup auto-charge always uses the reconciled amount.",
+    "WalletModal preset logic uses Math.ceil(Number(presetAmount)) — for a $39.00 order this rounds to 39, but for e.g. $12.34 shortfall it becomes $13. That's fine, but the crypto button label shows the raw $payable; consider showing the ceil-rounded modal amount on the button or reflecting the modal amount as the label to avoid a user-visible mismatch between button ($12.34) and modal preset ($13).",
+    "In the shortfall scenario the 'cart-pay-crypto-button' label still shows the FULL payable ($117.00 with crypto). Per the spec the modal presets to the shortfall ($96) which is confirmed correct, but the button label doesn't communicate that the top-up will only cover the shortfall — users may think they'd pay $117 in crypto. Consider labeling the button 'Top up $96 with crypto' in shortfall mode, or add secondary text under it."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100% (6/6 scenarios)"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345 (verified working via /sign-in). Wallet was $60 -> $21 after TEST 6.",
+  "seed_data_creation": "Cart items seeded via localStorage nw_cart_v2 (single $39 domain, and 3x$39 shortfall cart). One real order created for domain testbuyerpay39.com — recorded as expected 'test_mode' upstream.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All new testids validated on /cart: cart-pay-button, cart-pay-crypto-button, cart-shortfall-hint, cart-wallet-balance, cart-wallet-after. WalletModal testids validated: topup-amount-input (preset works via presetAmount prop), topup-currency-select (blocked on 'Loading coins…' in preview env), topup-generate-address (disabled while currencies loading), topup-address/topup-qr/topup-status could NOT be reached because supported-currencies didn't return in time. /account-information catch-all redirect works; CommandPalette 'info' entry now goes to /account-setting?tab=account-information and AccountSettings reads the ?tab= param correctly (then replaces URL). Order success route is /checkout/success/:id — worked. Cart-page is `data-testid=cart-page`. If you need to test more crypto flows, first re-seed the buyer wallet and verify GET /api/v1/wallet/supported-currencies (or equivalent) returns fast.",
+  "rca of the issue": "No blocking issues. Sole non-blocking observation: WalletModal 'Get address' cannot be exercised end-to-end in the preview env because supported-currencies is not returning within a reasonable window, leaving the currency select disabled. This is an environment/external-dependency limitation, not a code defect in the cart flow itself."
+}

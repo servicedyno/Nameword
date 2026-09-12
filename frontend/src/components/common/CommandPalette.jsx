@@ -23,7 +23,7 @@ const ITEMS = [
   { key: "subscriptions", to: "/subscriptions", icon: LuRepeat, group: "billing", keywords: "subscriptions renew recurring" },
   { key: "payments", to: "/payment-history", icon: LuReceipt, group: "billing", keywords: "invoices payments receipts history" },
   { key: "settings", to: "/account-setting", icon: LuSettings, group: "account", keywords: "settings profile security api key password 2fa" },
-  { key: "info", to: "/account-information", icon: LuUser, group: "account", keywords: "profile personal info" },
+  { key: "info", to: "/account-setting?tab=account-information", icon: LuUser, group: "account", keywords: "profile personal info" },
   { key: "help", to: "/help-support", icon: LuLifeBuoy, group: "account", keywords: "help support contact" },
 ];
 

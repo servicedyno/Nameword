@@ -25,57 +25,18 @@ const Dashboard = () => {
 
   const domainSuggestionRef = useRef(null);
 
-  // Extract base domain name from user's first domain or use dynamic fallback from user name
+  // Brand-protection suggestions are based ONLY on a domain the customer actually owns
+  // (their real SLD across other TLDs). We do NOT guess from the account name/email.
   useEffect(() => {
-    if (domains && domains.length > 0) {
-      const firstDomain = domains[0]?.websiteName || "";
-      if (firstDomain) {
-        // Extract base name (e.g., "apple" from "apple.com")
-        const baseName = firstDomain.split(".")[0];
-        setBaseDomainName(baseName);
-      }
-    } else if (user?.name) {
-      // Extract base name from user's name dynamically
-      // Get first word of name, remove special characters, convert to lowercase
-      const nameBase = user.name
-        .trim()
-        .split(/\s+/)[0]
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "");
-      
-      // Only use if it's a valid domain name (at least 2 characters)
-      if (nameBase.length >= 2) {
-        setBaseDomainName(nameBase);
-      } else if (user?.email) {
-        // Fallback to email username if name doesn't work
-        const emailBase = user.email
-          .split("@")[0]
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "");
-        if (emailBase.length >= 2) {
-          setBaseDomainName(emailBase);
-        } else {
-          setBaseDomainName("");
-        }
-      } else {
-        setBaseDomainName("");
-      }
-    } else if (user?.email) {
-      // Use email username as fallback if no name available
-      const emailBase = user.email
-        .split("@")[0]
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "");
-      if (emailBase.length >= 2) {
-        setBaseDomainName(emailBase);
-      } else {
-        setBaseDomainName("");
-      }
+    const owned = (domains || [])
+      .map((d) => (d?.websiteName || "").trim())
+      .find((n) => n && n.includes("."));
+    if (owned) {
+      setBaseDomainName(owned.split(".")[0].toLowerCase().replace(/[^a-z0-9-]/g, ""));
     } else {
-      // No domains, name, or email - don't set base domain
       setBaseDomainName("");
     }
-  }, [domains, user]);
+  }, [domains]);
 
   // Fetch TLD suggestions when base domain name is available
   useEffect(() => {

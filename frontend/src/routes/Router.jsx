@@ -27,7 +27,6 @@ import UnprotectedRoute from "../hocs/UnProtected";
 
 /* front admin section */
 import Dashboard from "../pages/front-admin/dashboard";
-import AccountInfomation from "../pages/front-admin/AccountInfomation";
 
 import PaymentHistory from "../pages/front-admin/billing/PaymentHistory";
 import OrderHistory from "../pages/front-admin/OrderHistory";
@@ -139,7 +138,6 @@ function Router() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/account-setting" element={<AccountSettings />} />
-        <Route path="/account-information" element={<AccountInfomation />} />
         <Route path="/payment-history" element={<PaymentHistory />} />
         <Route path="/orders" element={<OrderHistory />} />
         <Route path="/services" element={<ServicesRenewals />} />

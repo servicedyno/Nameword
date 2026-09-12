@@ -178,9 +178,14 @@ const SecurityCard = ({
   // Update brand protection suggestions when tldSuggestions change
   useEffect(() => {
     if (tldSuggestions && Array.isArray(tldSuggestions)) {
-      // Take first 3 suggestions (same as dashboard)
-      const suggestions = tldSuggestions.slice(0, 3);
-      setBrandProtectionSuggestions(suggestions);
+      // Only show genuinely useful suggestions: available and sensibly priced
+      // (premium registrations can cost thousands — never surface those here).
+      const MAX_SUGGESTION_USD = Number(import.meta.env.VITE_SUGGESTION_MAX_USD) || 200;
+      const affordable = tldSuggestions
+        .filter((s) => s?.available && Number(s?.registrationFee) > 0 && Number(s?.registrationFee) <= MAX_SUGGESTION_USD)
+        .sort((a, b) => Number(a?.registrationFee) - Number(b?.registrationFee))
+        .slice(0, 3);
+      setBrandProtectionSuggestions(affordable);
     } else {
       setBrandProtectionSuggestions([]);
     }
@@ -752,10 +757,6 @@ const SecurityCard = ({
                 );
                 const isAdding = addingToCart[fullDomainName] || false;
 
-                // Calculate original price (20% markup like dashboard)
-                const oldPrice =
-                  registrationFee > 0 ? registrationFee * 1.2 : registrationFee;
-
                 // Split domain for display (base and TLD)
                 const domainParts = fullDomainName.split(".");
                 const baseName =
@@ -783,11 +784,6 @@ const SecurityCard = ({
 
                     <p className="text-tealdark font-medium flex items-center gap-1">
                       ${registrationFee.toFixed(2)}
-                      {oldPrice > registrationFee && (
-                        <span className="text-secondary dark:text-gray-400 line-through">
-                          ${oldPrice.toFixed(2)}
-                        </span>
-                      )}
                     </p>
                     <button
                       onClick={() => handleAddToCart(suggestion)}

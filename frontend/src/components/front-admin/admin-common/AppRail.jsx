@@ -16,7 +16,7 @@ const RAIL = [
   { key: "rdp", to: "/rdp", icon: LuMonitor, match: ["/rdp"] },
   { key: "wallet", to: "/wallet", icon: LuWallet, match: ["/wallet", "/subscriptions", "/payment-history", "/orders"] },
   { key: "rewards", to: "/wallet#rewards", icon: LuGift, match: [] },
-  { key: "settings", to: "/account-setting", icon: LuSettings, match: ["/account-setting", "/account-information", "/change-email"] },
+  { key: "settings", to: "/account-setting", icon: LuSettings, match: ["/account-setting", "/change-email"] },
 ];
 
 function Tip({ children }) {
