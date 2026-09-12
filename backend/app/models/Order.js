@@ -39,6 +39,11 @@ const orderItemSchema = new mongoose.Schema(
     attempts: { type: Number, default: 0 },           // provisioning attempts (incl. retries)
     provisionedAt: { type: Date },                     // last provisioning attempt time
     live_status: { type: String },                     // cached live provider status (status poll)
+    // --- C2: renewal / expiry lifecycle ---
+    expires_at: { type: Date },                        // when this resource lapses
+    term_days: { type: Number },                       // length of the current term
+    auto_renew: { type: Boolean, default: false },     // opt-in; OFF by default
+    renewed_at: { type: Date },                        // last successful renewal
   },
   { _id: false }
 );

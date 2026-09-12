@@ -12,5 +12,9 @@ router.get("/orders/:id", currentUser, requireAuth, CheckoutController.getOrder)
 // C3: async provisioning — live status poll + failed-item retry.
 router.get("/orders/:id/status", currentUser, requireAuth, CheckoutController.getOrderStatus);
 router.post("/orders/:id/items/:idx/retry", currentUser, requireAuth, CheckoutController.retryItem);
+// C2: renewals — unified expiring list, per-item renew, auto-renew toggle.
+router.get("/renewals", currentUser, requireAuth, CheckoutController.listRenewals);
+router.post("/orders/:id/items/:idx/renew", currentUser, requireAuth, CheckoutController.renewItem);
+router.put("/orders/:id/items/:idx/auto-renew", currentUser, requireAuth, CheckoutController.setAutoRenew);
 
 module.exports = router;

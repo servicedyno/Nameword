@@ -357,6 +357,46 @@ async function syncItemLive(item) {
   }
 }
 
+// --- C2: renewal helpers ------------------------------------------------------
+// Term length for a fresh term. Hosting uses its plan duration; everything else
+// uses a sane default (domain = 1yr, vps/rdp = 30d).
+function computeTermDays(item) {
+  if (item.type === "hosting") return Number(item.duration_days) || 30;
+  if (item.type === "domain") return 365;
+  return 30; // vps / rdp
+}
+
+// Which renewals the PROVIDER can actually fulfil. In dry_run everything is
+// simulated (in-app charge, no upstream). In LIVE only hosting renews upstream
+// (POST /hosting/:user/renew); domain renew returns 501 provider-side and
+// vps/rdp have no renew endpoint yet, so we refuse those cleanly (no charge).
+function providerRenewSupported(type, mode) {
+  if (type === "hosting") return true;
+  return mode === "dry_run";
+}
+
+// Live renewal price. Falls back to the price originally paid for the item.
+async function priceRenewal(item) {
+  try {
+    if (item.type === "hosting") {
+      const plans = (await nomadly.get("/hosting/plans")).data?.plans || [];
+      const p = plans.find((x) => x.plan_id === item.plan_id);
+      if (Number(p?.price_usd) > 0) return round2(p.price_usd);
+    } else if (item.type === "domain") {
+      const d = (await nomadly.get("/domains/search", { params: { domain: item.domain } })).data || {};
+      if (Number(d.price_usd) > 0) return round2(d.price_usd);
+    } else if (item.type === "vps" || item.type === "rdp") {
+      const plans =
+        (await nomadly.get(`/${item.type}/plans`, { params: { region: item.region || "EU" } })).data?.plans || [];
+      const p = plans.find((x) => x.plan_id === item.plan_id);
+      if (Number(p?.price_usd) > 0) return round2(p.price_usd);
+    }
+  } catch (_) {
+    /* fall through to the original price */
+  }
+  return round2(Number(item.price_usd) || 0);
+}
+
 const serviceFor = (item) =>
   item.type === "domain"
     ? "Domain Registration"
@@ -596,6 +636,12 @@ class CheckoutController {
           } catch (e) {
             console.error("[checkout] payment record failed:", e?.message || e);
           }
+          // C2: start the renewal clock for a successfully-provisioned item.
+          const term = computeTermDays(item);
+          item.term_days = term;
+          if (!item.expires_at) {
+            item.expires_at = new Date(Date.now() + term * 86400000);
+          }
         }
         order.markModified("items");
         await order.save(); // persist per-item progress so the status poll sees it
@@ -758,6 +804,221 @@ class CheckoutController {
         );
       });
       return res.status(202).json({ success: true, order });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // C2: shared renewal core — used by the renew endpoint AND the auto-renew job.
+  // Charges the buyer's in-app wallet, renews upstream where the provider
+  // supports it (live hosting), extends expires_at, awards points. Returns a
+  // structured result ({ ok, ... }) instead of touching res.
+  static async performRenewal(order, idx) {
+    const item = order.items[idx];
+    if (!item) return { ok: false, status: 404, code: "not_found", message: "Order item not found." };
+    if (item.status === "failed") {
+      return { ok: false, status: 409, code: "not_renewable", message: "This item hasn't been provisioned." };
+    }
+    const mode = order.mode;
+    if (mode === "live" && !providerRenewSupported(item.type, mode)) {
+      return {
+        ok: false,
+        status: 409,
+        code: "renewal_not_supported",
+        message:
+          item.type === "domain"
+            ? "Domain renewal isn't available from the provider yet."
+            : `Renewal for ${item.type.toUpperCase()} isn't supported by the provider yet.`,
+      };
+    }
+
+    const price = await priceRenewal(item);
+    const wallet = await debitWallet(order.userId, price);
+    if (!wallet) {
+      const cur = await Wallet.findOne({ userId: order.userId });
+      const bal = round2(walletUsd(cur));
+      return {
+        ok: false,
+        status: 402,
+        code: "insufficient_wallet_balance",
+        message: "Top up your wallet to renew.",
+        price_usd: price,
+        wallet_balance_usd: bal,
+        shortfall_usd: round2(price - bal),
+      };
+    }
+
+    // Renew upstream (live hosting only). Refund + fail cleanly if the provider errors.
+    if (mode === "live" && item.type === "hosting" && item.provider_username) {
+      try {
+        await nomadly.post(`/hosting/${encodeURIComponent(item.provider_username)}/renew`);
+      } catch (e) {
+        await creditWallet(order.userId, price, `renew-refund:${order.orderNumber}:${idx}`);
+        return {
+          ok: false,
+          status: 502,
+          code: "provisioning_failed",
+          message: e.response?.data?.message || "Renewal failed at the provider; you were refunded.",
+        };
+      }
+    }
+
+    const tx = await Transaction.create({
+      userId: order.userId,
+      walletId: wallet._id,
+      amount: price,
+      currency: "USD",
+      type: "debit",
+      method: "wallet_balance",
+      reference: `renew:${order.orderNumber}:${idx}`,
+      status: "completed",
+      from: "nameword",
+    });
+
+    const term = computeTermDays(item);
+    const now = new Date();
+    const base = item.expires_at && new Date(item.expires_at) > now ? new Date(item.expires_at) : now;
+    item.expires_at = new Date(base.getTime() + term * 86400000);
+    item.term_days = term;
+    item.renewed_at = now;
+
+    try {
+      await createPaymentRecord({
+        userId: order.userId,
+        service: `${serviceFor(item)} Renewal`,
+        title: titleFor(item),
+        amount: price,
+        currency: "USD",
+        paymentMethod: "wallet_balance",
+        status: "completed",
+        transactionId: tx._id,
+        metadata: { renewal: true, mode, itemType: item.type, orderNumber: order.orderNumber },
+      });
+    } catch (e) {
+      console.error("[checkout] renewal payment record failed:", e?.message || e);
+    }
+
+    const pts = round2(price * purchaseRewardRate());
+    if (pts > 0) {
+      await logPoints(order.userId, pts, "credit");
+      order.points_earned = round2((Number(order.points_earned) || 0) + pts);
+    }
+
+    order.markModified("items");
+    await order.save();
+    const after = await Wallet.findOne({ userId: order.userId });
+    return {
+      ok: true,
+      charged_usd: price,
+      wallet_balance_usd: round2(walletUsd(after)),
+      expires_at: item.expires_at,
+      item,
+    };
+  }
+
+  // C2: renew a single owned item (ownership-gated), buyer-wallet-billed.
+  static async renewItem(req, res) {
+    try {
+      const id = String(req.params.id || "");
+      const idx = parseInt(req.params.idx, 10);
+      if (!/^[a-f0-9]{24}$/i.test(id)) throw new HttpError(404, "not_found", "Order not found.");
+      const order = await Order.findOne({ _id: id, userId: req.user.id });
+      if (!order) throw new HttpError(404, "not_found", "Order not found.");
+      if (!Number.isInteger(idx) || idx < 0 || idx >= order.items.length) {
+        throw new HttpError(404, "not_found", "Order item not found.");
+      }
+      const result = await CheckoutController.performRenewal(order, idx);
+      if (!result.ok) {
+        return res.status(result.status).json({
+          success: false,
+          error: result.code,
+          message: result.message,
+          ...(result.price_usd != null ? { price_usd: result.price_usd } : {}),
+          ...(result.wallet_balance_usd != null ? { wallet_balance_usd: result.wallet_balance_usd } : {}),
+          ...(result.shortfall_usd != null ? { shortfall_usd: result.shortfall_usd } : {}),
+        });
+      }
+      return res.json({
+        success: true,
+        idx,
+        charged_usd: result.charged_usd,
+        wallet_balance_usd: result.wallet_balance_usd,
+        expires_at: result.expires_at,
+        status: result.item.status,
+        auto_renew: !!result.item.auto_renew,
+      });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // C2: toggle auto-renew on an owned item (ownership-gated).
+  static async setAutoRenew(req, res) {
+    try {
+      const id = String(req.params.id || "");
+      const idx = parseInt(req.params.idx, 10);
+      if (!/^[a-f0-9]{24}$/i.test(id)) throw new HttpError(404, "not_found", "Order not found.");
+      const order = await Order.findOne({ _id: id, userId: req.user.id });
+      if (!order) throw new HttpError(404, "not_found", "Order not found.");
+      if (!Number.isInteger(idx) || idx < 0 || idx >= order.items.length) {
+        throw new HttpError(404, "not_found", "Order item not found.");
+      }
+      const enabled = req.body?.enabled === true || req.body?.enabled === "true";
+      order.items[idx].auto_renew = enabled;
+      order.markModified("items");
+      await order.save();
+      return res.json({ success: true, idx, auto_renew: enabled });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // C2: unified per-buyer "expiring soon" list across domains/hosting/vps/rdp.
+  static async listRenewals(req, res) {
+    try {
+      const userId = req.user.id;
+      const daysParam = parseInt(req.query.days, 10);
+      const withinDays = Number.isFinite(daysParam) ? daysParam : 30;
+      const now = Date.now();
+      const out = [];
+      for (const t of ["domain", "hosting", "vps", "rdp"]) {
+        const list = await ownership.ownedList(userId, t);
+        for (const e of list) {
+          const it = e.item;
+          const exp = it.expires_at ? new Date(it.expires_at) : null;
+          const days = exp ? Math.ceil((exp.getTime() - now) / 86400000) : null;
+          const bucket = days == null ? "unknown" : days < 0 ? "expired" : days <= 7 ? "expiring_soon" : "upcoming";
+          if (days != null && bucket !== "expired" && days > withinDays) continue;
+          out.push({
+            order_id: e.order_id,
+            idx: e.idx,
+            type: t,
+            ref: e.ref,
+            title: titleFor(it),
+            domain: it.domain || null,
+            plan: it.plan_name || null,
+            status: it.status,
+            expires_at: exp,
+            days_until_expiry: days,
+            bucket,
+            auto_renew: !!it.auto_renew,
+            renewable: providerRenewSupported(t, e.mode),
+            price_hint_usd: round2(Number(it.price_usd) || 0),
+          });
+        }
+      }
+      out.sort((a, b) => (a.days_until_expiry ?? 1e9) - (b.days_until_expiry ?? 1e9));
+      return res.json({
+        success: true,
+        within_days: withinDays,
+        count: out.length,
+        summary: {
+          expired: out.filter((x) => x.bucket === "expired").length,
+          expiring_soon: out.filter((x) => x.bucket === "expiring_soon").length,
+          upcoming: out.filter((x) => x.bucket === "upcoming").length,
+        },
+        renewals: out,
+      });
     } catch (err) {
       return CheckoutController.fail(res, err);
     }

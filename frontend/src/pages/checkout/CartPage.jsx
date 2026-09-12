@@ -7,6 +7,7 @@ import { usePageMeta } from "../../hooks/usePageMeta";
 import { useAlert } from "../../context/AlertContext";
 import checkoutAPI from "../../api/checkout";
 import CartSummary from "../../components/checkout/CartSummary";
+import WalletModal from "../../components/modals/wallet-modal";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 import { regionLabel } from "../../utils/regions";
 import Loader from "../../components/common/Loader";
@@ -129,6 +130,7 @@ export default function CartPage() {
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState(null);
   const [redeemPoints, setRedeemPoints] = useState(0);
+  const [showTopup, setShowTopup] = useState(false);
   const clientOrderId = useRef(newClientOrderId());
 
   const orderPayload = useMemo(() => cart.toPayload(), [cart.items]);
@@ -218,6 +220,20 @@ export default function CartPage() {
     } finally {
       setPaying(false);
     }
+  };
+
+  // C4: crypto top-up finished (wallet credited) → auto-resume the order.
+  // The server re-checks the balance in createOrder, so we just retry payment;
+  // if it's still short (e.g. price moved), the shortfall UI shows again.
+  const handleTopupSuccess = () => {
+    setShowTopup(false);
+    setPayError(null);
+    window.dispatchEvent(new Event("wallet:updated"));
+    // small delay so the credit is fully settled before we re-price + charge
+    setTimeout(() => {
+      refreshQuote();
+      pay();
+    }, 600);
   };
 
   const onRemove = (id) => {
@@ -334,7 +350,14 @@ export default function CartPage() {
                     </span>
                   </div>
                   {shortfall > 0 && (
-                    <Link to="/wallet" className="nw-btn-secondary nw-btn-sm mt-3 w-full" data-testid="cart-topup-link">Top up wallet</Link>
+                    <button
+                      type="button"
+                      onClick={() => { setPayError(null); setShowTopup(true); }}
+                      className="nw-btn-secondary nw-btn-sm mt-3 w-full"
+                      data-testid="cart-topup-button"
+                    >
+                      Top up {money(Math.max(25, Math.ceil(shortfall)))} & pay
+                    </button>
                   )}
                 </div>
                 {payError && (
@@ -350,6 +373,14 @@ export default function CartPage() {
             }
           />
         </div>
+      )}
+
+      {showTopup && (
+        <WalletModal
+          presetAmount={shortfall}
+          onClose={() => setShowTopup(false)}
+          onSuccess={handleTopupSuccess}
+        />
       )}
     </div>
   );

@@ -17,7 +17,7 @@ const readBalance = (res) => {
   return Number(b?.USD ?? b?.default ?? 0);
 };
 
-const WalletModal = ({ onClose, onSuccess }) => {
+const WalletModal = ({ onClose, onSuccess, presetAmount }) => {
   const { t } = useLanguage();
   const { showAlert } = useAlert();
 
@@ -27,6 +27,13 @@ const WalletModal = ({ onClose, onSuccess }) => {
   const [credited, setCredited] = useState(false);
   const startBalanceRef = useRef(0);
   const successRef = useRef(false);
+
+  // When opened with a preset (e.g. the exact cart shortfall), start there but
+  // never below the provider minimum.
+  const initialAmount =
+    presetAmount != null && Number(presetAmount) > 0
+      ? String(Math.max(MIN_TOPUP, Math.ceil(Number(presetAmount))))
+      : "";
 
   const walletTopUpSchema = Yup.object().shape({
     amount: Yup.number()
@@ -144,7 +151,7 @@ const WalletModal = ({ onClose, onSuccess }) => {
 
               <Formik
                 enableReinitialize
-                initialValues={{ amount: "" }}
+                initialValues={{ amount: initialAmount }}
                 validationSchema={walletTopUpSchema}
                 onSubmit={handleFormSubmit}
               >
