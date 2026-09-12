@@ -1683,6 +1683,7 @@ export const fr = {
       organizeDomains: "Organiser mes domaines",
       hosting: "Hébergement",
       billingPayments: "Facturation et Paiements",
+      cryptoCheckout: "Comment fonctionne le paiement en crypto",
       accountSecurity: "Compte et Sécurité",
       technicalIssues: "Problèmes Techniques"
     },
@@ -1691,7 +1692,14 @@ export const fr = {
       noQAContent: "Aucun contenu de questions-réponses disponible pour le moment.",
       accountSettings: "Paramètres du Compte *",
       helpSupportTitle: "Aide et Support",
-      getStartedWithDomains: "Commencer avec les Domaines"
+      getStartedWithDomains: "Commencer avec les Domaines",
+      heroEyebrow: "Centre d'aide",
+      heroTitle: "Comment pouvons-nous vous aider ?",
+      heroSubtitle: "Recherchez dans nos guides ou parcourez les thèmes ci-dessous : domaines, DNS, hébergement et paiement en crypto.",
+      searchPlaceholder: "Rechercher des articles d'aide…",
+      searchResultsTitle: "Résultats de recherche",
+      noResults: "Aucun résultat trouvé. Essayez un autre mot-clé ou parcourez les thèmes ci-dessous.",
+      clearSearch: "Effacer la recherche"
     },
     needHelp: {
       callUs: "Appelez-nous",
@@ -1703,6 +1711,38 @@ export const fr = {
       chatResponse: "Temps de réponse typique: moins de 3 minutes"
     },
     sections: {
+      cryptoCheckout: [
+        {
+          question: "Comment payer en cryptomonnaie ?",
+          answer: "Ajoutez des fonds à votre portefeuille prépayé, puis dépensez depuis celui-ci. Allez dans \"Portefeuille\" → \"Recharger,\" choisissez un montant et une monnaie (Bitcoin, Ethereum ou USDT sur TRC-20). Vous recevrez une adresse de paiement et un QR code : envoyez le montant exact et votre portefeuille est crédité automatiquement dès que le réseau confirme."
+        },
+        {
+          question: "Comment utiliser l'adresse de paiement et le QR code ?",
+          answer: {
+            intro: "Vous avez deux façons d'envoyer votre paiement :",
+            address: "Adresse : Copiez l'adresse de portefeuille affichée et collez-la dans votre propre portefeuille ou exchange",
+            qr: "QR code : Scannez le QR avec votre portefeuille mobile pour remplir l'adresse automatiquement",
+            amount: "Montant : Envoyez le montant exact affiché, sur le bon réseau (par exemple USDT sur TRC-20)",
+            conclusion: "Vous pouvez laisser le paiement ouvert : nous détectons le paiement et créditons votre portefeuille automatiquement."
+          }
+        },
+        {
+          question: "Quand mon portefeuille est-il crédité ?",
+          answer: "Dès que la transaction est confirmée sur la chaîne, généralement en quelques minutes. Vous n'avez pas besoin de garder l'onglet ouvert : nous réconcilions les paiements en attente automatiquement et vous prévenons par e-mail une fois terminé. Un lien de recharge reste valide pendant quelques heures."
+        },
+        {
+          question: "Quelles monnaies acceptez-vous ?",
+          answer: "Bitcoin (BTC), Ethereum (ETH) et Tether (USDT) sur le réseau TRC-20. Envoyez toujours sur le réseau exact affiché au paiement, sinon le paiement pourrait ne pas arriver."
+        },
+        {
+          question: "Mon paiement n'apparaît pas encore. Que faire ?",
+          answer: "Les confirmations crypto peuvent prendre quelques minutes. Vérifiez que vous avez envoyé le montant exact sur le bon réseau. S'il n'apparaît toujours pas après l'expiration de la recharge, contactez le support avec le hash de votre transaction (TXID) et nous la retrouverons."
+        },
+        {
+          question: "Puis-je obtenir un remboursement d'un paiement en crypto ?",
+          answer: "Une fois un domaine ou un service provisionné, il n'est pas remboursable. Tout solde inutilisé reste un crédit sur le portefeuille pour votre prochain achat."
+        }
+      ],
       discoverDomain: [
         {
           question: "Comment enregistrer un nouveau domaine?",
@@ -1879,36 +1919,37 @@ export const fr = {
         {
           question: "Quels modes de paiement sont acceptés?",
           answer: {
-            intro: "Nous acceptons:",
-            cards: "Cartes de crédit/débit (Visa, Mastercard, Amex)",
-            paypal: "PayPal",
-            crypto: "Cryptomonnaies"
+            intro: "Nous acceptons uniquement les cryptomonnaies :",
+            btc: "Bitcoin (BTC)",
+            eth: "Ethereum (ETH)",
+            usdt: "Tether (USDT) sur le réseau TRC-20",
+            conclusion: "Vous ajoutez des fonds à votre portefeuille prépayé et dépensez depuis celui-ci : ni carte de crédit, ni virement bancaire."
           }
         },
         {
-          question: "Comment mettre à jour mon mode de paiement?",
-          answer: "Allez dans \"Facturation\" → \"Modes de paiement.\" Ajoutez une nouvelle carte ou un compte PayPal et définissez-le par défaut."
+          question: "Comment recharger mon portefeuille ?",
+          answer: "Allez dans \"Portefeuille\" → \"Recharger.\" Choisissez un montant, sélectionnez une monnaie (BTC, ETH ou USDT-TRC20) et envoyez le montant exact à l'adresse affichée ou scannez le QR code. Votre portefeuille est crédité automatiquement dès que le paiement est confirmé sur la chaîne."
         },
         {
           question: "Comment voir mes factures?",
           answer: "Allez dans \"Facturation\" → \"Factures.\" Consultez, téléchargez ou imprimez toute facture passée."
         },
         {
-          question: "Comment fonctionne la facturation de renouvellement automatique?",
-          answer: "Nous facturons automatiquement votre mode de paiement par défaut avant l'expiration de votre service. Vous recevrez un rappel par e-mail 7 jours avant le renouvellement."
+          question: "Comment fonctionne le renouvellement automatique ?",
+          answer: "Le renouvellement automatique est payé depuis le solde de votre portefeuille prépayé avant l'expiration d'un service. Gardez suffisamment de fonds dans votre portefeuille et nous nous occupons du reste : nous vous envoyons un rappel par e-mail avant chaque renouvellement."
         },
         {
           question: "Puis-je obtenir un remboursement?",
-          answer: "Oui. Nous offrons une garantie de remboursement de 30 jours sur les plans d'hébergement. Les enregistrements de domaine ne sont pas remboursables. Contactez le support pour demander un remboursement."
+          answer: "Une fois un domaine ou un service provisionné, il n'est pas remboursable. Tout solde inutilisé reste simplement un crédit sur le portefeuille pour de futurs achats."
         },
         {
-          question: "Pourquoi mon paiement a-t-il été refusé?",
+          question: "Pourquoi mon paiement en crypto n'est-il pas arrivé ?",
           answer: {
-            intro: "Raisons courantes:",
-            insufficient: "Fonds insuffisants",
-            expired: "Carte expirée",
-            security: "Blocage de sécurité bancaire",
-            conclusion: "Mettez à jour votre mode de paiement ou contactez votre banque."
+            intro: "Quelques points à vérifier :",
+            network: "Vous avez envoyé sur le bon réseau (par exemple USDT sur TRC-20)",
+            amount: "Vous avez envoyé le montant exact affiché au paiement",
+            confirmations: "La transaction attend encore les confirmations du réseau (généralement quelques minutes)",
+            conclusion: "S'il n'apparaît toujours pas après l'expiration de la recharge, contactez le support avec le hash de votre transaction (TXID)."
           }
         },
         {

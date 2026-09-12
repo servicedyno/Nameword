@@ -177,6 +177,15 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Help page (hero + search + crypto guide) & footer accepted coins (2026-06) — DONE, tested 100% (frontend)
+- **On-brand help page**: `pages/front-admin/HelpSupport.jsx` now opens with a marketing hero (eyebrow "HELP CENTER", H1 "How can we help?", subtitle) on top of the existing marketing Navbar/Footer (MainLayout). NeedHelp contact block is now always visible below.
+- **Help search**: added a search box (`help-search-input`) that filters Q&A across ALL topics client-side (flattens every section via `answerToText`), with results panel (`help-search-results`), empty state (`help-search-empty`) and a clear button (`help-search-clear`) that returns to the browse-by-topic view (`help-browse`).
+- **Crypto Checkout guide**: new help topic "How crypto checkout works" (`help-tab-crypto-checkout`, id `crypto-checkout` → section `cryptoCheckout`) with 6 Q&As covering wallet top-up, payment address + QR, auto-credit timing, accepted coins, missing-payment troubleshooting, and refunds. Added to EN/ES/FR.
+- **Billing topic de-carded**: rewrote `helpSupport.sections.billingPayments` in EN/ES/FR to be crypto/wallet-accurate (crypto-only methods, wallet top-up, wallet-based auto-renewal, non-refundable-once-provisioned, crypto "payment not arrived" troubleshooting) — removed Visa/Mastercard/Amex/PayPal references.
+- **Footer accepted coins**: `components/layout/Footer.jsx` bottom bar now shows three real coin chips — BTC (FaBitcoin), ETH (FaEthereum), USDT-TRC20 (SiTether) — replacing the two generic icons (removed the `etherium` img import).
+- VERIFIED: lint 0/0, `yarn build` clean, PROD frontend rebuilt+restarted. `testing_agent` iteration_5.json = 100% functional on desktop 1920 + mobile 390 (hero/navbar/footer, search filter+empty+clear, crypto topic + mobile select, footer coin chips). No console errors.
+
+
 ### Legal copy refresh — Privacy & Terms to offshore/DMCA-ignored, crypto-only (2026-06) — DONE, verified
 - Rewrote the `privacy` and `terms` objects in `locales/en.js`, `es.js`, `fr.js` (same keys, new values) with fully-explicit positioning per user: privacy-first offshore jurisdiction, minimal/short-retention activity logs, no selling/marketing data, WHOIS-privacy by default, and a Terms "Acceptable Use & Termination" clause stating we do NOT honor DMCA/third-party takedown demands and only act on abuse of our own infra (spam/phishing/malware/attacks). Payments clause now states crypto-only (no cards/SEPA/bank), non-refundable once provisioned, leftover stays as wallet credit. Contact email set to hi@nameword.com in all three languages. ES/FR fully translated to match EN (they were previously behind EN on several clauses).
 - Removed the "Owner to confirm…" yellow banner: deleted the `legal-placeholder-note` `<p>` block from `pages/PrivacyPolicy.jsx` + `pages/TermsAndConditions.jsx`, and removed the `legal.placeholderNote` key from `site.en.js`/`site.es.js`/`site.fr.js`.

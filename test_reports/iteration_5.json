@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend-only testing of public /help-support page enhancements and footer accepted-coins. All 5 requested flows verified on desktop (1920x1080) and mobile (390x844). No console errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "hero_and_navbar_footer": "PASS - eyebrow 'HELP CENTER', H1 'How can we help?', subtitle, search input all render. Marketing Navbar & Footer present.",
+    "help_search": "PASS - 'QR' returns crypto-checkout Q&A (help-search-results visible); 'nameservers' returns DNS Q&As; 'zzzznope' shows help-search-empty; help-search-clear returns to help-browse.",
+    "crypto_checkout_topic": "PASS - help-tab-crypto-checkout renders all 4 required questions (pay with crypto, payment address & QR, wallet credited, which coins). Expanding first question shows answer with 'address' and 'QR'. Mobile help-tab-select allows selecting 'crypto-checkout' and shows same content.",
+    "footer_accepted_coins": "PASS - footer-accepted-coins present with 3 chips: footer-coin-btc='BTC', footer-coin-eth='ETH', footer-coin-usdt='USDT-TRC20'. Text 'We accept BTC ETH USDT-TRC20' visible.",
+    "billing_no_card_paypal": "MOSTLY PASS - Answer lists BTC/ETH/USDT only. No Visa/Mastercard/Amex mentioned. However the trailing clarifier '...no credit cards, PayPal or bank transfers.' still contains the word 'PayPal' (used as negation). Strict reading of requirement says no PayPal references should remain."
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL/MINOR: In helpSupport.sections.billingPayments answer for 'What payment methods are accepted?', consider removing the word 'PayPal' from the negation clause ('no credit cards, PayPal or bank transfers') if strict interpretation of 'no PayPal references' is required. Update en.js, es.js, fr.js consistently. Not blocking."
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100% functional, 1 minor copy concern"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Public /help-support page tested end-to-end on desktop & mobile. All data-testid selectors exist and function. Only copy nit is 'PayPal' word in a negation clause of billing answer.",
+  "rca of the issue": "N/A - no functional bugs found."
+}

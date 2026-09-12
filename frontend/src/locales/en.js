@@ -1683,6 +1683,7 @@ export const en = {
       organizeDomains: "Organize my domains",
       hosting: "Hosting",
       billingPayments: "Billing & Payments",
+      cryptoCheckout: "How crypto checkout works",
       accountSecurity: "Account & Security",
       technicalIssues: "Technical Issues"
     },
@@ -1691,7 +1692,14 @@ export const en = {
       noQAContent: "No Q&A content available yet.",
       accountSettings: "Account Settings *",
       helpSupportTitle: "Help & Support",
-      getStartedWithDomains: "Get started with Domains"
+      getStartedWithDomains: "Get started with Domains",
+      heroEyebrow: "Help center",
+      heroTitle: "How can we help?",
+      heroSubtitle: "Search our guides or browse the topics below — domains, DNS, hosting and crypto checkout.",
+      searchPlaceholder: "Search help articles…",
+      searchResultsTitle: "Search results",
+      noResults: "No results found. Try a different keyword or browse the topics below.",
+      clearSearch: "Clear search"
     },
     needHelp: {
       callUs: "Call us",
@@ -1703,6 +1711,38 @@ export const en = {
       chatResponse: "Typical response time: under 3 minutes"
     },
     sections: {
+      cryptoCheckout: [
+        {
+          question: "How do I pay with cryptocurrency?",
+          answer: "Add funds to your prepaid wallet, then spend from it. Go to \"Wallet\" → \"Top Up,\" choose an amount and pick a coin (Bitcoin, Ethereum or USDT on TRC-20). You'll get a payment address and QR code — send the exact amount and your wallet is credited automatically once the network confirms."
+        },
+        {
+          question: "How do I use the payment address and QR code?",
+          answer: {
+            intro: "You have two ways to send your payment:",
+            address: "Address: Copy the wallet address shown and paste it into your own wallet or exchange",
+            qr: "QR code: Scan the QR with your mobile wallet to fill in the address automatically",
+            amount: "Amount: Send the exact amount shown, on the correct network (e.g. USDT on TRC-20)",
+            conclusion: "You can keep the checkout open — we detect the payment and credit your wallet automatically."
+          }
+        },
+        {
+          question: "When is my wallet credited?",
+          answer: "As soon as the transaction confirms on-chain — usually within a few minutes. You don't need to keep the tab open: we reconcile pending payments automatically and email you when it's done. A top-up link stays valid for a few hours."
+        },
+        {
+          question: "Which coins do you accept?",
+          answer: "Bitcoin (BTC), Ethereum (ETH) and Tether (USDT) on the TRC-20 network. Always send on the exact network shown at checkout, or the payment may not arrive."
+        },
+        {
+          question: "My payment hasn't shown up yet. What should I do?",
+          answer: "Crypto confirmations can take a few minutes. Double-check that you sent the exact amount on the correct network. If it still hasn't appeared after the top-up expires, contact support with your transaction hash (TXID) and we'll trace it."
+        },
+        {
+          question: "Can I get a refund on a crypto payment?",
+          answer: "Once a domain or service has been provisioned it's non-refundable. Any unused balance stays as wallet credit for your next purchase."
+        }
+      ],
       discoverDomain: [
         {
           question: "How do I register a new domain?",
@@ -1879,36 +1919,37 @@ export const en = {
         {
           question: "What payment methods are accepted?",
           answer: {
-            intro: "We accept:",
-            cards: "Credit/debit cards (Visa, Mastercard, Amex)",
-            paypal: "PayPal",
-            crypto: "Cryptocurrencies"
+            intro: "We accept cryptocurrency only:",
+            btc: "Bitcoin (BTC)",
+            eth: "Ethereum (ETH)",
+            usdt: "Tether (USDT) on the TRC-20 network",
+            conclusion: "You add funds to your prepaid wallet and spend from it — no credit cards or bank transfers."
           }
         },
         {
-          question: "How do I update my payment method?",
-          answer: "Go to \"Billing\" → \"Payment Methods.\" Add a new card or PayPal account and set it as default."
+          question: "How do I top up my wallet?",
+          answer: "Go to \"Wallet\" → \"Top Up.\" Choose an amount, pick a coin (BTC, ETH or USDT-TRC20), then send the exact amount to the address shown or scan the QR code. Your wallet is credited automatically once the payment confirms on-chain."
         },
         {
           question: "How do I view my invoices?",
           answer: "Go to \"Billing\" → \"Invoices.\" View, download, or print any past invoice."
         },
         {
-          question: "How does auto-renewal billing work?",
-          answer: "We automatically charge your default payment method before your service expires. You'll receive an email reminder 7 days before renewal."
+          question: "How does auto-renewal work?",
+          answer: "Auto-renewal is paid from your prepaid wallet balance before a service expires. Keep enough funds in your wallet and we'll handle the rest — we email you a reminder before each renewal."
         },
         {
           question: "Can I get a refund?",
-          answer: "Yes. We offer a 30-day money-back guarantee on hosting plans. Domain registrations are non-refundable. Contact support to request a refund."
+          answer: "Once a domain or service has been provisioned it's non-refundable. Any unused balance simply stays as wallet credit for future purchases."
         },
         {
-          question: "Why was my payment declined?",
+          question: "Why hasn't my crypto payment arrived?",
           answer: {
-            intro: "Common reasons:",
-            insufficient: "Insufficient funds",
-            expired: "Expired card",
-            security: "Bank security block",
-            conclusion: "Update your payment method or contact your bank."
+            intro: "A few things to check:",
+            network: "You sent on the correct network (e.g. USDT on TRC-20)",
+            amount: "You sent the exact amount shown at checkout",
+            confirmations: "The transaction is still awaiting network confirmations (usually a few minutes)",
+            conclusion: "If it still hasn't appeared after the top-up expires, contact support with your transaction hash (TXID)."
           }
         },
         {

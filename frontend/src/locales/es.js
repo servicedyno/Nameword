@@ -1683,6 +1683,7 @@ export const es = {
       organizeDomains: "Organizar mis dominios",
       hosting: "Alojamiento",
       billingPayments: "Facturación y Pagos",
+      cryptoCheckout: "Cómo funciona el pago con cripto",
       accountSecurity: "Cuenta y Seguridad",
       technicalIssues: "Problemas Técnicos"
     },
@@ -1691,7 +1692,14 @@ export const es = {
       noQAContent: "Aún no hay contenido de preguntas y respuestas disponible.",
       accountSettings: "Configuración de Cuenta *",
       helpSupportTitle: "Ayuda y Soporte",
-      getStartedWithDomains: "Empezar con Dominios"
+      getStartedWithDomains: "Empezar con Dominios",
+      heroEyebrow: "Centro de ayuda",
+      heroTitle: "¿Cómo podemos ayudarte?",
+      heroSubtitle: "Busca en nuestras guías o explora los temas de abajo: dominios, DNS, alojamiento y pago con cripto.",
+      searchPlaceholder: "Buscar artículos de ayuda…",
+      searchResultsTitle: "Resultados de búsqueda",
+      noResults: "No se encontraron resultados. Prueba con otra palabra clave o explora los temas de abajo.",
+      clearSearch: "Borrar búsqueda"
     },
     needHelp: {
       callUs: "Llámanos",
@@ -1703,6 +1711,38 @@ export const es = {
       chatResponse: "Tiempo de respuesta típico: menos de 3 minutos"
     },
     sections: {
+      cryptoCheckout: [
+        {
+          question: "¿Cómo pago con criptomonedas?",
+          answer: "Añade fondos a tu monedero prepago y gasta desde él. Ve a \"Monedero\" → \"Recargar,\" elige un importe y una moneda (Bitcoin, Ethereum o USDT en TRC-20). Recibirás una dirección de pago y un código QR: envía el importe exacto y tu monedero se acredita automáticamente cuando la red confirma."
+        },
+        {
+          question: "¿Cómo uso la dirección de pago y el código QR?",
+          answer: {
+            intro: "Tienes dos formas de enviar el pago:",
+            address: "Dirección: Copia la dirección del monedero mostrada y pégala en tu propio monedero o exchange",
+            qr: "Código QR: Escanea el QR con tu monedero móvil para completar la dirección automáticamente",
+            amount: "Importe: Envía el importe exacto mostrado, en la red correcta (por ejemplo, USDT en TRC-20)",
+            conclusion: "Puedes mantener el pago abierto: detectamos el pago y acreditamos tu monedero automáticamente."
+          }
+        },
+        {
+          question: "¿Cuándo se acredita mi monedero?",
+          answer: "En cuanto la transacción se confirma en la cadena, normalmente en unos minutos. No necesitas mantener la pestaña abierta: reconciliamos los pagos pendientes automáticamente y te avisamos por correo cuando esté listo. El enlace de recarga es válido durante unas horas."
+        },
+        {
+          question: "¿Qué monedas aceptan?",
+          answer: "Bitcoin (BTC), Ethereum (ETH) y Tether (USDT) en la red TRC-20. Envía siempre en la red exacta mostrada en el pago, o el pago podría no llegar."
+        },
+        {
+          question: "Mi pago aún no aparece. ¿Qué hago?",
+          answer: "Las confirmaciones de cripto pueden tardar unos minutos. Comprueba que enviaste el importe exacto en la red correcta. Si aún no aparece después de que la recarga expire, contacta al soporte con el hash de tu transacción (TXID) y lo rastrearemos."
+        },
+        {
+          question: "¿Puedo obtener un reembolso de un pago en cripto?",
+          answer: "Una vez aprovisionado un dominio o servicio, no es reembolsable. Cualquier saldo no utilizado queda como crédito en el monedero para tu próxima compra."
+        }
+      ],
       discoverDomain: [
         {
           question: "¿Cómo registro un nuevo dominio?",
@@ -1879,36 +1919,37 @@ export const es = {
         {
           question: "¿Qué métodos de pago se aceptan?",
           answer: {
-            intro: "Aceptamos:",
-            cards: "Tarjetas de crédito/débito (Visa, Mastercard, Amex)",
-            paypal: "PayPal",
-            crypto: "Criptomonedas"
+            intro: "Solo aceptamos criptomonedas:",
+            btc: "Bitcoin (BTC)",
+            eth: "Ethereum (ETH)",
+            usdt: "Tether (USDT) en la red TRC-20",
+            conclusion: "Añades fondos a tu monedero prepago y gastas desde él: sin tarjetas de crédito ni transferencias bancarias."
           }
         },
         {
-          question: "¿Cómo actualizo mi método de pago?",
-          answer: "Ve a \"Facturación\" → \"Métodos de Pago.\" Agrega una nueva tarjeta o cuenta de PayPal y establécelo como predeterminado."
+          question: "¿Cómo recargo mi monedero?",
+          answer: "Ve a \"Monedero\" → \"Recargar.\" Elige un importe, selecciona una moneda (BTC, ETH o USDT-TRC20) y envía el importe exacto a la dirección mostrada o escanea el código QR. Tu monedero se acredita automáticamente cuando el pago se confirma en la cadena."
         },
         {
           question: "¿Cómo veo mis facturas?",
           answer: "Ve a \"Facturación\" → \"Facturas.\" Ver, descargar o imprimir cualquier factura pasada."
         },
         {
-          question: "¿Cómo funciona la facturación de renovación automática?",
-          answer: "Cobramos automáticamente tu método de pago predeterminado antes de que expire tu servicio. Recibirás un recordatorio por correo electrónico 7 días antes de la renovación."
+          question: "¿Cómo funciona la renovación automática?",
+          answer: "La renovación automática se paga con el saldo de tu monedero prepago antes de que expire un servicio. Mantén fondos suficientes en tu monedero y nosotros nos encargamos del resto: te enviamos un recordatorio por correo antes de cada renovación."
         },
         {
           question: "¿Puedo obtener un reembolso?",
-          answer: "Sí. Ofrecemos una garantía de devolución de dinero de 30 días en planes de alojamiento. Los registros de dominio no son reembolsables. Contacta al soporte para solicitar un reembolso."
+          answer: "Una vez aprovisionado un dominio o servicio, no es reembolsable. Cualquier saldo no utilizado simplemente queda como crédito en el monedero para futuras compras."
         },
         {
-          question: "¿Por qué se rechazó mi pago?",
+          question: "¿Por qué no ha llegado mi pago en cripto?",
           answer: {
-            intro: "Razones comunes:",
-            insufficient: "Fondos insuficientes",
-            expired: "Tarjeta vencida",
-            security: "Bloqueo de seguridad bancario",
-            conclusion: "Actualiza tu método de pago o contacta a tu banco."
+            intro: "Algunas cosas para comprobar:",
+            network: "Enviaste en la red correcta (por ejemplo, USDT en TRC-20)",
+            amount: "Enviaste el importe exacto mostrado en el pago",
+            confirmations: "La transacción aún espera confirmaciones de red (normalmente unos minutos)",
+            conclusion: "Si aún no aparece después de que la recarga expire, contacta al soporte con el hash de tu transacción (TXID)."
           }
         },
         {

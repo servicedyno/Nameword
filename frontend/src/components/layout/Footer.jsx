@@ -1,6 +1,6 @@
-import { etherium } from "../common/icons";
 import BrandLogo from "../common/BrandLogo";
-import { FaXTwitter, FaBitcoin } from "react-icons/fa6";
+import { FaXTwitter, FaBitcoin, FaEthereum } from "react-icons/fa6";
+import { SiTether } from "react-icons/si";
 import { LuMail, LuMapPin, LuShieldCheck } from "react-icons/lu";
 import { NavLink, useNavigate, useLocation } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -95,12 +95,17 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <p className="text-13 text-ink-soft dark:text-gray-500">© {new Date().getFullYear()} {s.footer.rights}</p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2" data-testid="footer-accepted-coins">
             <span className="text-13 text-ink-soft dark:text-gray-500">{s.footer.payments}</span>
-            <div className="flex items-center gap-2.5 text-ink-soft dark:text-gray-400">
-              <span aria-label="Bitcoin" title="Bitcoin" className="social-link"><FaBitcoin /></span>
-              <span aria-label="Ethereum" title="Ethereum" className="social-link"><img src={etherium} alt="Ethereum" className="dark-mode h-6 w-6" /></span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-gray-900 dark:text-gray-300" data-testid="footer-coin-btc" title="Bitcoin">
+              <FaBitcoin className="h-4 w-4 text-[#f7931a]" /> BTC
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-gray-900 dark:text-gray-300" data-testid="footer-coin-eth" title="Ethereum">
+              <FaEthereum className="h-4 w-4 text-[#627eea]" /> ETH
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-gray-900 dark:text-gray-300" data-testid="footer-coin-usdt" title="Tether (TRC-20)">
+              <SiTether className="h-4 w-4 text-[#26a17b]" /> USDT-TRC20
+            </span>
           </div>
         </div>
       </div>
