@@ -1,5 +1,5 @@
 import BrandLogo from "../common/BrandLogo";
-import { FaXTwitter, FaBitcoin, FaEthereum } from "react-icons/fa6";
+import { FaBitcoin, FaEthereum } from "react-icons/fa6";
 import { SiTether } from "react-icons/si";
 import { LuMail, LuMapPin, LuShieldCheck } from "react-icons/lu";
 import { NavLink, useNavigate, useLocation } from "react-router";
@@ -54,9 +54,6 @@ const Footer = () => {
             >
               <LuShieldCheck className="h-4 w-4" /> {s.footer.dmca}
             </span>
-            <div className="flex items-center gap-2.5">
-              <a href="https://x.com/namewordcom" target="_blank" rel="noreferrer" aria-label="X" className="social-link"><FaXTwitter /></a>
-            </div>
           </div>
 
           {/* Products */}
