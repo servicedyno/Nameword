@@ -6,6 +6,9 @@
 ---
 
 ## ⏱️ CURRENT STATUS (2026-09) — updated live
+
+**✅ BUGFIX — dashboard "Smart Suggestion" absurd prices / fake discount (user-reported):** cards showed real *premium* reseller prices for an account-derived keyword (email "demo" → only premium TLDs like demo.online $20,313) plus a fabricated "Save 17%" (oldPrice = price×1.2). Fixed in `src/pages/front-admin/dashboard.jsx`: removed the fake discount/old-price and now only show available suggestions priced ≤ $200 (cheapest first); premium ones are filtered → empty state when none qualify. Frontend-testing-agent verified 2/2. NOTE: sibling placeholder UI still to clean if desired — `SecurityCard.jsx` brand-protection cards use the same price×1.2 fake discount, and `AccountInfomation.jsx` has hard-coded fake "Smart Suggestion" cards (applecommunity.com / "Save 85%").
+
 **App:** Re-provisioned and **LIVE** on this pod (Node/Express :8001 + Vite prod build :3000), on your **real Railway Mongo** (`nozomi.proxy.rlwy.net/nameword`, seeded data). Supervisor repointed to run node backend + prod frontend. `.env` rebuilt from your credentials.
 
 **DynoPay — ✅ crypto LIVE & VERIFIED END-TO-END (real money):**

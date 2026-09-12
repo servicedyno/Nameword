@@ -91,26 +91,24 @@ const Dashboard = () => {
       return [];
     }
 
-    // Take first 3 suggestions for the cards
-    const suggestionsToShow = tldSuggestions.slice(0, 3); 
+    // Only surface genuinely useful suggestions: available and sensibly priced.
+    // Premium registrations can cost thousands — never show those as casual "buy now" cards.
+    const MAX_SUGGESTION_USD = Number(import.meta.env.VITE_SUGGESTION_MAX_USD) || 200;
 
-    return suggestionsToShow
+    const affordable = tldSuggestions
+      .filter((s) => s?.available && Number(s?.registrationFee) > 0 && Number(s?.registrationFee) <= MAX_SUGGESTION_USD)
+      .sort((a, b) => Number(a?.registrationFee) - Number(b?.registrationFee))
+      .slice(0, 3);
+
+    return affordable
       .map((suggestion, index) => {
-        const registrationFee = Number(suggestion?.registrationFee || 0);
-
-        const oldPrice =
-          registrationFee > 0 ? registrationFee * 1.2 : registrationFee;
-        const discount =
-          oldPrice > registrationFee && oldPrice > 0
-            ? Math.round(((oldPrice - registrationFee) / oldPrice) * 100)
-            : 0;
-
-        return { 
+        const price = Number(suggestion?.registrationFee || 0);
+        return {
           title: suggestion?.websiteName || "",
-          discount: discount,      
-          price: Number.parseFloat(registrationFee.toFixed(2)),
-          oldPrice: Number.parseFloat(oldPrice.toFixed(2)),
-          moreOptions: index === 1 && tldSuggestions.length > 2,
+          discount: 0,
+          price: Number.parseFloat(price.toFixed(2)),
+          oldPrice: null,
+          moreOptions: index === 1 && affordable.length > 2,
           suggestion: suggestion,
         };
       })
