@@ -12,7 +12,7 @@ import random
 import string
 
 # Backend URL from frontend/.env
-BASE_URL = "https://7fb709c1-2d79-410a-9fb8-83b445caf0e8.preview.emergentagent.com/api/v1"
+BASE_URL = "https://nameword-setup-1.preview.emergentagent.com/api/v1"
 TIMEOUT = 30
 
 def random_domain():
