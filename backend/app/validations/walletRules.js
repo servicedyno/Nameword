@@ -63,10 +63,21 @@ const dynoCheckoutURLRules = [
 ];
 
 
+const cryptoTopupRules = [
+    body("amount")
+        .exists().withMessage("Amount is required.")
+        .isFloat({ min: 0.01 }).withMessage("Amount must be a positive number."),
+    body("currency")
+        .exists().withMessage("Currency is required.")
+        .isString().withMessage("Currency must be a string.")
+];
+
+
 module.exports = {
     createWalletRules,
     getWalletRules,
     fundWalletRules,
     processPaymentRules,
-    dynoCheckoutURLRules
+    dynoCheckoutURLRules,
+    cryptoTopupRules
 };

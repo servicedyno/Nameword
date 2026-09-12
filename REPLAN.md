@@ -5,6 +5,29 @@
 
 ---
 
+## ⏱️ CURRENT STATUS (2026-09) — updated live
+**App:** Re-provisioned and **LIVE** on this pod (Node/Express :8001 + Vite prod build :3000), on your **real Railway Mongo** (`nozomi.proxy.rlwy.net/nameword`, seeded data). Supervisor repointed to run node backend + prod frontend. `.env` rebuilt from your credentials.
+
+**DynoPay — ✅ crypto LIVE & VERIFIED END-TO-END (real money):**
+- Root-caused a config bug: your DynoPay key was in `DYNO_PAY_JWT_TOKEN`, but the code reads `DYNO_PAY_API_KEY` → moved it; hand-off now works.
+- Embedded checkout (`/user/embed/session`) returns a `checkout.dynopay.com` session offering **crypto** (BTC/ETH/LTC/DOGE/TRX/BCH/SOL/XRP/POLYGON/USDC/USDT variants).
+- **Real $10 ETH test:** minted address `0xdc55…de5d` (0.00393637 ETH) → user sent → DynoPay `waiting→confirmed→settled` (tx `0x8c20ec1c…c2f49`) → buyer wallet **$50 → $60**, invoice `HCY-13714599`, +0.20 reward points, **idempotent** (replay did not double-credit).
+
+**Backend full-journey test (approved plan): PASS** — onboarding, product pricing to pay-step (domain/cPanel/VPS/RDP/mixed), wallet+points test-mode orders, renewals/auto-renew, account mgmt all green (against dry_run reseller → `test_mode`). Details in `test_result.md`.
+
+**✅ DONE — Option (a): crypto wallet top-up first-class + `/payment/*` fixed (backend; testing-agent verified 8/9, the 1 diff is 422-vs-400 on a validation error = fine):**
+- NEW `POST /wallet/crypto-topup` (returns raw address + crypto amount + QR) and `GET /wallet/crypto-topup/:paymentId/status` (polls DynoPay `getPaymentStatus`, credits the wallet **idempotently** on confirm; a webhook cross-flow guard prevents double-credit). New `CryptoTopup` model tracks each attempt; ownership-gated.
+- Fixed `/api/v1/payment/getSupportedCurrency` path (`/getSupportedCurrency` → `/user/getSupportedCurrency`) and switched crypto endpoints to the **per-user** token from `/user/createUser` (`ensureWallet`) instead of the empty env `DYNO_PAY_WALLET_TOKEN`.
+- Still pending: **frontend UI** for in-app crypto top-up (amount + coin picker → address + QR + live status) — not built yet.
+
+**Open production items (need your action / keys):**
+- Point the **DynoPay dashboard webhook** → `…/api/v1/wallet/dynocheckout-webhook` for hands-off auto-credit.
+- Set **`DYNO_PAY_WEBHOOK_SECRET`** — currently blank, so the webhook **skips signature checks** (a wallet-credit spoofing risk).
+- Placeholders still: SMTP/Brevo sender verify, Google OAuth callback whitelist, Telegram/SMS, WHM/Plesk/Cloudflare/Telnyx, GCloud.
+
+
+---
+
 ## 0. Product vision (one paragraph)
 Nameword is a **retail reseller**: customers register, top up a **Nameword wallet (USD) with crypto (DynoPay)**, and
 buy **domains, DNS, shared hosting, VPS and RDP** — all fulfilled behind the scenes through **one Nomadly reseller key**

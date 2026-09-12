@@ -7,21 +7,21 @@ const VPSDisk = require('../../models/VPSDisk');
 const { fetchVPSPlansWithCosts } = require('../../helpers/computeEngineHelper');
 require('dotenv').config();
 
-const baseUrl = process.env.DYNO_PAY_BASE_URL;
-const apiKey = process.env.DYNO_PAY_API_KEY;
-const walletToken = process.env.DYNO_PAY_WALLET_TOKEN;
-                                                                                                                          
-const headers = {     
-  accept: 'application/json',
-  'content-type': 'application/json',
-  'x-api-key': apiKey,
-  'Authorization': `Bearer ${walletToken}`
+const { ensureWallet } = require('../../helpers/dynoPayHelper');
+
+const baseUrl = (process.env.DYNO_PAY_BASE_URL || 'https://dynopay.com/api').trim().replace(/\/+$/, '');
+// Build DynoPay headers. Pass a per-user walletToken for endpoints that need the customer Bearer.
+const apiHeaders = (walletToken) => {
+  const h = { accept: 'application/json', 'content-type': 'application/json', 'x-api-key': process.env.DYNO_PAY_API_KEY };
+  if (walletToken) h['Authorization'] = `Bearer ${walletToken}`;
+  return h;
 };
+const headers = apiHeaders();
 
 // To fetch supported currencies
 const fetchSupportedCryptoCurrency = async (req, res) => {
     try {
-        const response = await axios.get(`${baseUrl}/getSupportedCurrency`, { headers });
+        const response = await axios.get(`${baseUrl}/user/getSupportedCurrency`, { headers });
         return res.status(200).json({ success: true, data: response.data.data });
     } catch (error) {
         console.error('Error in Fetching Supported Crypto Currencies:', error?.response?.data?.message);
@@ -80,6 +80,8 @@ const getVPSCryptoAddress = async (req, res) => {
 
       // Fetch all VPS plans with costs based on user location, region, disk type, etc.
       const userId = req.user._id;
+      let walletToken = null;
+      try { walletToken = await ensureWallet(userId); } catch (e) { console.warn('[getVPSCryptoAddress] ensureWallet skipped:', e?.message || e); }
       const region = req?.query?.region || "us-central1";
       const diskType = diskDetails.type;
       const preemptible = req?.query?.preemptible || false;
@@ -110,7 +112,7 @@ const getVPSCryptoAddress = async (req, res) => {
       const options = {
           method: 'POST',
           url: `${baseUrl}/user/cryptoPayment`,
-          headers,
+          headers: apiHeaders(walletToken),
           data: {
               amount: totalPrice,
               currency, 

@@ -7,6 +7,8 @@ const {
 	getDynocheckoutUrl,
 	handleDynoPaymentWebhook,
 	getHostbayWalletTransactions,
+	createCryptoTopup,
+	getCryptoTopupStatus,
 } = require("../../app/controllers/wallet/WalletController");
 const {
 	getPaymentHistory,
@@ -22,6 +24,7 @@ const {
 	fundWalletRules,
 	processPaymentRules,
 	dynoCheckoutURLRules,
+	cryptoTopupRules,
 } = require("../../app/validations/walletRules");
 const sessionOrApiKey = require("../../app/middlewares/session-or-apikey");
 const router = express.Router();
@@ -40,6 +43,8 @@ router.post(
 	validateRequest,
 	getDynocheckoutUrl
 );
+router.post("/crypto-topup", cryptoTopupRules, validateRequest, createCryptoTopup);
+router.get("/crypto-topup/:paymentId/status", getCryptoTopupStatus);
 // Payment history - new implementation
 router.get("/transactions", getPaymentHistory);
 router.get("/transactions/:id", getPaymentById);

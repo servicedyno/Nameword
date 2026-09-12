@@ -129,6 +129,31 @@ const getPaymentStatus = async (paymentId) => {
   return response.data;
 };
 
+// Direct crypto charge — POST /user/cryptoPayment (x-api-key + per-user Bearer walletToken)
+// -> { success, message, data: { transaction_id, address, amount, currency, base_amount, base_currency, qr_code, redirect_uri } }
+const createCryptoPayment = async ({ amount, currency, redirect_uri, meta_data, walletToken }) => {
+  const url = merchantUrl("/cryptoPayment");
+  const headers = { ...authHeaders() };
+  if (walletToken) headers.Authorization = `Bearer ${walletToken}`;
+  const body = { amount: Number(amount), currency };
+  if (redirect_uri) body.redirect_uri = redirect_uri;
+  if (meta_data && typeof meta_data === "object" && Object.keys(meta_data).length > 0) body.meta_data = meta_data;
+  try {
+    const response = await axios.post(url, body, { headers });
+    return response.data;
+  } catch (err) {
+    console.error("[DynoPay cryptoPayment] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
+    throw err;
+  }
+};
+
+// Supported crypto currencies — GET /user/getSupportedCurrency (x-api-key only)
+const getSupportedCurrencies = async () => {
+  const url = merchantUrl("/getSupportedCurrency");
+  const response = await axios.get(url, { headers: authHeaders() });
+  return response.data;
+};
+
 // Ensure the user has a DynoPay customer/wallet token (optional for userless checkout).
 const ensureWallet = async (userID) => {
   const user = await User.findById({ _id: userID });
@@ -154,6 +179,8 @@ module.exports = {
   registerUserForPayment,
   createPaymentLink,
   createEmbeddedSession,
+  createCryptoPayment,
+  getSupportedCurrencies,
   generatePaymentLink,
   generateAddFundsLink,
   fetchDynoWalletBalance,
