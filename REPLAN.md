@@ -18,7 +18,11 @@
 **✅ DONE — Option (a): crypto wallet top-up first-class + `/payment/*` fixed (backend; testing-agent verified 8/9, the 1 diff is 422-vs-400 on a validation error = fine):**
 - NEW `POST /wallet/crypto-topup` (returns raw address + crypto amount + QR) and `GET /wallet/crypto-topup/:paymentId/status` (polls DynoPay `getPaymentStatus`, credits the wallet **idempotently** on confirm; a webhook cross-flow guard prevents double-credit). New `CryptoTopup` model tracks each attempt; ownership-gated.
 - Fixed `/api/v1/payment/getSupportedCurrency` path (`/getSupportedCurrency` → `/user/getSupportedCurrency`) and switched crypto endpoints to the **per-user** token from `/user/createUser` (`ensureWallet`) instead of the empty env `DYNO_PAY_WALLET_TOKEN`.
-- Still pending: **frontend UI** for in-app crypto top-up (amount + coin picker → address + QR + live status) — not built yet.
+- ✅ **DONE — frontend UI** for in-app crypto top-up: `WalletModal` rewritten to the native flow (amount + coin picker → raw address + QR + copy + live "waiting → confirming → credited" polling of `/wallet/crypto-topup/:id/status`, credits with no webhook). Wired into the wallet page and the checkout "Top up & pay" (min $10). Self-verified via screenshots on desktop (1920) and mobile (390) — live TRC-20/ETH addresses returned; modal responsive.
+
+**✅ DONE — webhook/poller idempotency (your ask): no double-credit if the DynoPay dashboard webhook is later enabled.** Both the webhook and the poller now stamp `Transaction.idempotencyKey = dynopay:<payment_id>` and there is a **unique+sparse index** on it — duplicate credits are blocked by a read-check AND at the DB level; distinct payments still credit. Testing-agent verified 7/7.
+
+**⚠️ GAP found — embedded wallet top-up (`WalletModal` iframe) credits ONLY via the webhook**, which is not reaching this pod → in this environment an embedded crypto top-up would poll the balance forever and never credit. The reliable path is the native crypto top-up (address+QR + `getPaymentStatus` poll → credit, no webhook needed), which now needs the frontend UI wired in. Order checkout itself is **wallet-first** (`/checkout/orders` debits wallet; crypto only funds the wallet) — there is no separate "pay this order directly with a crypto address" screen.
 
 **Open production items (need your action / keys):**
 - Point the **DynoPay dashboard webhook** → `…/api/v1/wallet/dynocheckout-webhook` for hands-off auto-credit.

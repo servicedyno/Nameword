@@ -33,6 +33,22 @@ export const walletAPI = {
         return response.data;
     },
 
+    // Native crypto top-up: generate a raw address + QR (no webhook needed; status is polled)
+    createCryptoTopup: async (payload) => {
+        const response = await apiClient.post(ENDPOINTS.WALLET.CRYPTO_TOPUP, payload);
+        return response.data;
+    },
+
+    getCryptoTopupStatus: async (paymentId) => {
+        const response = await apiClient.get(ENDPOINTS.WALLET.CRYPTO_TOPUP_STATUS(paymentId));
+        return response.data;
+    },
+
+    getSupportedCurrencies: async () => {
+        const response = await apiClient.get(ENDPOINTS.WALLET.SUPPORTED_CURRENCY);
+        return response.data;
+    },
+
     getHostbayTransactions: async (params = {}) => {
         const response = await apiClient.get(ENDPOINTS.WALLET.TRANSACTIONS, { params });
         return response.data;

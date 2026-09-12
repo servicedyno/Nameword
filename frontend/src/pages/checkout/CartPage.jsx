@@ -356,7 +356,7 @@ export default function CartPage() {
                       className="nw-btn-secondary nw-btn-sm mt-3 w-full"
                       data-testid="cart-topup-button"
                     >
-                      Top up {money(Math.max(25, Math.ceil(shortfall)))} & pay
+                      Top up {money(Math.max(10, Math.ceil(shortfall)))} & pay
                     </button>
                   )}
                 </div>

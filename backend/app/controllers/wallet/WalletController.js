@@ -673,12 +673,22 @@ const handleDynoPaymentWebhook = async (req, res) => {
                         method: responseData?.data?.payment_mode || "dynopay",
                         reference: reference,
                         status: isSuccess ? "completed" : "failed",
-                        from: "dynocash",
+			from: "dynocash",
+			idempotencyKey: isSuccess ? ((payment_id || transaction_id || transaction_reference) ? `dynopay:${payment_id || transaction_id || transaction_reference}` : undefined) : undefined,
                 });
-                await transaction.save();
+                try {
+			await transaction.save();
+		} catch (e) {
+			if (e && e.code === 11000) {
+				console.log("[Payment] flow=wallet_add_funds | duplicate (idempotencyKey) skipped");
+				markProcessed(webhookId);
+				return res.status(200).json({ success: true, message: `$${amount} has already been added to wallet` });
+			}
+			throw e;
+		}
 
-                if (isSuccess) {
-                        const currency = "USD";
+		if (isSuccess) {
+			const currency = "USD";
                         const currentBalance = wallet.balance.get(currency) || 0;
                         wallet.balance.set(currency, currentBalance + amount);
                         wallet.lastTransactionAt = new Date();
@@ -856,11 +866,20 @@ const creditWalletTopup = async ({ userId, amountUsd, paymentId, transactionRefe
 	let wallet = await Wallet.findOne({ userId });
 	if (!wallet) { wallet = new Wallet({ userId, balance: new Map() }); await wallet.save(); }
 	const reference = `dynopay_wallet_${transactionReference || paymentId || "unknown"}_${Date.now()}`;
+	const idempotencyKey = paymentId ? `dynopay:${paymentId}` : (transactionReference ? `dynopay:${transactionReference}` : undefined);
 	const transaction = new Transaction({
 		userId, walletId: wallet._id, amount, currency: "USD", type: "credit",
-		method: paymentMode === "crypto" ? "crypto" : "dynopay", reference, status: "completed", from: "dynocash",
+		method: paymentMode === "crypto" ? "crypto" : "dynopay", reference, status: "completed", from: "dynocash", idempotencyKey,
 	});
-	await transaction.save();
+	try {
+		await transaction.save();
+	} catch (e) {
+		if (e && e.code === 11000) {
+			const w = await Wallet.findOne({ userId });
+			return { credited: false, alreadyCredited: true, newBalance: w ? Number(w.balance.get("USD") || 0) : 0 };
+		}
+		throw e;
+	}
 	const currentBalance = wallet.balance.get("USD") || 0;
 	wallet.balance.set("USD", currentBalance + amount);
 	wallet.lastTransactionAt = new Date();
