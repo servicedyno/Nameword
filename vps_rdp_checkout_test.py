@@ -12,7 +12,7 @@ import subprocess
 from typing import Dict, Any, Tuple, Optional
 
 # Base URL from frontend/.env
-BASE_URL = "https://domain-manager-43.preview.emergentagent.com"
+BASE_URL = "https://domain-manager-44.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 CHECKOUT_BASE = f"{API_BASE}/checkout"
 RESELLER_BASE = f"{API_BASE}/reseller"
