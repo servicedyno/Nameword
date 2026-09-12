@@ -39,7 +39,7 @@ export default function AppRail({ collapsed, onToggle }) {
   return (
     <div className="flex h-full w-[76px] flex-col items-center border-r border-line bg-white py-5 dark:border-white/[0.06] dark:bg-gray-950">
       <NavLink to="/" className="mb-6" title="Nameword">
-        <img src={favicon} alt="Nameword" className="h-8 w-8 dark-mode" />
+        <img src={favicon} alt="Nameword" className="h-8 w-8" />
       </NavLink>
       <nav className="flex flex-1 flex-col items-center gap-1.5" aria-label="Primary">
         {RAIL.map((it) => (

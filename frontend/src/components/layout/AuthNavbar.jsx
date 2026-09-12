@@ -1,4 +1,5 @@
-import { logo, Help, USA, ES, FR } from "../common/icons";
+import { Help, USA, ES, FR } from "../common/icons";
+import BrandLogo from "../common/BrandLogo";
 import { NavLink } from "react-router";
 import ThemeToggleButton from "../common/ThemeToggleButton";
 import CartIconButton from "../common/CartIconButton";
@@ -32,12 +33,7 @@ const AuthNavbar = () => {
     <div className="sticky top-0 left-0 w-full z-20 bg-white dark:bg-gray-900 p-5">
       <nav className="flex items-center justify-between w-full px-0 sm:px-5 xl:px-7">
         <NavLink to={"/"} className="flex items-center space-x-4">
-          <img
-            src={logo}
-            alt={t.nav.logoAlt}
-            title={t.nav.logoTitle}
-            className="dark-mode"
-          />
+          <BrandLogo />
         </NavLink>
 
         <div className="lg:flex hidden justify-between items-center gap-14">

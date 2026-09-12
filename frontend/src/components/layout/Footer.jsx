@@ -1,4 +1,5 @@
-import { logo, etherium, AMEX } from "../common/icons";
+import { etherium, AMEX } from "../common/icons";
+import BrandLogo from "../common/BrandLogo";
 import { FaXTwitter, FaBitcoin, FaCcVisa } from "react-icons/fa6";
 import { LuMail, LuMapPin } from "react-icons/lu";
 import { NavLink, useNavigate, useLocation } from "react-router";
@@ -38,7 +39,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
             <NavLink to="/" aria-label="Nameword home">
-              <img src={logo} alt={t.nav.logoAlt} title={t.nav.logoTitle} className="dark-mode h-8 w-auto" />
+              <BrandLogo />
             </NavLink>
             <p className="max-w-sm text-15 text-ink-soft dark:text-gray-400">{s.footer.tagline}</p>
             <div className="flex flex-col gap-2">

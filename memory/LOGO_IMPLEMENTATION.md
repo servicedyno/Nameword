@@ -1,7 +1,6 @@
 # Nameword "Keyhole N" Logo Redesign — Implementation Handoff
 
-Status: **NOT COMPLETE — spec + investigation done, implementation pending.**
-Owner action: another agent picks this up and executes the steps below end-to-end, then verifies (light + dark, desktop + mobile) and runs the frontend testing agent.
+Status: **COMPLETE — implemented & verified (light + dark, public + authed).**
 
 ---
 

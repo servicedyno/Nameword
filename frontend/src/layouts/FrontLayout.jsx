@@ -101,7 +101,7 @@ const FrontLayout = () => {
           <button className="xl:hidden text-primary dark:text-white" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
             <CgMenu size={22} />
           </button>
-          <NavLink to="/" className="xl:hidden"><img src={favicon} alt="Nameword" className="h-8 w-8 dark-mode" /></NavLink>
+          <NavLink to="/" className="xl:hidden"><img src={favicon} alt="Nameword" className="h-8 w-8" /></NavLink>
 
           {/* global search / command palette trigger */}
           <button

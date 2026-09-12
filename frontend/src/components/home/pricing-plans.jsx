@@ -1,4 +1,5 @@
-import { logoblue, globeIcon } from "../common/icons";
+import { globeIcon } from "../common/icons";
+import BrandLogo from "../common/BrandLogo";
 import { FaCheck } from "react-icons/fa6";
 import { TbSearch } from "react-icons/tb";
 import { LuGlobe } from "react-icons/lu";
@@ -67,7 +68,7 @@ const PricingPlans = () => {
                     {/* NameWord Column */}
                     <div className="bg-white dark:bg-gray-900 text-center md:block hidden">
                         <div className="flex justify-center items-center gap-2 text-gray-500 font-medium text-lg mt-6 mb-6">
-                            <img src={logoblue} alt="NameWord Logo" title="NameWord Logo" className="dark-mode" />
+                            <BrandLogo />
                         </div>
 
                         {domains.map((item, index) => (

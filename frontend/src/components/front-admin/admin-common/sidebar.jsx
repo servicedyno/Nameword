@@ -501,7 +501,7 @@ export default function Sidebar({ setIsEnlarge }) {
               <img
                 src={favicon}
                 alt="Hosting"
-                className="w-8 h-8 dark-mode xl:block hidden"
+                className="w-8 h-8 xl:block hidden"
               />
             </NavLink>
           </div>

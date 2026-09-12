@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { logo, USA, ES, FR } from "../common/icons";
+import { USA, ES, FR } from "../common/icons";
+import BrandLogo from "../common/BrandLogo";
 import useDropdown from "../../hooks/useDropdown";
 import { useAuth } from "../../hooks/useAuth";
 import { NavLink, useNavigate } from "react-router";
@@ -56,7 +57,7 @@ const Navbar = () => {
       <div className="nw-container flex h-16 lg:h-[4.5rem] items-center justify-between gap-4">
         {/* Brand */}
         <NavLink to="/" className="flex items-center gap-2 shrink-0" aria-label="Nameword home">
-          <img src={logo} alt={t.nav.logoAlt} title={t.nav.logoTitle} className="dark-mode h-8 w-auto" />
+          <BrandLogo markClassName="h-8 w-8" />
         </NavLink>
 
         {/* Desktop nav */}
@@ -153,7 +154,7 @@ const Navbar = () => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <div className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col overflow-y-auto bg-white p-5 shadow-2xl dark:bg-gray-950 dark:border-l dark:border-white/[0.06]">
             <div className="mb-6 flex items-center justify-between">
-              <img src={logo} alt={t.nav.logoAlt} className="dark-mode h-8 w-auto" />
+              <BrandLogo markClassName="h-8 w-8" />
               <button type="button" onClick={() => setMobileOpen(false)} aria-label={s.nav.closeMenu} className="p-2 text-primary dark:text-white">
                 <RxCross2 size={24} />
               </button>
