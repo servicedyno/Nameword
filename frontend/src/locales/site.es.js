@@ -3,7 +3,7 @@ export const siteEs = {
   meta: {
     title: "Nameword — Alojamiento offshore, privado por defecto",
     description:
-      "Registra dominios privados, gestiona tu DNS y despliega VPS, RDP, hosting cPanel y correo privado offshore desde jurisdicciones que respetan la privacidad.",
+      "Registra dominios privados, gestiona tu DNS y despliega VPS, RDP y hosting cPanel offshore desde jurisdicciones que respetan la privacidad.",
   },
 
   nav: {
@@ -22,7 +22,6 @@ export const siteEs = {
       hosting: { title: "Hosting cPanel Offshore", desc: "Panel conocido, jurisdicción que respeta la privacidad" },
       vps: { title: "VPS Offshore", desc: "Acceso root en jurisdicciones que respetan la privacidad" },
       rdp: { title: "RDP Privado", desc: "Escritorios Windows bajo tu control" },
-      email: { title: "Correo Privado", desc: "Buzones en tu propio dominio" },
       api: { title: "API para desarrolladores", desc: "Automatiza todo lo del panel" },
     },
   },
@@ -31,7 +30,7 @@ export const siteEs = {
     eyebrow: "Offshore · Privado · Tuyo",
     heading: "Alojamiento offshore, privado por defecto.",
     subheading:
-      "Registra dominios, gestiona tu DNS y despliega servidores, hosting cPanel y correo privado desde jurisdicciones que respetan la privacidad: mínima recogida de datos, privacidad WHOIS incluida y un monedero prepago que no te sigue a todas partes.",
+      "Registra dominios, gestiona tu DNS y despliega servidores y hosting cPanel desde jurisdicciones que respetan la privacidad: mínima recogida de datos, privacidad WHOIS incluida y un monedero prepago que no te sigue a todas partes.",
     tabs: { search: "Registrar", transfer: "Transferir" },
     placeholder: "tunombre.com",
     searchBtn: "Buscar en privado",
@@ -71,15 +70,14 @@ export const siteEs = {
     products: {
       eyebrow: "La plataforma",
       title: "Todo lo que necesitas. Nada que te vigile.",
-      lead: "Siete productos enfocados, un monedero prepago, un panel discreto.",
+      lead: "Seis productos enfocados, un monedero prepago, un panel discreto.",
       explore: "Explorar",
       items: {
         domains: { title: "Dominios Privados", desc: "Registra y transfiere en cientos de TLD con privacidad WHOIS incluida en las extensiones elegibles.", price: "precios por TLD en vivo" },
         dns: { title: "Gestión DNS", desc: "Gestor completo de registros con propagación rápida. Apunta donde quieras; cámbiate cuando quieras.", price: "incluido con cada dominio" },
-        hosting: { title: "Hosting cPanel Offshore", desc: "El panel de control que ya conoces, servido desde una jurisdicción que respeta la privacidad.", price: "mensual o anual" },
+        hosting: { title: "Hosting cPanel Offshore", desc: "El panel de control que ya conoces, servido desde una jurisdicción que respeta la privacidad.", price: "7 días o mensual" },
         vps: { title: "VPS Offshore", desc: "Servidores Linux con acceso root completo, desplegados en jurisdicciones que respetan la privacidad en segundos.", price: "desde 18 $/mes" },
         rdp: { title: "RDP Privado", desc: "Escritorios Windows que administras tú. Accesibles desde cualquier lugar, tuyos.", price: "desde 27 $/mes" },
-        email: { title: "Correo Privado", desc: "Buzones en tu propio dominio, TLS en tránsito, IMAP/SMTP con cualquier cliente.", price: "por buzón" },
         api: { title: "API para desarrolladores", desc: "Dominios, DNS, servidores y monedero: cada acción del panel disponible como endpoint autenticado.", price: "incluida con tu cuenta" },
       },
     },
@@ -145,7 +143,7 @@ export const siteEs = {
       { title: "Jurisdicción que respeta la privacidad", desc: "Las cuentas se sirven desde infraestructura en jurisdicciones que respetan la privacidad. Sabes dónde vive tu sitio." },
       { title: "TLS automático", desc: "Los certificados se emiten y renuevan automáticamente para cada sitio de tu cuenta." },
       { title: "Copias diarias", desc: "Copias automáticas para restaurar con un clic, y exportar cuando quieras." },
-      { title: "Pagado desde tu monedero", desc: "Planes mensuales o anuales cargados a tu saldo prepago. Sin tarjeta guardada para renovaciones." },
+      { title: "Pagado desde tu monedero", desc: "Planes de 7 días o mensuales cargados a tu saldo prepago. Sin tarjeta guardada para renovaciones." },
       { title: "Correo en tu dominio", desc: "Buzones, reenvíos y filtro antispam en tu propio dominio, incluidos con el hosting." },
     ],
     monthly: "Mensual",
@@ -322,7 +320,6 @@ export const siteEs = {
         hosting: "Hosting cPanel",
         vps: "VPS Offshore",
         rdp: "RDP Privado",
-        email: "Correo Privado",
         api: "API para desarrolladores",
         wallet: "Monedero",
         rewards: "Recompensas de fidelidad",
@@ -336,7 +333,7 @@ export const siteEs = {
   },
 
   footer: {
-    tagline: "Alojamiento offshore, privado por defecto. Dominios, DNS, servidores y correo desde jurisdicciones que respetan la privacidad, pagados desde un monedero prepago.",
+    tagline: "Alojamiento offshore, privado por defecto. Dominios, DNS y servidores desde jurisdicciones que respetan la privacidad, pagados desde un monedero prepago.",
     products: "Productos",
     company: "Empresa",
     support: "Soporte",
@@ -346,7 +343,6 @@ export const siteEs = {
       hosting: "Hosting cPanel Offshore",
       vps: "VPS Offshore",
       rdp: "RDP Privado",
-      email: "Correo Privado",
       api: "API para desarrolladores",
       pricing: "Precios",
       rewards: "Recompensas de fidelidad",

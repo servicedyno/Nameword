@@ -7,20 +7,19 @@ import { useAuth } from "../../hooks/useAuth";
 import { NavLink, useNavigate } from "react-router";
 import { IoChevronDown, IoMenu } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
-import { LuGlobe, LuNetwork, LuServer, LuCloud, LuMonitor, LuMail, LuCode, LuShieldCheck } from "react-icons/lu";
+import { LuGlobe, LuNetwork, LuServer, LuCloud, LuMonitor, LuCode, LuShieldCheck } from "react-icons/lu";
 import ThemeToggleButton from "../common/ThemeToggleButton";
 import UserDropdownMenu from "../common/UserDropdownMenu";
 import CartNavButton from "../checkout/CartNavButton";
 import { useLanguage } from "../../hooks/useLanguage";
 
-// Kept product surface: Domains · DNS · cPanel Hosting · VPS · RDP · Private Email · API
+// Kept product surface: Domains · DNS · cPanel Hosting · VPS · RDP · API
 const PRODUCT_KEYS = [
   { key: "domains", to: "/domains", icon: LuGlobe },
   { key: "dns", to: "/dns-manager", icon: LuNetwork },
   { key: "hosting", to: "/hosting", icon: LuServer },
   { key: "vps", to: "/vps", icon: LuCloud },
   { key: "rdp", to: "/rdp", icon: LuMonitor },
-  { key: "email", to: "/email", icon: LuMail },
   { key: "api", to: "/api", icon: LuCode },
 ];
 

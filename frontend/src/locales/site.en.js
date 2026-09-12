@@ -5,7 +5,7 @@ export const siteEn = {
   meta: {
     title: "Nameword — Offshore hosting, private by default",
     description:
-      "Register private domains, run your DNS and deploy offshore VPS, RDP, cPanel hosting and private email from privacy-respecting jurisdictions.",
+      "Register private domains, run your DNS and deploy offshore VPS, RDP and cPanel hosting from privacy-respecting jurisdictions.",
   },
 
   nav: {
@@ -24,7 +24,6 @@ export const siteEn = {
       hosting: { title: "Offshore cPanel Hosting", desc: "Familiar panel, privacy-respecting jurisdiction" },
       vps: { title: "Offshore VPS", desc: "Root access in privacy-respecting jurisdictions" },
       rdp: { title: "Private RDP", desc: "Windows desktops you control" },
-      email: { title: "Private Email", desc: "Mailboxes on your own domain" },
       api: { title: "Developer API", desc: "Automate everything in the dashboard" },
     },
   },
@@ -33,7 +32,7 @@ export const siteEn = {
     eyebrow: "Offshore · Private · Yours",
     heading: "Offshore hosting, private by default.",
     subheading:
-      "Register domains, run your DNS, and deploy servers, cPanel hosting and private email from privacy-respecting jurisdictions — minimal data collection, WHOIS privacy included, and a prepaid wallet that doesn't follow you around.",
+      "Register domains, run your DNS, and deploy servers and cPanel hosting from privacy-respecting jurisdictions — minimal data collection, WHOIS privacy included, and a prepaid wallet that doesn't follow you around.",
     tabs: { search: "Register", transfer: "Transfer in" },
     placeholder: "yourname.com",
     searchBtn: "Search privately",
@@ -88,15 +87,14 @@ export const siteEn = {
     products: {
       eyebrow: "The platform",
       title: "Everything you need. Nothing that watches you.",
-      lead: "Seven focused products, one prepaid wallet, one quiet dashboard.",
+      lead: "Six focused products, one prepaid wallet, one quiet dashboard.",
       explore: "Explore",
       items: {
         domains: { title: "Private Domains", desc: "Register and transfer across hundreds of TLDs with WHOIS privacy included on eligible extensions.", price: "live per-TLD pricing" },
         dns: { title: "DNS Management", desc: "Full records manager with fast propagation. Point anywhere; move away whenever you like.", price: "included with every domain" },
-        hosting: { title: "Offshore cPanel Hosting", desc: "The control panel you already know, served from a privacy-respecting jurisdiction.", price: "monthly or annual" },
+        hosting: { title: "Offshore cPanel Hosting", desc: "The control panel you already know, served from a privacy-respecting jurisdiction.", price: "7 days or monthly" },
         vps: { title: "Offshore VPS", desc: "Linux servers with full root access, deployed in privacy-respecting jurisdictions in seconds.", price: "from $18/mo" },
         rdp: { title: "Private RDP", desc: "Windows desktops you administer yourself. Reachable from anywhere, owned by you.", price: "from $27/mo" },
-        email: { title: "Private Email", desc: "Mailboxes on your own domain, TLS in transit, IMAP/SMTP with any client.", price: "per mailbox" },
         api: { title: "Developer API", desc: "Domains, DNS, servers and wallet — every dashboard action, available as an authenticated endpoint.", price: "included with your account" },
       },
     },
@@ -162,7 +160,7 @@ export const siteEn = {
       { title: "Privacy-respecting jurisdiction", desc: "Accounts are served from infrastructure in privacy-respecting jurisdictions. You know where your site lives." },
       { title: "TLS auto-issued", desc: "Certificates are issued and renewed automatically for every site on your account." },
       { title: "Daily backups", desc: "Automatic backups so you can restore in a click — and export whenever you like." },
-      { title: "Paid from your wallet", desc: "Monthly or annual plans debited from your prepaid balance. No card kept on file for renewals." },
+      { title: "Paid from your wallet", desc: "7-day or monthly plans debited from your prepaid balance. No card kept on file for renewals." },
       { title: "Mail on your domain", desc: "Mailboxes, forwarders and spam filtering on your own domain, included with hosting." },
     ],
     monthly: "Monthly",
@@ -339,7 +337,6 @@ export const siteEn = {
         hosting: "cPanel hosting",
         vps: "Offshore VPS",
         rdp: "Private RDP",
-        email: "Private Email",
         api: "Developer API",
         wallet: "Wallet",
         rewards: "Loyalty rewards",
@@ -353,7 +350,7 @@ export const siteEn = {
   },
 
   footer: {
-    tagline: "Offshore hosting, private by default. Domains, DNS, servers and email from privacy-respecting jurisdictions — paid from a prepaid wallet.",
+    tagline: "Offshore hosting, private by default. Domains, DNS and servers from privacy-respecting jurisdictions — paid from a prepaid wallet.",
     products: "Products",
     company: "Company",
     support: "Support",
@@ -363,7 +360,6 @@ export const siteEn = {
       hosting: "Offshore cPanel Hosting",
       vps: "Offshore VPS",
       rdp: "Private RDP",
-      email: "Private Email",
       api: "Developer API",
       pricing: "Pricing",
       rewards: "Loyalty Rewards",

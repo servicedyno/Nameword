@@ -63,7 +63,6 @@ const Footer = () => {
             <NavLink to="/hosting" className={linkCls}>{s.footer.links.hosting}</NavLink>
             <NavLink to="/vps" className={linkCls}>{s.footer.links.vps}</NavLink>
             <NavLink to="/rdp" className={linkCls}>{s.footer.links.rdp}</NavLink>
-            <NavLink to="/email" className={linkCls}>{s.footer.links.email}</NavLink>
             <NavLink to="/api" className={linkCls}>{s.footer.links.api}</NavLink>
           </div>
 

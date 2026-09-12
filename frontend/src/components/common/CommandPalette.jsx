@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 import {
   LuSearch, LuArrowRight, LuLayoutDashboard, LuGlobe, LuNetwork,
-  LuServer, LuCloud, LuMonitor, LuMail, LuCode, LuWallet, LuGift, LuRepeat,
+  LuServer, LuCloud, LuMonitor, LuCode, LuWallet, LuGift, LuRepeat,
   LuReceipt, LuSettings, LuUser, LuLifeBuoy, LuPlus,
 } from "react-icons/lu";
 
@@ -17,7 +17,6 @@ const ITEMS = [
   { key: "hosting", to: "/hosting", icon: LuServer, group: "goto", keywords: "hosting cpanel websites" },
   { key: "vps", to: "/vps", icon: LuCloud, group: "goto", keywords: "server vps cloud instance offshore linux root" },
   { key: "rdp", to: "/rdp", icon: LuMonitor, group: "goto", keywords: "remote desktop rdp windows" },
-  { key: "email", to: "/email", icon: LuMail, group: "goto", keywords: "email mailbox inbox private" },
   { key: "api", to: "/api", icon: LuCode, group: "goto", keywords: "api developer key automation" },
   { key: "wallet", to: "/wallet", icon: LuWallet, group: "billing", keywords: "wallet balance funds prepaid" },
   { key: "rewards", to: "/wallet#rewards", icon: LuGift, group: "billing", keywords: "rewards points loyalty tier badge" },

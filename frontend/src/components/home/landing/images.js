@@ -10,6 +10,5 @@ export const LANDING_IMG = {
   hosting: "/img/landing/hosting.webp",
   vps: "/img/landing/vps.webp",
   rdp: "/img/landing/rdp.webp",
-  email: "/img/landing/email.webp",
   api: "/img/landing/api.webp",
 };

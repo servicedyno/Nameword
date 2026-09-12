@@ -18,7 +18,6 @@ import OrderSuccess from "../pages/checkout/OrderSuccess";
 import Hosting from "../pages/HostingNomadly";
 import VPS from "../pages/VPS";
 import RDP from "../pages/RDP";
-import Email from "../pages/Email";
 import Api from "../pages/Api";
 import Pricing from "../pages/Pricing";
 import DomainsNomadly from "../pages/DomainsNomadly";
@@ -115,7 +114,6 @@ function Router() {
       />
       <Route path="/vps" element={<VPS />} />
       <Route path="/rdp" element={<RDP />} />
-      <Route path="/email" element={<Email />} />
       <Route path="/api" element={<Api />} />
       <Route path="/pricing" element={<Pricing />} />
 

@@ -1,6 +1,6 @@
 # ONGOING TASK — Remove "Private Email" product + fix cPanel billing wording
 
-Status: **NOT STARTED** (only exploration done; no code changed yet).
+Status: **DONE** (completed & verified 2026-09-12 — see "COMPLETION" note at bottom).
 Date: 2026-06. Language: respond in English.
 
 ## User request (verbatim)
@@ -110,3 +110,18 @@ Do these single-line / phrase edits per file:
 7. Toggle EN/FR/ES to confirm all three locales render without the email item and with correct cPanel wording.
 
 This is a small, focused change set — self-test with a couple of screenshots is sufficient (no need for full testing_agent unless something breaks).
+
+---
+
+## COMPLETION (2026-09-12)
+All edits applied and verified.
+
+Components:
+- Deleted `pages/Email.jsx`; removed its import + `<Route path="/email">` from `routes/Router.jsx` (now hits catch-all -> redirects to `/`).
+- Removed the Private Email entry + unused `LuMail` import from: `Navbar.jsx` (PRODUCT_KEYS + comment), `Products.jsx` (landing grid), `CommandPalette.jsx`. Removed the footer `/email` NavLink from `Footer.jsx` (kept `LuMail` — still used by the `mailto:hello@nameword.com` link). Removed `email` from `landing/images.js`.
+
+Locales (en/fr/es): removed `nav.items.email`, `home.products.items.email`, `app.palette.items.email`, `footer.links.email`; dropped "private email" from `meta.description`, `home.subheading`, `footer.tagline`; product count lead Seven/Sept/Siete -> Six/Six/Seis; hosting card `price` -> "7 days or monthly" / "7 jours ou mensuel" / "7 días o mensual"; `hosting.features` "Paid from your wallet" billing copy -> "7-day/7 jours/7 días" wording.
+
+Left as agreed (note in doc): the top-level `email: {}` marketing block AND the whole `hosting: {}` marketing section are DEAD config — NO component references `t.site.hosting` anymore (current `/hosting` renders the Nomadly storefront `HostingNomadly.jsx` using live reseller-plan features, not this copy). Also kept: genuine cPanel "Mail on your domain" feature, security bullet mentioning "mailbox", DNS MX demo, legal text, and all account/auth email.
+
+Verified (screenshots, EN + ES): landing Products grid = 6 cards (5 products + API), no Email card; cPanel card badge reads "7 DAYS OR MONTHLY" / "7 DÍAS O MENSUAL"; Products dropdown + footer have no Email; `/email` redirects to `/`; no "private email" text on site. ESLint clean on all edited files.

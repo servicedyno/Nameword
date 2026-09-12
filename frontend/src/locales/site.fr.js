@@ -3,7 +3,7 @@ export const siteFr = {
   meta: {
     title: "Nameword — Hébergement offshore, privé par défaut",
     description:
-      "Enregistrez des domaines privés, gérez votre DNS et déployez VPS, RDP, hébergement cPanel et e-mail privé offshore depuis des juridictions respectueuses de la vie privée.",
+      "Enregistrez des domaines privés, gérez votre DNS et déployez VPS, RDP et hébergement cPanel offshore depuis des juridictions respectueuses de la vie privée.",
   },
 
   nav: {
@@ -22,7 +22,6 @@ export const siteFr = {
       hosting: { title: "Hébergement cPanel Offshore", desc: "Panneau familier, juridiction respectueuse de la vie privée" },
       vps: { title: "VPS Offshore", desc: "Accès root dans des juridictions respectueuses de la vie privée" },
       rdp: { title: "RDP Privé", desc: "Des bureaux Windows sous votre contrôle" },
-      email: { title: "E-mail Privé", desc: "Des boîtes sur votre propre domaine" },
       api: { title: "API Développeur", desc: "Automatisez tout ce que fait le tableau de bord" },
     },
   },
@@ -31,7 +30,7 @@ export const siteFr = {
     eyebrow: "Offshore · Privé · À vous",
     heading: "Hébergement offshore, privé par défaut.",
     subheading:
-      "Enregistrez des domaines, gérez votre DNS et déployez serveurs, hébergement cPanel et e-mail privé depuis des juridictions respectueuses de la vie privée — collecte de données minimale, confidentialité WHOIS incluse et un portefeuille prépayé qui ne vous suit pas partout.",
+      "Enregistrez des domaines, gérez votre DNS et déployez serveurs et hébergement cPanel depuis des juridictions respectueuses de la vie privée — collecte de données minimale, confidentialité WHOIS incluse et un portefeuille prépayé qui ne vous suit pas partout.",
     tabs: { search: "Enregistrer", transfer: "Transférer" },
     placeholder: "votrenom.com",
     searchBtn: "Rechercher en privé",
@@ -71,15 +70,14 @@ export const siteFr = {
     products: {
       eyebrow: "La plateforme",
       title: "Tout ce qu'il vous faut. Rien qui vous observe.",
-      lead: "Sept produits ciblés, un portefeuille prépayé, un tableau de bord discret.",
+      lead: "Six produits ciblés, un portefeuille prépayé, un tableau de bord discret.",
       explore: "Découvrir",
       items: {
         domains: { title: "Domaines Privés", desc: "Enregistrez et transférez sur des centaines de TLD, confidentialité WHOIS incluse sur les extensions éligibles.", price: "tarifs par TLD en direct" },
         dns: { title: "Gestion DNS", desc: "Gestionnaire d'enregistrements complet à propagation rapide. Pointez où vous voulez ; partez quand vous voulez.", price: "inclus avec chaque domaine" },
-        hosting: { title: "Hébergement cPanel Offshore", desc: "Le panneau que vous connaissez déjà, servi depuis une juridiction respectueuse de la vie privée.", price: "mensuel ou annuel" },
+        hosting: { title: "Hébergement cPanel Offshore", desc: "Le panneau que vous connaissez déjà, servi depuis une juridiction respectueuse de la vie privée.", price: "7 jours ou mensuel" },
         vps: { title: "VPS Offshore", desc: "Serveurs Linux avec accès root complet, déployés dans des juridictions respectueuses de la vie privée en quelques secondes.", price: "dès 18 $/mois" },
         rdp: { title: "RDP Privé", desc: "Des bureaux Windows que vous administrez vous-même. Accessibles partout, à vous.", price: "dès 27 $/mois" },
-        email: { title: "E-mail Privé", desc: "Boîtes sur votre propre domaine, TLS en transit, IMAP/SMTP avec n'importe quel client.", price: "par boîte" },
         api: { title: "API Développeur", desc: "Domaines, DNS, serveurs et portefeuille — chaque action du tableau de bord disponible en endpoint authentifié.", price: "incluse avec votre compte" },
       },
     },
@@ -145,7 +143,7 @@ export const siteFr = {
       { title: "Juridiction respectueuse de la vie privée", desc: "Les comptes sont servis depuis une infrastructure dans des juridictions respectueuses de la vie privée. Vous savez où vit votre site." },
       { title: "TLS automatique", desc: "Les certificats sont émis et renouvelés automatiquement pour chaque site de votre compte." },
       { title: "Sauvegardes quotidiennes", desc: "Sauvegardes automatiques pour restaurer en un clic — et exporter quand vous voulez." },
-      { title: "Payé depuis votre portefeuille", desc: "Offres mensuelles ou annuelles débitées de votre solde prépayé. Aucune carte conservée pour les renouvellements." },
+      { title: "Payé depuis votre portefeuille", desc: "Offres de 7 jours ou mensuelles débitées de votre solde prépayé. Aucune carte conservée pour les renouvellements." },
       { title: "E-mail sur votre domaine", desc: "Boîtes, redirections et filtrage antispam sur votre propre domaine, inclus avec l'hébergement." },
     ],
     monthly: "Mensuel",
@@ -322,7 +320,6 @@ export const siteFr = {
         hosting: "Hébergement cPanel",
         vps: "VPS Offshore",
         rdp: "RDP Privé",
-        email: "E-mail Privé",
         api: "API Développeur",
         wallet: "Portefeuille",
         rewards: "Récompenses de fidélité",
@@ -336,7 +333,7 @@ export const siteFr = {
   },
 
   footer: {
-    tagline: "Hébergement offshore, privé par défaut. Domaines, DNS, serveurs et e-mail depuis des juridictions respectueuses de la vie privée — payés depuis un portefeuille prépayé.",
+    tagline: "Hébergement offshore, privé par défaut. Domaines, DNS et serveurs depuis des juridictions respectueuses de la vie privée — payés depuis un portefeuille prépayé.",
     products: "Produits",
     company: "Entreprise",
     support: "Support",
@@ -346,7 +343,6 @@ export const siteFr = {
       hosting: "Hébergement cPanel Offshore",
       vps: "VPS Offshore",
       rdp: "RDP Privé",
-      email: "E-mail Privé",
       api: "API Développeur",
       pricing: "Tarifs",
       rewards: "Récompenses de fidélité",

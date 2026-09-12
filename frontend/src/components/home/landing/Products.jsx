@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { LuGlobe, LuNetwork, LuServer, LuCloud, LuMonitor, LuMail, LuCode, LuArrowRight } from "react-icons/lu";
+import { LuGlobe, LuNetwork, LuServer, LuCloud, LuMonitor, LuCode, LuArrowRight } from "react-icons/lu";
 import { useLanguage } from "../../../hooks/useLanguage";
 import { useAuth } from "../../../hooks/useAuth";
 import Reveal from "./Reveal";
@@ -11,7 +11,6 @@ const PRODUCTS = [
   { key: "hosting", to: "/hosting", icon: LuServer, img: LANDING_IMG.hosting },
   { key: "vps", to: "/vps", icon: LuCloud, img: LANDING_IMG.vps },
   { key: "rdp", to: "/rdp", icon: LuMonitor, img: LANDING_IMG.rdp },
-  { key: "email", to: "/email", icon: LuMail, img: LANDING_IMG.email },
 ];
 const API = { key: "api", to: "/api", icon: LuCode, img: LANDING_IMG.api };
 
