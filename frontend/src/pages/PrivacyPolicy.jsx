@@ -10,9 +10,6 @@ const PrivacyPolicy = () => {
                 <p>
                     {t.privacy.intro || "At NameWord, we respect your privacy and are committed to protecting your personal data."}
                 </p>
-                <p className="!mt-4 rounded-xl border border-amber-400/40 bg-amber-50 px-4 py-3 !text-13 !font-medium text-amber-800 dark:bg-amber-500/10 dark:text-amber-200" data-testid="legal-placeholder-note">
-                    {t.site.legal.placeholderNote}
-                </p>
 
                 <h2>{t.privacy.infoWeCollect || "1. Information We Collect"}</h2>
                 <p>

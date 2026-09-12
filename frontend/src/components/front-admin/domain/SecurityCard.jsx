@@ -524,7 +524,7 @@ const SecurityCard = ({
         });
       }
     },
-    [addingToCart, navigate, showAlert, cartCtx, t]
+    [addingToCart, showAlert, cartCtx, t]
   );
 
   const handleFetchAuthCode = useCallback(async () => {
@@ -808,7 +808,6 @@ const SecurityCard = ({
             domainName={domainName}
             planOptions={[]}
             initialPlanId="full"
-            expirationDate={modalExpirationDate}
             onCheckout={handlePrivacyCheckout}
             isCheckoutLoading={isPrivacyCheckoutLoading}
           />

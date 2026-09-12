@@ -365,8 +365,6 @@ export const siteFr = {
       "Nameword est conçu pour fonctionner avec le moins possible de vos données personnelles. Cette politique explique ce que nous collectons pour opérer domaines, DNS, hébergement, serveurs et e-mail, pourquoi nous en avons besoin et comment vous gardez le contrôle.",
     termsIntro:
       "Ces conditions régissent votre utilisation des services de domaines, DNS, hébergement, serveurs et e-mail de Nameword. Elles sont écrites pour être lues : langage clair d'abord, précision juridique là où elle compte.",
-    placeholderNote:
-      "À confirmer par le propriétaire : société exploitante et juridiction, durées de conservation des journaux et des données, contact abus et retrait. Le texte utilise des formulations prudentes jusqu'à confirmation.",
   },
 
   common: {

@@ -10,9 +10,6 @@ const TermsAndConditions = () => {
                 <p>
                     {t.terms.intro || "By accessing or using NameWord, you agree to these Terms and Conditions. If you do not agree, please do not use our services."}
                 </p>
-                <p className="!mt-4 rounded-xl border border-amber-400/40 bg-amber-50 px-4 py-3 !text-13 !font-medium text-amber-800 dark:bg-amber-500/10 dark:text-amber-200" data-testid="legal-placeholder-note">
-                    {t.site.legal.placeholderNote}
-                </p>
 
                 <h2>{t.terms.services || "1. Services"}</h2>
                 <p>

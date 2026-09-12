@@ -380,8 +380,6 @@ export const siteEn = {
       "Nameword is built to run with as little of your personal data as possible. This policy explains what we collect to operate domains, DNS, hosting, servers and email for you, why we need it, and how you stay in control.",
     termsIntro:
       "These terms govern your use of Nameword's domain, DNS, hosting, server and email services. They are written to be read: plain language first, legal precision where it matters.",
-    placeholderNote:
-      "Owner to confirm: operating company and jurisdiction, log and data-retention periods, abuse and takedown contact. Wording below uses safe defaults until confirmed.",
   },
 
   common: {
