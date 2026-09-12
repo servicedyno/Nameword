@@ -1,4 +1,3 @@
-import { IoMdCall } from "react-icons/io";
 import { MdOutlineEmail } from "react-icons/md";
 import { IoChatboxOutline } from "react-icons/io5";
 import { useLanguage } from "../../../hooks/useLanguage";
@@ -9,24 +8,14 @@ const NeedHelp = () => {
 
     return (
         <div className='p-8 min-h-64 flex items-center justify-center'>
-            <div className={`grid ${showChat ? 'md:grid-cols-3' : 'md:grid-cols-2'} grid-cols-1 lg:gap-12 md:gap-8 gap-8`}>
-                <div className='flex flex-col items-center text-center'>
-                    <div className="rounded-icon-bg">
-                        <IoMdCall size={25} className='text-darkbtn dark:text-white' />
-                    </div>
-                    <div className="space-y-1 need-help">
-                        <p className="desc">{t.helpSupport?.needHelp?.callUs || "Call us"}</p>
-                        <a href="tel:+18928444531" className="main-text">+1 892 8444-531 </a>
-                        <p className="desc">{t.helpSupport?.needHelp?.callHours || "Mon-Fri, 9 AM - 5 PM (ET)"}</p>
-                    </div>
-                </div>
+            <div className={`grid ${showChat ? 'md:grid-cols-2' : 'md:grid-cols-1'} grid-cols-1 lg:gap-12 md:gap-8 gap-8`}>
                 <div className='flex flex-col items-center text-center'>
                     <div className="rounded-icon-bg">
                         <MdOutlineEmail  size={25} className='text-darkbtn dark:text-white' />
                     </div>
                     <div className="space-y-1 need-help">
                         <p className="desc">{t.helpSupport?.needHelp?.emailUs || "Email us"}</p>
-                        <p className="main-text">info@nameword.com</p>
+                        <a href="mailto:hello@nameword.com" className="main-text">hello@nameword.com</a>
                         <p className="desc">{t.helpSupport?.needHelp?.emailResponse || "We usually respond within 24 hours."}</p>
                     </div>
                 </div>

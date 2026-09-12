@@ -1,12 +1,10 @@
-import { etherium, AMEX } from "../common/icons";
+import { etherium } from "../common/icons";
 import BrandLogo from "../common/BrandLogo";
-import { FaXTwitter, FaBitcoin, FaCcVisa } from "react-icons/fa6";
+import { FaXTwitter, FaBitcoin } from "react-icons/fa6";
 import { LuMail, LuMapPin, LuShieldCheck } from "react-icons/lu";
 import { NavLink, useNavigate, useLocation } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../hooks/useAuth";
-import { BiLogoMastercard } from "react-icons/bi";
-import { SiSepa } from "react-icons/si";
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -65,7 +63,7 @@ const Footer = () => {
           <div>
             <p className={headCls}>{s.footer.products}</p>
             <a href="/home" onClick={handleDomainSearch} className={linkCls}>{s.footer.links.domains}</a>
-            <NavLink to={protectedTo("/dns-management")} onClick={remember("/dns-management")} className={linkCls}>{s.footer.links.dns}</NavLink>
+            <NavLink to={protectedTo("/dns-manager")} onClick={remember("/dns-manager")} className={linkCls}>{s.footer.links.dns}</NavLink>
             <NavLink to="/hosting" className={linkCls}>{s.footer.links.hosting}</NavLink>
             <NavLink to="/vps" className={linkCls}>{s.footer.links.vps}</NavLink>
             <NavLink to="/rdp" className={linkCls}>{s.footer.links.rdp}</NavLink>
@@ -102,10 +100,6 @@ const Footer = () => {
             <div className="flex items-center gap-2.5 text-ink-soft dark:text-gray-400">
               <span aria-label="Bitcoin" title="Bitcoin" className="social-link"><FaBitcoin /></span>
               <span aria-label="Ethereum" title="Ethereum" className="social-link"><img src={etherium} alt="Ethereum" className="dark-mode h-6 w-6" /></span>
-              <span aria-label="Mastercard" title="Mastercard" className="social-link"><BiLogoMastercard /></span>
-              <span aria-label="Visa" title="Visa" className="social-link"><FaCcVisa /></span>
-              <span aria-label="Amex" title="American Express" className="social-link"><img src={AMEX} alt="Amex" className="dark-mode h-6 w-6" /></span>
-              <span aria-label="SEPA" title="SEPA" className="social-link"><SiSepa /></span>
             </div>
           </div>
         </div>

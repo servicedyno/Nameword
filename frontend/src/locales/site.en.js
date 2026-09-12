@@ -111,7 +111,7 @@ export const siteEn = {
       title: "Live in three steps",
       items: [
         { title: "Pick your name & jurisdiction", desc: "Search a domain and choose an offshore, privacy-first jurisdiction. Private WHOIS is included." },
-        { title: "Fund your wallet with crypto", desc: "Top up once with crypto or card. Everything is paid from your balance — no recurring card pulls." },
+        { title: "Fund your wallet with crypto", desc: "Top up once with crypto. Everything is paid from your balance — no recurring charges." },
         { title: "Deploy and hold the keys", desc: "Point DNS, deploy cPanel, VPS or RDP, and keep full root. Your content stays up, yours to move anytime." },
       ],
     },
@@ -226,7 +226,7 @@ export const siteEn = {
       { q: "Can I use a domain I already own?", a: "Yes. Point your MX records at the values we give you — or keep the domain elsewhere and only host mail with us." },
       { q: "Which mail clients work?", a: "Anything that speaks IMAP/SMTP: Thunderbird, Apple Mail, Outlook, K-9, FairEmail and more. There's also webmail." },
       { q: "Do you read or scan my mail?", a: "Automated spam and malware filtering runs on incoming mail. We don't use your mail for advertising or profiling." },
-      { q: "How do I pay?", a: "Mailboxes are debited from your prepaid wallet monthly. Top up by card or crypto; nothing is kept on file for renewals." },
+      { q: "How do I pay?", a: "Mailboxes are debited from your prepaid wallet monthly. Top up with crypto; nothing is kept on file for renewals." },
     ],
     ctaTitle: "An inbox that keeps to itself",
     ctaLead: "Set up private email on your domain in minutes and pay from your wallet.",
