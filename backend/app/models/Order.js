@@ -26,6 +26,13 @@ const orderItemSchema = new mongoose.Schema(
     refunded_usd: { type: Number, default: 0 },
     message: { type: String },
     upstream: { type: mongoose.Schema.Types.Mixed },
+    // --- Ownership / management identifiers captured at provisioning time (C1) ---
+    // These let every "my X" view and management action be scoped to the buyer,
+    // instead of trusting the provider's account-wide list.
+    provider_id: { type: String },        // vps/rdp: upstream resource id (live mode)
+    provider_username: { type: String },  // hosting: cPanel username (live mode)
+    panel_url: { type: String },           // hosting: control panel URL (if provided)
+    server_ip: { type: String },           // hosting/server: IP (if provided)
   },
   { _id: false }
 );

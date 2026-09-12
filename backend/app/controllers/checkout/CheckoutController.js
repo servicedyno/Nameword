@@ -4,6 +4,7 @@ const Transaction = require("../../models/Transaction");
 const Order = require("../../models/Order");
 const User = require("../../models/User");
 const RewardPointLog = require("../../models/RewardPointLog");
+const ownership = require("../../services/ownership");
 const { createPaymentRecord } = require("../../utils/paymentHelper");
 
 // ---- Reward points config -------------------------------------------------
@@ -431,6 +432,10 @@ class CheckoutController {
         item.status = result.status;
         item.message = result.message;
         item.upstream = result.upstream;
+        // Capture upstream identifiers so every "my X" view + management action
+        // can be ownership-scoped to this buyer (C1). In dry_run these stay empty
+        // and a stable synthetic ref (`<orderId>:<index>`) is used instead.
+        Object.assign(item, ownership.extractProviderIds(item.type, result.upstream));
         if (result.status === "failed") {
           // Refund a failed item proportionally across the cash + points it was paid with.
           const cashShare =
