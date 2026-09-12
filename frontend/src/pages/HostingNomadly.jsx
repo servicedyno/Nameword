@@ -22,6 +22,7 @@ import {
   FiPlayCircle,
   FiServer,
   FiStar,
+  FiSettings,
 } from "react-icons/fi";
 
 const money = (n) =>
@@ -90,6 +91,16 @@ export default function HostingNomadly() {
   const [busyUser, setBusyUser] = useState(null);
   const [confirmUser, setConfirmUser] = useState(null);
   const [creds, setCreds] = useState(null);
+
+  // Manage panel (4d: details/usage, upgrade, addon domains, Visitor Captcha)
+  const [manage, setManage] = useState(null); // { user, domain, plan_id }
+  const [manageData, setManageData] = useState(null); // hosting details
+  const [manageAddons, setManageAddons] = useState(null);
+  const [manageCaptcha, setManageCaptcha] = useState(null);
+  const [manageLoading, setManageLoading] = useState(false);
+  const [manageBusy, setManageBusy] = useState(null); // 'upgrade' | 'addon' | 'captcha'
+  const [addonInput, setAddonInput] = useState("");
+  const [upgradePlan, setUpgradePlan] = useState("");
 
   const loadPlans = useCallback(async () => {
     setPlansLoading(true);
@@ -242,6 +253,91 @@ export default function HostingNomadly() {
       setCreds({ user, _error: true, ...(data || { message: "Could not fetch credentials." }) });
     } finally {
       setBusyUser(null);
+    }
+  };
+
+  // ---- Manage panel (4d) ----
+  const openManage = async (a) => {
+    const user = a.username;
+    setManage({ user, domain: a.domain || null, plan_id: a.plan_id || null });
+    setManageData(null);
+    setManageAddons(null);
+    setManageCaptcha(null);
+    setUpgradePlan("");
+    setAddonInput("");
+    setManageLoading(true);
+    try {
+      const [details, addons] = await Promise.all([
+        resellerAPI.getHostingDetails(user).catch(() => null),
+        resellerAPI.listHostingAddons(user).catch(() => null),
+      ]);
+      setManageData(details);
+      setManageAddons(addons);
+      // Captcha status only makes sense for a domain (Gold plan exclusive).
+      if (a.domain) {
+        try {
+          setManageCaptcha(await resellerAPI.getHostingCaptcha(a.domain));
+        } catch { /* not eligible / not gold — leave null */ }
+      }
+    } finally {
+      setManageLoading(false);
+    }
+  };
+  const closeManage = () => {
+    setManage(null);
+    setManageData(null);
+    setManageAddons(null);
+    setManageCaptcha(null);
+  };
+  const doUpgrade = async () => {
+    if (!manage || !upgradePlan) return;
+    setManageBusy("upgrade");
+    try {
+      const res = await resellerAPI.upgradeHosting(manage.user, upgradePlan);
+      if (res?.mode === "dry_run") {
+        showAlert("Test mode — upgrades apply once a live account is provisioned.", { type: "success" });
+      } else {
+        showAlert(`Upgraded${res?.charged_usd != null ? ` — charged ${money(res.charged_usd)}` : ""}.`, { type: "success" });
+        window.dispatchEvent(new Event("wallet:updated"));
+      }
+      loadAccounts();
+      openManage({ username: manage.user, domain: manage.domain, plan_id: upgradePlan });
+    } catch (err) {
+      const d = err?.response?.data;
+      showAlert(d?.message || "Upgrade failed.", { type: "fail" });
+    } finally {
+      setManageBusy(null);
+    }
+  };
+  const doAddAddon = async () => {
+    const d = addonInput.trim().toLowerCase();
+    if (!manage || !d) return;
+    setManageBusy("addon");
+    try {
+      await resellerAPI.addHostingAddon(manage.user, d);
+      showAlert(`Addon domain ${d} attached.`, { type: "success" });
+      setAddonInput("");
+      setManageAddons(await resellerAPI.listHostingAddons(manage.user).catch(() => manageAddons));
+    } catch (err) {
+      const e = err?.response?.data;
+      showAlert(e?.message || "Could not add the addon domain.", { type: "fail" });
+    } finally {
+      setManageBusy(null);
+    }
+  };
+  const toggleCaptcha = async () => {
+    if (!manage?.domain) return;
+    const next = !(manageCaptcha?.visitor_captcha_enabled);
+    setManageBusy("captcha");
+    try {
+      const res = await resellerAPI.setHostingCaptcha(manage.domain, next);
+      setManageCaptcha((c) => ({ ...(c || {}), visitor_captcha_enabled: res?.visitor_captcha_enabled ?? next }));
+      showAlert(next ? "Visitor Captcha turned on." : "Visitor Captcha turned off.", { type: "success" });
+    } catch (err) {
+      const e = err?.response?.data;
+      showAlert(e?.message || "Visitor Captcha is only available on a live Gold-plan domain.", { type: "fail" });
+    } finally {
+      setManageBusy(null);
     }
   };
 
@@ -431,6 +527,7 @@ export default function HostingNomadly() {
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <button disabled={busyUser === user + "login"} onClick={() => doLogin(user)} title="Open cPanel" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-gray-800 disabled:opacity-50"><FiExternalLink size={16} /> <span className="text-sm">Login</span></button>
+                      <button onClick={() => openManage(a)} title="Manage plan, addons & captcha" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800" data-testid={`hosting-manage-${user}`}><FiSettings size={16} /> <span className="text-sm">Manage</span></button>
                       <button disabled={busyUser === user + "creds"} onClick={() => revealCreds(user)} title="Credentials" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800 disabled:opacity-50"><FiLock size={16} /> <span className="text-sm">Credentials</span></button>
                       {a.suspended ? (
                         <button disabled={busyUser === user + "unsuspend"} onClick={() => doUnsuspend(user)} title="Unsuspend" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-green-600 hover:bg-green-50 dark:hover:bg-gray-800 disabled:opacity-50"><FiPlayCircle size={16} /></button>
@@ -538,6 +635,108 @@ export default function HostingNomadly() {
                     </div>
                   )}
                   {creds.note && <p className="text-xs text-secondary dark:text-gray-400 pt-1 border-t border-lightgray dark:border-gray-800 mt-2">{creds.note}</p>}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage modal (4d): details/usage, upgrade, addon domains, Visitor Captcha */}
+      {manage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeManage}>
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="hosting-manage-modal">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-primary dark:text-white">Manage {manage.domain || manage.user}</h3>
+              <button onClick={closeManage} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
+            </div>
+            <div className="px-6 py-5 space-y-5 text-sm">
+              {manageLoading ? (
+                <p className="text-secondary dark:text-gray-400 flex items-center gap-2"><FiRefreshCw className="animate-spin" size={15} /> Loading account…</p>
+              ) : (
+                <>
+                  {manageData?.mode === "dry_run" && (
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-amber-800 dark:text-amber-200">
+                      <FiAlertTriangle className="mt-0.5 shrink-0" size={15} />
+                      <span className="text-xs">Test mode — plan, addons and captcha changes apply once a live account is provisioned.</span>
+                    </div>
+                  )}
+
+                  {/* Overview */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Row label="Plan" value={String(manageData?.plan || manage.plan_id || "—").replace(/-/g, " ")} />
+                    <Row label="Status" value={manageData?.suspended ? "Suspended" : (manageData?.status === "test_mode" ? "Test mode" : "Active")} />
+                    <Row label="Expires" value={manageData?.expires_at ? new Date(manageData.expires_at).toLocaleDateString() : "—"} />
+                    <Row label="Server IP" value={manageData?.deliverables?.server_ip || "—"} />
+                  </div>
+                  {manageData?.usage && (
+                    <div>
+                      <p className="text-xs font-medium text-secondary dark:text-gray-400 mb-1">Disk usage</p>
+                      <div className="h-2 rounded-full bg-lightgray dark:bg-gray-800 overflow-hidden">
+                        <div className="h-full bg-brand-600 dark:bg-brand-500" style={{ width: `${Math.min(100, Math.round(manageData.usage.disk_used_pct || 0))}%` }} />
+                      </div>
+                      <p className="text-xs text-secondary dark:text-gray-400 mt-1">{Math.round(manageData.usage.disk_used_mb || 0)} MB used ({Math.round(manageData.usage.disk_used_pct || 0)}%)</p>
+                    </div>
+                  )}
+
+                  {/* Upgrade */}
+                  <div className="border-t border-lightgray dark:border-gray-800 pt-4">
+                    <p className="font-medium text-primary dark:text-white mb-2">Upgrade plan</p>
+                    <div className="flex items-center gap-2">
+                      <select value={upgradePlan} onChange={(e) => setUpgradePlan(e.target.value)} className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="hosting-upgrade-select">
+                        <option value="">Choose a plan…</option>
+                        {plans.filter((p) => p.plan_id !== (manageData?.plan_id || manage.plan_id)).map((p) => (
+                          <option key={p.plan_id} value={p.plan_id}>{p.name} — {money(p.price_usd)}</option>
+                        ))}
+                      </select>
+                      <button onClick={doUpgrade} disabled={!upgradePlan || manageBusy === "upgrade"} className="nw-btn-primary nw-btn-sm disabled:opacity-50" data-testid="hosting-upgrade-btn">
+                        {manageBusy === "upgrade" ? "…" : "Upgrade"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Addon domains */}
+                  <div className="border-t border-lightgray dark:border-gray-800 pt-4">
+                    <p className="font-medium text-primary dark:text-white mb-2">Addon domains {manageAddons?.addon_quota != null && <span className="text-xs text-secondary dark:text-gray-400">(quota: {String(manageAddons.addon_quota)})</span>}</p>
+                    {Array.isArray(manageAddons?.addons) && manageAddons.addons.length > 0 ? (
+                      <ul className="mb-2 space-y-1">
+                        {manageAddons.addons.map((ad, i) => (
+                          <li key={i} className="flex items-center gap-2 text-secondary dark:text-gray-300"><FiGlobe size={13} /> {ad.domain || ad}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-secondary dark:text-gray-400 mb-2">No addon domains yet.</p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input value={addonInput} onChange={(e) => setAddonInput(e.target.value)} placeholder="blog.example.com" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="hosting-addon-input" />
+                      <button onClick={doAddAddon} disabled={!addonInput.trim() || manageBusy === "addon"} className="nw-btn-secondary nw-btn-sm disabled:opacity-50" data-testid="hosting-addon-btn">
+                        {manageBusy === "addon" ? "…" : "Add"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visitor Captcha (Gold only) */}
+                  {manage.domain && (
+                    <div className="border-t border-lightgray dark:border-gray-800 pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-primary dark:text-white flex items-center gap-1.5"><FiShield size={15} /> Visitor Captcha + Geo</p>
+                          <p className="text-xs text-secondary dark:text-gray-400 mt-0.5">Golden Anti-Red exclusive · requires the domain on Cloudflare.</p>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={!!manageCaptcha?.visitor_captcha_enabled}
+                          disabled={manageBusy === "captcha"}
+                          onClick={toggleCaptcha}
+                          data-testid="hosting-captcha-toggle"
+                          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${manageCaptcha?.visitor_captcha_enabled ? "bg-brand-600 dark:bg-brand-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                        >
+                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${manageCaptcha?.visitor_captcha_enabled ? "translate-x-5" : "translate-x-0.5"}`} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

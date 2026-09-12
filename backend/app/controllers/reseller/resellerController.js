@@ -268,16 +268,34 @@ const registerDomain = (req, res) =>
   forward(res, nomadly.post("/domains/register", req.body || {}));
 
 // ---------- DNS (free) ----------
+// C1/4c: DNS records + registrar nameservers are scoped to a domain the buyer
+// actually owns (registered through their account). This closes the gap where a
+// signed-in user could read/write DNS for ANY domain in the reseller account.
+async function withOwnedDomain(req, res, fn) {
+  const entry = await ownership.findOwnedDomain(userId(req), req.params.domain);
+  if (!entry) return forbidden(res, "domain");
+  return fn(entry);
+}
 const listDnsRecords = (req, res) =>
-  forward(res, nomadly.get(`/dns/${enc(req.params.domain)}/records`));
+  withOwnedDomain(req, res, () =>
+    forward(res, nomadly.get(`/dns/${enc(req.params.domain)}/records`))
+  );
 const addDnsRecord = (req, res) =>
-  forward(res, nomadly.post(`/dns/${enc(req.params.domain)}/records`, req.body || {}));
+  withOwnedDomain(req, res, () =>
+    forward(res, nomadly.post(`/dns/${enc(req.params.domain)}/records`, req.body || {}))
+  );
 const updateDnsRecord = (req, res) =>
-  forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/records`, req.body || {}));
+  withOwnedDomain(req, res, () =>
+    forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/records`, req.body || {}))
+  );
 const deleteDnsRecord = (req, res) =>
-  forward(res, nomadly.delete(`/dns/${enc(req.params.domain)}/records`, { data: req.body || {} }));
+  withOwnedDomain(req, res, () =>
+    forward(res, nomadly.delete(`/dns/${enc(req.params.domain)}/records`, { data: req.body || {} }))
+  );
 const setNameservers = (req, res) =>
-  forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/nameservers`, req.body || {}));
+  withOwnedDomain(req, res, () =>
+    forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/nameservers`, req.body || {}))
+  );
 
 // ---------- cPanel Hosting ----------
 const getHostingPlans = (req, res) => forward(res, nomadly.get("/hosting/plans"));
@@ -367,6 +385,109 @@ const hostingCredentials = (req, res) =>
     })
   );
 
+// ---------- cPanel Hosting management (4d) ----------
+// Full account details: plan, expiry, addon quota/list + LIVE disk/bandwidth
+// usage (?usage=true). Ownership-gated; degrades to a friendly test-mode payload.
+const getHostingDetails = (req, res) =>
+  withOwnedHosting(
+    req,
+    res,
+    (u) => forward(res, nomadly.get(`/hosting/${enc(u)}`, { params: req.query })),
+    (entry) => ({
+      mode: "dry_run",
+      username: entry.ref,
+      domain: entry.item.domain || null,
+      plan: entry.item.plan_name || entry.item.plan_id || null,
+      plan_id: entry.item.plan_id || null,
+      price_usd: entry.item.price_usd ?? null,
+      duration_days: entry.item.duration_days || null,
+      suspended: false,
+      status: "test_mode",
+      expires_at: entry.item.expires_at || null,
+      deliverables: {
+        cpanel_username: entry.ref,
+        panel_url: entry.item.panel_url || null,
+        server_ip: entry.item.server_ip || null,
+        nameservers: entry.item.nameservers || [],
+      },
+      addon_quota: null,
+      addon_domain_count: 0,
+      addon_domains: [],
+      usage: null,
+      note: "Test mode — full account details and live usage are available once a live account is provisioned.",
+    })
+  );
+
+// Upgrade to a higher tier (wallet-billed upstream). In dry_run there is nothing
+// provisioned to upgrade, so we return a friendly test-mode note.
+const upgradeHosting = (req, res) =>
+  withOwnedHosting(
+    req,
+    res,
+    (u) => forward(res, nomadly.post(`/hosting/${enc(u)}/upgrade`, req.body || {})),
+    { mode: "dry_run", status: "test_mode", message: "Test mode — plan upgrades apply once a live account is provisioned." }
+  );
+
+// Addon domains (free upstream; quota enforced by plan tier).
+const listHostingAddons = (req, res) =>
+  withOwnedHosting(
+    req,
+    res,
+    (u) => forward(res, nomadly.get(`/hosting/${enc(u)}/addons`)),
+    (entry) => ({
+      mode: "dry_run",
+      username: entry.ref,
+      plan: entry.item.plan_name || entry.item.plan_id || null,
+      addon_quota: null,
+      addon_count: 0,
+      addons: [],
+      note: "Test mode — addon domains are available once a live account is provisioned.",
+    })
+  );
+const addHostingAddon = (req, res) =>
+  withOwnedHosting(
+    req,
+    res,
+    (u) => forward(res, nomadly.post(`/hosting/${enc(u)}/addons`, req.body || {})),
+    { mode: "dry_run", status: "test_mode", message: "Test mode — addon domains can be attached once a live account is provisioned." }
+  );
+
+// Visitor Captcha (Gold-plan exclusive) — scoped by the SITE domain. The buyer
+// owns it if they have a hosting account for that domain (or own the domain).
+async function withOwnedCaptchaDomain(req, res, liveFn, dryResult) {
+  const uid = userId(req);
+  const domain = String(req.params.domain || "").trim().toLowerCase();
+  const hostingList = await ownership.ownedList(uid, "hosting");
+  const hostEntry = hostingList.find(
+    (e) => String(e.item.domain || "").toLowerCase() === domain
+  );
+  const entry = hostEntry || (await ownership.findOwnedDomain(uid, domain));
+  if (!entry) return forbidden(res, "hosting domain");
+  if (hostEntry && hostEntry.item.provider_username) return liveFn(domain);
+  return res.json(typeof dryResult === "function" ? dryResult(entry) : dryResult);
+}
+const getHostingCaptcha = (req, res) =>
+  withOwnedCaptchaDomain(
+    req,
+    res,
+    (d) => forward(res, nomadly.get(`/hosting/captcha/${enc(d)}`)),
+    (entry) => ({
+      mode: "dry_run",
+      domain: String(req.params.domain || "").toLowerCase(),
+      gold_plan: /gold/i.test(entry.item.plan_id || entry.item.plan_name || ""),
+      eligible: false,
+      visitor_captcha_enabled: false,
+      note: "Test mode — Visitor Captcha status is available once a live Gold-plan account is provisioned.",
+    })
+  );
+const setHostingCaptcha = (req, res) =>
+  withOwnedCaptchaDomain(
+    req,
+    res,
+    (d) => forward(res, nomadly.post(`/hosting/captcha/${enc(d)}`, req.body || {})),
+    { mode: "dry_run", status: "test_mode", message: "Test mode — Visitor Captcha can be toggled once a live Gold-plan account is provisioned." }
+  );
+
 module.exports = {
   getHealth,
   getAccount,
@@ -401,4 +522,10 @@ module.exports = {
   terminateHosting,
   hostingLogin,
   hostingCredentials,
+  getHostingDetails,
+  upgradeHosting,
+  listHostingAddons,
+  addHostingAddon,
+  getHostingCaptcha,
+  setHostingCaptcha,
 };

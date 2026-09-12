@@ -67,6 +67,19 @@ export const resellerAPI = {
     (await apiClient.get(`${R}/hosting/${encodeURIComponent(user)}/login`)).data,
   getHostingCredentials: async (user) =>
     (await apiClient.get(`${R}/hosting/${encodeURIComponent(user)}/credentials`)).data,
+  // cPanel Hosting management (4d)
+  getHostingDetails: async (user) =>
+    (await apiClient.get(`${R}/hosting/${encodeURIComponent(user)}`, { params: { usage: true } })).data,
+  upgradeHosting: async (user, plan_id) =>
+    (await apiClient.post(`${R}/hosting/${encodeURIComponent(user)}/upgrade`, { plan_id })).data,
+  listHostingAddons: async (user) =>
+    (await apiClient.get(`${R}/hosting/${encodeURIComponent(user)}/addons`)).data,
+  addHostingAddon: async (user, domain) =>
+    (await apiClient.post(`${R}/hosting/${encodeURIComponent(user)}/addons`, { domain })).data,
+  getHostingCaptcha: async (domain) =>
+    (await apiClient.get(`${R}/hosting/captcha/${encodeURIComponent(domain)}`)).data,
+  setHostingCaptcha: async (domain, enabled) =>
+    (await apiClient.post(`${R}/hosting/captcha/${encodeURIComponent(domain)}`, { enabled })).data,
 };
 
 // Product-scoped facade so a single component can drive both VPS and RDP.

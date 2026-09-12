@@ -48,10 +48,18 @@ router.put("/dns/:domain/nameservers", ...auth, c.setNameservers);
 router.get("/hosting/plans", c.getHostingPlans);
 router.get("/hosting", ...auth, c.listHosting);
 router.post("/hosting", ...auth, c.createHosting);
+// Visitor Captcha (Gold plan) — scoped by the SITE domain, not the cPanel user.
+router.get("/hosting/captcha/:domain", ...auth, c.getHostingCaptcha);
+router.post("/hosting/captcha/:domain", ...auth, c.setHostingCaptcha);
+// Account management (:user)
 router.post("/hosting/:user/suspend", ...auth, c.suspendHosting);
 router.post("/hosting/:user/unsuspend", ...auth, c.unsuspendHosting);
+router.post("/hosting/:user/upgrade", ...auth, c.upgradeHosting);
 router.get("/hosting/:user/login", ...auth, c.hostingLogin);
 router.get("/hosting/:user/credentials", ...auth, c.hostingCredentials);
+router.get("/hosting/:user/addons", ...auth, c.listHostingAddons);
+router.post("/hosting/:user/addons", ...auth, c.addHostingAddon);
 router.delete("/hosting/:user", ...auth, c.terminateHosting);
+router.get("/hosting/:user", ...auth, c.getHostingDetails);
 
 module.exports = router;

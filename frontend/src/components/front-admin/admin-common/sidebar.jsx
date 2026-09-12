@@ -690,6 +690,9 @@ export default function Sidebar({ setIsEnlarge }) {
                       <NavLink to={"/orders"}>{t.admin.orders || "Orders"}</NavLink>
                     </li>
                     <li>
+                      <NavLink to={"/services"}>{t.admin.myServices || "My services"}</NavLink>
+                    </li>
+                    <li>
                       <NavLink to={"/subscriptions"}>
                         {t.admin.subscriptions}
                       </NavLink>

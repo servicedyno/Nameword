@@ -652,6 +652,18 @@ class CheckoutController {
       order.provisioningLockedAt = null;
       order.markModified("items");
       await order.save();
+
+      // C4: order confirmation / receipt email (best-effort, non-blocking).
+      try {
+        const { sendOrderConfirmation } = require("../../services/orderEmail");
+        await sendOrderConfirmation({
+          to: email,
+          order,
+          name: user?.name || user?.firstName || null,
+        });
+      } catch (e) {
+        console.error("[checkout] order email failed (non-blocking):", e?.message || e);
+      }
     } catch (err) {
       console.error("[checkout] processOrder error:", err?.message || err);
       // Leave the lock to expire; the safety-net cron reclaims and finishes it.
