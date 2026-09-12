@@ -53,7 +53,7 @@ const MonthlyPlan = ({ plans = [], onSelectPlan }) => {
             <div className="flex gap-5 flex-col items-start justify-start h-full">
               <div className="flex justify-between items-center gap-2 w-full">
                 <p className="plan-title capitalize">
-                  {plan.provider || t.cart.hosting.hostingFallback}
+                  {t.cart.hosting.hostingFallback}
                 </p>
                 <span className="badge dark:text-gray-200">{plan.billing_cycle}</span>
               </div>

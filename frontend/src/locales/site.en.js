@@ -22,7 +22,7 @@ export const siteEn = {
       domains: { title: "Private Domains", desc: "Register with WHOIS privacy included" },
       dns: { title: "DNS Management", desc: "Your records, your nameservers" },
       hosting: { title: "Offshore cPanel Hosting", desc: "Familiar panel, privacy-respecting jurisdiction" },
-      vps: { title: "Offshore VPS", desc: "Root access in the EU or Singapore" },
+      vps: { title: "Offshore VPS", desc: "Root access in privacy-respecting jurisdictions" },
       rdp: { title: "Private RDP", desc: "Windows desktops you control" },
       email: { title: "Private Email", desc: "Mailboxes on your own domain" },
       api: { title: "Developer API", desc: "Automate everything in the dashboard" },
@@ -38,9 +38,9 @@ export const siteEn = {
     placeholder: "yourname.com",
     searchBtn: "Search privately",
     transferBtn: "Start transfer",
-    heroChips: ["WHOIS privacy included", "EU & Singapore regions", "Prepaid wallet"],
+    heroChips: ["WHOIS privacy included", "Privacy jurisdictions", "Prepaid wallet"],
     heroFloat: { title: "WHOIS privacy included", sub: "on every eligible domain" },
-    heroFloat2: { title: "You pick the jurisdiction", sub: "EU or Singapore today" },
+    heroFloat2: { title: "You pick the jurisdiction", sub: "Privacy jurisdictions" },
     needServers: "Need a server instead?",
     rating: "Trusted across 2 jurisdictions",
     trustNote: "No card stored · pay from your prepaid wallet",
@@ -48,12 +48,12 @@ export const siteEn = {
       live: "Live",
       tabs: { domains: "Domains", hosting: "Hosting", servers: "VPS · RDP", manage: "Manage" },
       domains: { available: "Available", taken: "Taken" },
-      hosting: { title: "Offshore cPanel", region: "EU · Frankfurt", status: "Active", disk: "Disk", bandwidth: "Bandwidth" },
-      servers: { title: "Deploy a server", region: "SG · Singapore", status: "Running", cpu: "vCPU", ram: "RAM", ssd: "SSD" },
+      hosting: { title: "Offshore cPanel", region: "Privacy Jurisdiction A", status: "Active", disk: "Disk", bandwidth: "Bandwidth" },
+      servers: { title: "Deploy a server", region: "Privacy Jurisdiction B", status: "Running", cpu: "vCPU", ram: "RAM", ssd: "SSD" },
       manage: { title: "DNS records", propagated: "Propagated", wallet: "Wallet" },
     },
     trust: [
-      { label: "2 jurisdictions", sub: "EU & Singapore" },
+      { label: "2 jurisdictions", sub: "Privacy jurisdictions" },
       { label: "WHOIS privacy", sub: "included, not upsold" },
       { label: "Prepaid wallet", sub: "top up with crypto" },
       { label: "Full API", sub: "everything in the dashboard" },
@@ -65,7 +65,7 @@ export const siteEn = {
       items: [
         {
           title: "Offshore by design",
-          desc: "Infrastructure in privacy-respecting jurisdictions — the EU and Singapore today. You choose where your data lives.",
+          desc: "Infrastructure in privacy-respecting jurisdictions. You choose where your data lives.",
         },
         {
           title: "Private by default",
@@ -94,7 +94,7 @@ export const siteEn = {
         domains: { title: "Private Domains", desc: "Register and transfer across hundreds of TLDs with WHOIS privacy included on eligible extensions.", price: "live per-TLD pricing" },
         dns: { title: "DNS Management", desc: "Full records manager with fast propagation. Point anywhere; move away whenever you like.", price: "included with every domain" },
         hosting: { title: "Offshore cPanel Hosting", desc: "The control panel you already know, served from a privacy-respecting jurisdiction.", price: "monthly or annual" },
-        vps: { title: "Offshore VPS", desc: "Linux servers with full root access, deployed in the EU or Singapore in seconds.", price: "from $18/mo" },
+        vps: { title: "Offshore VPS", desc: "Linux servers with full root access, deployed in privacy-respecting jurisdictions in seconds.", price: "from $18/mo" },
         rdp: { title: "Private RDP", desc: "Windows desktops you administer yourself. Reachable from anywhere, owned by you.", price: "from $27/mo" },
         email: { title: "Private Email", desc: "Mailboxes on your own domain, TLS in transit, IMAP/SMTP with any client.", price: "per mailbox" },
         api: { title: "Developer API", desc: "Domains, DNS, servers and wallet — every dashboard action, available as an authenticated endpoint.", price: "included with your account" },
@@ -115,7 +115,7 @@ export const siteEn = {
       eyebrow: "How it works",
       title: "Private in three steps",
       items: [
-        { title: "Choose your name and jurisdiction", desc: "Search a domain, pick the EU or Singapore for your servers, and add WHOIS privacy — included." },
+        { title: "Choose your name and jurisdiction", desc: "Search a domain, pick a privacy jurisdiction for your servers, and add WHOIS privacy — included." },
         { title: "Fund your wallet once", desc: "Top up by card or crypto. Everything you order is paid from the balance, so there are no recurring card pulls." },
         { title: "Deploy and hold the keys", desc: "Point your DNS, deploy cPanel, VPS or RDP, and keep root access. Export or transfer whenever you like." },
       ],
@@ -126,7 +126,7 @@ export const siteEn = {
       lead: "Privacy here is a default, not a premium tier. It shows up in how we bill, what we store, and where your servers live.",
       items: [
         "WHOIS privacy included on eligible domains",
-        "Infrastructure in privacy-respecting jurisdictions — EU and Singapore",
+        "Infrastructure in privacy-respecting jurisdictions",
         "Two-factor authentication and login alerts on every account",
         "TLS on every hosting account, mailbox and dashboard session",
         "Full root/admin access — your keys, your servers, no lock-in",
@@ -159,7 +159,7 @@ export const siteEn = {
     chips: ["cPanel only", "TLS auto-issued", "Daily backups"],
     features: [
       { title: "Familiar cPanel", desc: "Manage sites, databases, mail and files from the panel you already use. No retraining." },
-      { title: "Privacy-respecting jurisdiction", desc: "Accounts are served from infrastructure in the EU. You know where your site lives." },
+      { title: "Privacy-respecting jurisdiction", desc: "Accounts are served from infrastructure in privacy-respecting jurisdictions. You know where your site lives." },
       { title: "TLS auto-issued", desc: "Certificates are issued and renewed automatically for every site on your account." },
       { title: "Daily backups", desc: "Automatic backups so you can restore in a click — and export whenever you like." },
       { title: "Paid from your wallet", desc: "Monthly or annual plans debited from your prepaid balance. No card kept on file for renewals." },
@@ -174,18 +174,18 @@ export const siteEn = {
   servers: {
     vps: {
       eyebrow: "Offshore VPS",
-      title: "Linux servers with root access, in the EU or Singapore",
+      title: "Linux servers with root access, in privacy-respecting jurisdictions",
       tagline: "Deploy in seconds, choose the jurisdiction, keep the keys. Paid from your prepaid wallet.",
-      chips: ["Choose EU or Singapore", "Full root access", "Paid from wallet"],
+      chips: ["Choose your jurisdiction", "Full root access", "Paid from wallet"],
     },
     rdp: {
       eyebrow: "Private RDP",
       title: "Windows desktops you administer yourself",
       tagline: "Full Administrator access, reachable from anywhere, deployed in the jurisdiction you choose.",
-      chips: ["Choose EU or Singapore", "Full Administrator access", "Paid from wallet"],
+      chips: ["Choose your jurisdiction", "Full Administrator access", "Paid from wallet"],
     },
     regionLabel: "Jurisdiction",
-    regions: { EU: "European Union", SG: "Singapore" },
+    regions: { EU: "Privacy Jurisdiction A", SG: "Privacy Jurisdiction B" },
     wallet: "Wallet",
     dryRun: {
       title: "Preview mode.",
@@ -377,7 +377,7 @@ export const siteEn = {
     },
     payments: "We accept",
     rights: "Nameword. All rights reserved.",
-    jurisdictionNote: "Infrastructure in the EU and Singapore.",
+    jurisdictionNote: "Infrastructure in privacy-respecting jurisdictions.",
   },
 
   legal: {

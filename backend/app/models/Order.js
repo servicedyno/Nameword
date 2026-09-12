@@ -2,14 +2,21 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
   {
-    type: { type: String, enum: ["domain", "hosting"], required: true },
-    domain: { type: String, required: true },
+    type: { type: String, enum: ["domain", "hosting", "vps", "rdp"], required: true },
+    domain: { type: String },
     plan_id: { type: String },
     plan_name: { type: String },
     duration_days: { type: Number },
     ns_choice: { type: String, enum: ["cloudflare", "registrar", "custom"], default: "cloudflare" },
     nameservers: { type: [String], default: [] },
     registrar: { type: String },
+    // Server (vps/rdp) fields
+    region: { type: String },
+    os: { type: String },
+    hostname: { type: String },
+    vcpus: { type: Number },
+    ram_gb: { type: Number },
+    disk_gb: { type: Number },
     price_usd: { type: Number, required: true },
     status: {
       type: String,

@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 import { resellerProduct } from "../../api/reseller";
-import WalletNudge from "../reseller/WalletNudge";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { useBuyer } from "../../hooks/useBuyer";
-import { Link } from "react-router";
+import { useCart } from "../../hooks/useCart";
+import { regionLabel } from "../../utils/regions";
+import { Link, useNavigate } from "react-router";
 import {
   FiServer,
   FiCpu,
@@ -23,6 +24,7 @@ import {
   FiCheckCircle,
   FiAlertTriangle,
   FiZap,
+  FiShoppingCart,
 } from "react-icons/fi";
 
 // Jurisdictions offered today (labels come from locales/site.*.js -> servers.regions)
@@ -86,7 +88,9 @@ export default function ServersPage({ product = "vps" }) {
   usePageMeta(copy.eyebrow, copy.tagline);
 
   const [region, setRegion] = useState("EU");
-  const { isAuthenticated, mode, balance, refresh, requireLogin } = useBuyer();
+  const { isAuthenticated, mode, balance } = useBuyer();
+  const cart = useCart();
+  const navigate = useNavigate();
 
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -95,11 +99,9 @@ export default function ServersPage({ product = "vps" }) {
   const [servers, setServers] = useState([]);
   const [serversLoading, setServersLoading] = useState(true);
 
-  const [deployPlan, setDeployPlan] = useState(null);
+  const [configPlan, setConfigPlan] = useState(null);
   const [hostname, setHostname] = useState("");
   const [os, setOs] = useState(meta.osChoices ? meta.osChoices[0] : "windows");
-  const [deploying, setDeploying] = useState(false);
-  const [deployResult, setDeployResult] = useState(null);
 
   const [busyId, setBusyId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -147,45 +149,31 @@ export default function ServersPage({ product = "vps" }) {
   }, [region, product]);
 
   // --- actions ---
-  const openDeploy = (plan) => {
-    if (!requireLogin(`/${product}`)) return;
-    setDeployPlan(plan);
+  // Guests and signed-in users alike configure a plan and add it to the cart.
+  // Provisioning happens after login at checkout, paid from the prepaid wallet —
+  // the same flow as domains and hosting.
+  const openConfigure = (plan) => {
+    setConfigPlan(plan);
     setHostname("");
     setOs(meta.osChoices ? meta.osChoices[0] : "windows");
-    setDeployResult(null);
   };
 
-  const closeDeploy = () => {
-    setDeployPlan(null);
-    setDeployResult(null);
-    setDeploying(false);
+  const closeConfigure = () => {
+    setConfigPlan(null);
   };
 
-  const submitDeploy = async () => {
-    if (!deployPlan) return;
-    setDeploying(true);
-    setDeployResult(null);
-    try {
-      const payload = {
-        plan_id: deployPlan.plan_id,
-        region,
-        ...(hostname ? { hostname } : {}),
-        ...(meta.osChoices ? { os } : {}),
-      };
-      const res = await api.create(payload);
-      setDeployResult(res);
-      if (res?.mode === "live" && res?.result?.success) {
-        showAlert(`${meta.title} deployed successfully.`, { type: "success" });
-        loadServers();
-        refresh();
-      }
-    } catch (err) {
-      const data = err?.response?.data;
-      setDeployResult({ _error: true, ...(data || { message: "Deployment failed." }) });
-      showAlert(data?.message || "Deployment failed.", { type: "fail" });
-    } finally {
-      setDeploying(false);
-    }
+  const addToCart = () => {
+    if (!configPlan) return;
+    cart.addServer({
+      product,
+      plan: configPlan,
+      region,
+      os: meta.osChoices ? os : undefined,
+      hostname: hostname.trim(),
+    });
+    showAlert(`${configPlan.name || configPlan.plan_id} added to cart.`, { type: "success" });
+    setConfigPlan(null);
+    navigate("/cart");
   };
 
   const doAction = async (id, action) => {
@@ -349,10 +337,11 @@ export default function ServersPage({ product = "vps" }) {
                       <span className="text-ink-soft dark:text-gray-400 text-sm"> /mo</span>
                     </div>
                     <button
-                      onClick={() => openDeploy(p)}
+                      onClick={() => openConfigure(p)}
                       className="nw-btn-primary nw-btn-sm"
+                      data-testid={`server-add-${p.plan_id}`}
                     >
-                      Deploy
+                      <FiShoppingCart size={15} /> Add to cart
                     </button>
                   </div>
                 </div>
@@ -423,79 +412,42 @@ export default function ServersPage({ product = "vps" }) {
         </section>}
       </main>
 
-      {/* Deploy modal */}
-      {deployPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeDeploy}>
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      {/* Configure & add-to-cart modal */}
+      {configPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeConfigure}>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="server-configure-modal">
             <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
-              <h3 className="text-lg font-semibold text-primary dark:text-white">Deploy {meta.title}</h3>
-              <button onClick={closeDeploy} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
+              <h3 className="text-lg font-semibold text-primary dark:text-white">Add {meta.title} to cart</h3>
+              <button onClick={closeConfigure} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
               <div className="rounded-lg bg-lightgray-200 dark:bg-gray-800 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-primary dark:text-white">{deployPlan.name || deployPlan.plan_id}</span>
-                  <span className="font-bold text-primary dark:text-white">{money(deployPlan.price_usd)}<span className="text-secondary text-sm font-normal"> /mo</span></span>
+                  <span className="font-medium text-primary dark:text-white">{configPlan.name || configPlan.plan_id}</span>
+                  <span className="font-bold text-primary dark:text-white">{money(configPlan.price_usd)}<span className="text-secondary text-sm font-normal"> /mo</span></span>
                 </div>
-                <p className="text-xs text-secondary dark:text-gray-400 mt-1">{deployPlan.ram_gb} GB RAM · {deployPlan.disk_gb} GB SSD · {region}</p>
+                <p className="text-xs text-secondary dark:text-gray-400 mt-1">{configPlan.ram_gb} GB RAM · {configPlan.disk_gb} GB SSD · {regionLabel(region)}</p>
               </div>
 
-              {!deployResult && (
-                <>
-                  <div>
-                    <label htmlFor="hostname" className="block text-sm font-medium text-primary dark:text-white mb-1">Hostname <span className="text-secondary font-normal">(optional)</span></label>
-                    <input id="hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} placeholder="web-01" className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
-                  </div>
-                  {meta.osChoices && (
-                    <div>
-                      <label htmlFor="os" className="block text-sm font-medium text-primary dark:text-white mb-1">Operating system</label>
-                      <select id="os" value={os} onChange={(e) => setOs(e.target.value)} className="w-full appearance-none rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm capitalize focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15">
-                        {meta.osChoices.map((o) => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    </div>
-                  )}
-                  {!meta.osChoices && (
-                    <p className="text-sm text-secondary dark:text-gray-400">Operating system: <span className="text-primary dark:text-white font-medium">Windows</span></p>
-                  )}
-                  <WalletNudge balance={balance} price={deployPlan.price_usd} />
-                </>
-              )}
-
-              {deployResult && !deployResult._error && deployResult.mode === "dry_run" && (
-                <div className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm">
-                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 font-semibold mb-2"><FiCheckCircle /> Simulated (test mode)</div>
-                  <p className="text-amber-800 dark:text-amber-200">This order priced at <span className="font-semibold">{money(deployResult.price_usd)}</span> and passed validation. No server was created and no funds were charged.</p>
-                  {deployResult.sufficient_balance === false && (
-                    <p className="text-amber-800 dark:text-amber-200 mt-2">Note: wallet balance ({money(deployResult.wallet_balance_usd)}) is below the price — top up before going live.</p>
-                  )}
+              <div>
+                <label htmlFor="hostname" className="block text-sm font-medium text-primary dark:text-white mb-1">Hostname <span className="text-secondary font-normal">(optional)</span></label>
+                <input id="hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} placeholder="web-01" className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" data-testid="server-hostname-input" />
+              </div>
+              {meta.osChoices ? (
+                <div>
+                  <label htmlFor="os" className="block text-sm font-medium text-primary dark:text-white mb-1">Operating system</label>
+                  <select id="os" value={os} onChange={(e) => setOs(e.target.value)} className="w-full appearance-none rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm capitalize focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" data-testid="server-os-select">
+                    {meta.osChoices.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
                 </div>
+              ) : (
+                <p className="text-sm text-secondary dark:text-gray-400">Operating system: <span className="text-primary dark:text-white font-medium">Windows</span></p>
               )}
-
-              {deployResult && !deployResult._error && deployResult.mode === "live" && (
-                <div className="rounded-lg border border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 text-sm space-y-1">
-                  <div className="flex items-center gap-2 text-green-800 dark:text-green-200 font-semibold mb-1"><FiCheckCircle /> Deployed</div>
-                  <p className="text-green-800 dark:text-green-200">Charged {money(deployResult.charged_usd)}. New balance {money(deployResult.wallet_balance_usd)}.</p>
-                  {deployResult.result?.ip && <p className="text-green-800 dark:text-green-200">IP: <span className="font-mono">{deployResult.result.ip}</span></p>}
-                  {deployResult.result?.default_password && <p className="text-green-800 dark:text-green-200">Password: <span className="font-mono">{deployResult.result.default_password}</span></p>}
-                </div>
-              )}
-
-              {deployResult && deployResult._error && (
-                <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm">
-                  <div className="flex items-center gap-2 text-red-700 dark:text-red-300 font-semibold mb-1"><FiAlertTriangle /> {deployResult.error || "Error"}</div>
-                  <p className="text-red-700 dark:text-red-300">{deployResult.message}</p>
-                </div>
-              )}
+              <p className="flex items-center gap-2 text-xs text-secondary dark:text-gray-400"><FiLock size={13} /> Pay from your prepaid wallet at checkout. Billed monthly.</p>
             </div>
             <div className="px-6 py-4 border-t border-lightgray dark:border-gray-800 flex justify-end gap-3">
-              {!deployResult ? (
-                <>
-                  <button onClick={closeDeploy} className="px-4 py-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white text-sm font-medium">Cancel</button>
-                  <button onClick={submitDeploy} disabled={deploying} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium disabled:opacity-60">{deploying ? "Deploying…" : `Deploy · ${money(deployPlan.price_usd)}`}</button>
-                </>
-              ) : (
-                <button onClick={closeDeploy} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium">Done</button>
-              )}
+              <button onClick={closeConfigure} className="px-4 py-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white text-sm font-medium">Cancel</button>
+              <button onClick={addToCart} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium inline-flex items-center gap-2" data-testid="server-add-to-cart-confirm"><FiShoppingCart size={15} /> Add to cart · {money(configPlan.price_usd)}</button>
             </div>
           </div>
         </div>

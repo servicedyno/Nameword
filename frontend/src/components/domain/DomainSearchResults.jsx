@@ -21,7 +21,6 @@ function ResultCard({ domain, available, price_usd, registrar, ctaLabel, ctaIcon
           ) : (
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">Taken</span>
           )}
-          {registrar && <span className="text-xs text-ink-soft dark:text-gray-500">{registrar}</span>}
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">

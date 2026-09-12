@@ -65,7 +65,7 @@ export default function OrderSuccess() {
         <div className="mt-8 flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3" data-testid="order-test-mode-banner">
           <FiAlertTriangle className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-300" />
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            <span className="font-semibold">Test mode.</span> The registrar is in test mode, so no real domain or hosting was provisioned. Your order and wallet charge are recorded exactly as they will be once live.
+            <span className="font-semibold">Test mode.</span> Test mode is on, so nothing was provisioned yet. Your order and wallet charge are recorded exactly as they will be once live.
           </p>
         </div>
       )}

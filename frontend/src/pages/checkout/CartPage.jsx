@@ -8,6 +8,7 @@ import { useAlert } from "../../context/AlertContext";
 import checkoutAPI from "../../api/checkout";
 import CartSummary from "../../components/checkout/CartSummary";
 import { money, durationLabel } from "../../utils/checkoutFormat";
+import { regionLabel } from "../../utils/regions";
 import Loader from "../../components/common/Loader";
 
 const newClientOrderId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
@@ -93,6 +94,28 @@ function DomainLine({ item, hosting, problem, onRemove, onNsChange, onNsListChan
   );
 }
 
+function ServerLine({ item, onRemove }) {
+  const label = item.type === "rdp" ? "RDP" : "VPS";
+  return (
+    <div className="nw-card !p-5 flex items-center justify-between gap-4" data-testid={`cart-item-server-${item.id}`}>
+      <div className="flex items-start gap-3 min-w-0">
+        <span className="nw-icon h-10 w-10 shrink-0"><FiServer size={18} /></span>
+        <div className="min-w-0">
+          <p className="font-semibold text-primary dark:text-white">{item.plan_name || item.plan_id}</p>
+          <p className="text-sm text-ink-soft dark:text-gray-400">
+            {label} · {regionLabel(item.region)} · {item.type === "vps" ? (item.os || "ubuntu") : "Windows"} · monthly
+          </p>
+          {item.hostname && <p className="text-xs text-ink-soft dark:text-gray-400 mt-0.5">Hostname: {item.hostname}</p>}
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1">
+        <span className="font-bold text-primary dark:text-white nw-mono">{money(item.price_usd)}<span className="text-xs font-normal text-ink-soft">/mo</span></span>
+        <button type="button" onClick={() => onRemove(item.id)} className="text-sm text-ink-soft hover:text-red-600 dark:text-gray-400" data-testid={`cart-remove-server-${item.id}`}>Remove</button>
+      </div>
+    </div>
+  );
+}
+
 export default function CartPage() {
   usePageMeta("Cart", "Review your order and pay from your wallet.");
   const { isAuthenticated, loading } = useAuth();
@@ -129,7 +152,12 @@ export default function CartPage() {
       setProblems({});
       // Sync live prices back into the local cart.
       for (const it of q.items || []) {
-        const local = cart.items.find((c) => c.type === it.type && c.domain === it.domain);
+        const local = cart.items.find((c) =>
+          c.type === it.type &&
+          (it.type === "domain" || it.type === "hosting"
+            ? c.domain === it.domain
+            : c.plan_id === it.plan_id && c.region === it.region && Number(c.price_usd) !== Number(it.price_usd))
+        );
         if (local && Number(local.price_usd) !== Number(it.price_usd)) cart.update(local.id, { price_usd: it.price_usd });
       }
     } catch (err) {
@@ -219,7 +247,7 @@ export default function CartPage() {
               <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3" data-testid="cart-test-mode-banner">
                 <FiAlertTriangle className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-300" />
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  <span className="font-semibold">Test mode.</span> The registrar is in test mode: your wallet is charged exactly as in live mode and the order is recorded, but no real domain or hosting is provisioned yet.
+                  <span className="font-semibold">Test mode.</span> Test mode is on: your wallet is charged exactly as in live mode and the order is recorded, but nothing is provisioned yet.
                 </p>
               </div>
             )}
@@ -240,6 +268,9 @@ export default function CartPage() {
                   <button type="button" onClick={() => onRemove(h.id)} className="text-sm text-ink-soft hover:text-red-600 dark:text-gray-400" data-testid={`cart-remove-hosting-${h.domain}`}>Remove</button>
                 </div>
               </div>
+            ))}
+            {cart.servers.map((s) => (
+              <ServerLine key={s.id} item={s} onRemove={onRemove} />
             ))}
           </section>
 

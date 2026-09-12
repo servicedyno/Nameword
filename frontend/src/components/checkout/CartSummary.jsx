@@ -2,6 +2,16 @@ import { Link } from "react-router";
 import { FiGlobe, FiServer } from "react-icons/fi";
 
 import { money, durationLabel } from "../../utils/checkoutFormat";
+import { regionLabel } from "../../utils/regions";
+
+const itemTitle = (it) => (it.type === "domain" ? it.domain : it.plan_name);
+const itemSubtitle = (it) => {
+  if (it.type === "domain") return "Registration · 1 year";
+  if (it.type === "hosting") return `Hosting for ${it.domain} · ${durationLabel(it.duration_days)}`;
+  if (it.type === "vps") return `VPS · ${regionLabel(it.region)} · monthly`;
+  if (it.type === "rdp") return `RDP · ${regionLabel(it.region)} · monthly`;
+  return "";
+};
 
 // Sticky right-hand order summary shared by the hosting, account and cart steps.
 export default function CartSummary({ items, title = "Order summary", footer, children, editHref = "/domains", discount = 0, discountLabel = "Discount", total }) {
@@ -18,13 +28,13 @@ export default function CartSummary({ items, title = "Order summary", footer, ch
       <ul className="divide-y divide-line dark:divide-gray-800">
         {items.length === 0 && <li className="px-5 py-6 text-sm text-ink-soft dark:text-gray-400">Your cart is empty.</li>}
         {items.map((it) => (
-          <li key={it.id || `${it.type}-${it.domain}`} className="flex items-start justify-between gap-3 px-5 py-3.5" data-testid={`summary-item-${it.type}-${it.domain}`}>
+          <li key={it.id || `${it.type}-${it.domain}`} className="flex items-start justify-between gap-3 px-5 py-3.5" data-testid={`summary-item-${it.type}-${it.domain || it.plan_id}`}>
             <div className="flex items-start gap-3 min-w-0">
               <span className="nw-icon h-8 w-8 shrink-0">{it.type === "domain" ? <FiGlobe size={15} /> : <FiServer size={15} />}</span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-primary dark:text-white truncate">{it.type === "domain" ? it.domain : it.plan_name}</p>
+                <p className="text-sm font-semibold text-primary dark:text-white truncate">{itemTitle(it)}</p>
                 <p className="text-xs text-ink-soft dark:text-gray-400 truncate">
-                  {it.type === "domain" ? "Registration · 1 year" : `Hosting for ${it.domain} · ${durationLabel(it.duration_days)}`}
+                  {itemSubtitle(it)}
                 </p>
               </div>
             </div>

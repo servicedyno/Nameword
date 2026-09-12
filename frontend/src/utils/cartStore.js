@@ -77,6 +77,27 @@ export const cartStore = {
     write(read().filter((i) => !(i.type === "hosting" && i.domain === d)));
   },
 
+  // Server plans (vps/rdp). No domain — each add is a distinct server line.
+  // billing is strictly monthly, so price_usd is the monthly price.
+  addServer({ product, plan, region, os, hostname }) {
+    const type = product === "rdp" ? "rdp" : "vps";
+    const items = read();
+    items.push({
+      id: uid(),
+      type,
+      plan_id: plan.plan_id,
+      plan_name: plan.name || plan.plan_id,
+      region: String(region || "EU").toUpperCase(),
+      os: type === "vps" ? (os || "ubuntu") : "windows",
+      hostname: hostname || "",
+      vcpus: plan.vcpus ?? null,
+      ram_gb: plan.ram_gb ?? null,
+      disk_gb: plan.disk_gb ?? null,
+      price_usd: Number(plan.price_usd) || 0,
+    });
+    write(items);
+  },
+
   // Removing a domain also drops the hosting attached to it.
   remove(id) {
     const items = read();
@@ -106,16 +127,27 @@ export const cartStore = {
 
   // Server payload shape (prices are re-validated server-side).
   toPayload() {
-    return read().map((i) =>
-      i.type === "domain"
-        ? {
-            type: "domain",
-            domain: i.domain,
-            ns_choice: i.ns_choice || "cloudflare",
-            ...(i.ns_choice === "custom" && Array.isArray(i.nameservers) ? { nameservers: i.nameservers.filter(Boolean) } : {}),
-          }
-        : { type: "hosting", domain: i.domain, plan_id: i.plan_id }
-    );
+    return read().map((i) => {
+      if (i.type === "domain") {
+        return {
+          type: "domain",
+          domain: i.domain,
+          ns_choice: i.ns_choice || "cloudflare",
+          ...(i.ns_choice === "custom" && Array.isArray(i.nameservers) ? { nameservers: i.nameservers.filter(Boolean) } : {}),
+        };
+      }
+      if (i.type === "hosting") {
+        return { type: "hosting", domain: i.domain, plan_id: i.plan_id };
+      }
+      // vps / rdp
+      return {
+        type: i.type,
+        plan_id: i.plan_id,
+        region: i.region || "EU",
+        ...(i.type === "vps" && i.os ? { os: i.os } : {}),
+        ...(i.hostname ? { hostname: i.hostname } : {}),
+      };
+    });
   },
 };
 

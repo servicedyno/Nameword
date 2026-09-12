@@ -6,10 +6,16 @@ export function useCart() {
   return useMemo(() => {
     const domains = items.filter((i) => i.type === "domain");
     const hosting = items.filter((i) => i.type === "hosting");
+    const vps = items.filter((i) => i.type === "vps");
+    const rdp = items.filter((i) => i.type === "rdp");
+    const servers = items.filter((i) => i.type === "vps" || i.type === "rdp");
     return {
       items,
       domains,
       hosting,
+      vps,
+      rdp,
+      servers,
       count: items.length,
       subtotal: cartSubtotal(items),
       isEmpty: items.length === 0,

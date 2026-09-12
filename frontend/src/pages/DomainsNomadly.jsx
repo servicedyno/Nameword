@@ -40,7 +40,6 @@ function ExactMatchCard({ result, inCart, onAdd, onContinue }) {
             ) : (
               <span className="inline-flex items-center gap-1.5 text-red-600 dark:text-red-300"><FiXCircle /> Taken</span>
             )}
-            {result.registrar && <span className="nw-mono text-xs uppercase tracking-wider text-ink-muted">· {result.registrar}</span>}
           </div>
           <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-primary dark:text-white break-all" data-testid="exact-match-domain">
             {result.domain}
@@ -60,7 +59,7 @@ function ExactMatchCard({ result, inCart, onAdd, onContinue }) {
           <div className="flex flex-col items-start gap-3 md:items-end shrink-0">
             <div className="text-right">
               <p className="text-3xl font-bold text-primary dark:text-white nw-mono" data-testid="exact-match-price">{money(result.price_usd)}</p>
-              <p className="text-xs text-ink-soft dark:text-gray-400">first year · renews at the live registrar price</p>
+              <p className="text-xs text-ink-soft dark:text-gray-400">first year · renews at the live price</p>
             </div>
             {inCart ? (
               <div className="flex items-center gap-2">
@@ -293,7 +292,6 @@ export default function DomainsNomadly() {
                     <div className="min-w-0">
                       <span className="font-semibold text-primary dark:text-white">{d.domain}</span>
                       <div className="flex items-center gap-x-5 gap-y-1 flex-wrap text-sm text-secondary dark:text-gray-400 mt-0.5">
-                        {d.registrar && <span>{d.registrar}</span>}
                         {d.nameserver_type && <span>NS: {d.nameserver_type}</span>}
                         {d.registered_at && <span>Since {new Date(d.registered_at).toLocaleDateString()}</span>}
                       </div>

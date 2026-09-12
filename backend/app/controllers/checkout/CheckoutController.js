@@ -37,6 +37,19 @@ const round2 = (n) => Math.round(Number(n) * 100) / 100;
 const normDomain = (d) => String(d || "").trim().toLowerCase();
 const SENSITIVE_RE = /password|pin|secret|token/i;
 
+// Server (vps/rdp) helpers.
+const VALID_REGIONS = ["EU", "SG"];
+const normRegion = (r) => {
+  const v = String(r || "").trim().toUpperCase();
+  return VALID_REGIONS.includes(v) ? v : "EU";
+};
+const VPS_OS = ["ubuntu", "debian", "centos", "fedora", "rocky", "almalinux"];
+const sanitizeOs = (o) => {
+  const v = String(o || "").trim().toLowerCase();
+  return VPS_OS.includes(v) ? v : "ubuntu";
+};
+const sanitizeHostname = (h) => String(h || "").trim().slice(0, 63);
+
 // Validate + normalise a custom nameserver list (2–4 unique valid hostnames).
 function normalizeNameservers(raw, domain) {
   const arr = Array.isArray(raw) ? raw : String(raw || "").split(/[\s,]+/);
@@ -86,50 +99,79 @@ async function priceItems(rawItems) {
   if (rawItems.length > 20) throw new HttpError(400, "too_many_items", "Too many items in cart.");
 
   let plans = null;
+  const serverPlans = {}; // cache: `${type}:${region}` -> plan[]
   const out = [];
   const seen = new Set();
   for (const it of rawItems) {
     const type = it?.type;
-    const domain = normDomain(it?.domain);
-    if (!DOMAIN_RE.test(domain)) {
-      throw new HttpError(400, "invalid_domain", `"${it?.domain || ""}" is not a valid domain.`);
-    }
-    const key = `${type}:${domain}`;
-    if (seen.has(key)) throw new HttpError(400, "duplicate_item", `${domain} appears twice in the cart.`);
-    seen.add(key);
 
-    if (type === "domain") {
-      const r = await nomadly.get("/domains/search", { params: { domain } });
-      const d = r.data || {};
-      const price = Number(d.price_usd);
-      if (!d.available) {
-        throw new HttpError(409, "domain_unavailable", `${domain} is no longer available.`, { domain });
+    if (type === "domain" || type === "hosting") {
+      const domain = normDomain(it?.domain);
+      if (!DOMAIN_RE.test(domain)) {
+        throw new HttpError(400, "invalid_domain", `"${it?.domain || ""}" is not a valid domain.`);
       }
+      const key = `${type}:${domain}`;
+      if (seen.has(key)) throw new HttpError(400, "duplicate_item", `${domain} appears twice in the cart.`);
+      seen.add(key);
+
+      if (type === "domain") {
+        const r = await nomadly.get("/domains/search", { params: { domain } });
+        const d = r.data || {};
+        const price = Number(d.price_usd);
+        if (!d.available) {
+          throw new HttpError(409, "domain_unavailable", `${domain} is no longer available.`, { domain });
+        }
+        if (!Number.isFinite(price) || price <= 0) {
+          throw new HttpError(400, "pricing_failed", `Could not price ${domain}.`, { domain });
+        }
+        const nsChoice = ["registrar", "custom"].includes(it.ns_choice) ? it.ns_choice : "cloudflare";
+        const nameservers = nsChoice === "custom" ? normalizeNameservers(it.nameservers, domain) : [];
+        out.push({
+          type,
+          domain,
+          ns_choice: nsChoice,
+          nameservers,
+          registrar: d.registrar || null,
+          price_usd: round2(price),
+        });
+      } else {
+        if (!plans) plans = (await nomadly.get("/hosting/plans")).data?.plans || [];
+        const plan = plans.find((p) => p.plan_id === it.plan_id);
+        if (!plan) throw new HttpError(400, "invalid_plan", `Unknown hosting plan "${it.plan_id}".`);
+        out.push({
+          type,
+          domain,
+          plan_id: plan.plan_id,
+          plan_name: plan.name,
+          duration_days: plan.duration_days,
+          features: Array.isArray(plan.features) ? plan.features : [],
+          price_usd: round2(plan.price_usd),
+        });
+      }
+    } else if (type === "vps" || type === "rdp") {
+      // Servers have no domain — price against the live vps/rdp catalog for the region.
+      const region = normRegion(it?.region);
+      const cacheKey = `${type}:${region}`;
+      if (!serverPlans[cacheKey]) {
+        serverPlans[cacheKey] = (await nomadly.get(`/${type}/plans`, { params: { region } })).data?.plans || [];
+      }
+      const plan = serverPlans[cacheKey].find((p) => p.plan_id === it.plan_id);
+      if (!plan) throw new HttpError(400, "invalid_plan", `Unknown ${type.toUpperCase()} plan "${it.plan_id}".`);
+      const price = Number(plan.price_usd);
       if (!Number.isFinite(price) || price <= 0) {
-        throw new HttpError(400, "pricing_failed", `Could not price ${domain}.`, { domain });
+        throw new HttpError(400, "pricing_failed", `Could not price ${type.toUpperCase()} plan "${it.plan_id}".`);
       }
-      const nsChoice = ["registrar", "custom"].includes(it.ns_choice) ? it.ns_choice : "cloudflare";
-      const nameservers = nsChoice === "custom" ? normalizeNameservers(it.nameservers, domain) : [];
       out.push({
         type,
-        domain,
-        ns_choice: nsChoice,
-        nameservers,
-        registrar: d.registrar || null,
-        price_usd: round2(price),
-      });
-    } else if (type === "hosting") {
-      if (!plans) plans = (await nomadly.get("/hosting/plans")).data?.plans || [];
-      const plan = plans.find((p) => p.plan_id === it.plan_id);
-      if (!plan) throw new HttpError(400, "invalid_plan", `Unknown hosting plan "${it.plan_id}".`);
-      out.push({
-        type,
-        domain,
         plan_id: plan.plan_id,
-        plan_name: plan.name,
-        duration_days: plan.duration_days,
-        features: Array.isArray(plan.features) ? plan.features : [],
-        price_usd: round2(plan.price_usd),
+        plan_name: plan.name || plan.plan_id,
+        region,
+        os: type === "vps" ? sanitizeOs(it?.os) : "windows",
+        hostname: sanitizeHostname(it?.hostname),
+        vcpus: plan.vcpus ?? null,
+        ram_gb: plan.ram_gb ?? null,
+        disk_gb: plan.disk_gb ?? null,
+        price_usd: round2(price),
       });
     } else {
       throw new HttpError(400, "invalid_item", "Unsupported cart item type.");
@@ -220,6 +262,11 @@ async function provisionItem(item, mode, email) {
           console.error("[checkout] set custom nameservers failed:", e?.message || e);
         }
       }
+    } else if (item.type === "vps" || item.type === "rdp") {
+      const body = { plan_id: item.plan_id, region: item.region };
+      if (item.type === "vps" && item.os) body.os = item.os;
+      if (item.hostname) body.hostname = item.hostname;
+      r = await nomadly.post(`/${item.type}`, body);
     } else {
       r = await nomadly.post("/hosting", {
         plan_id: item.plan_id,
@@ -250,8 +297,22 @@ async function provisionItem(item, mode, email) {
   }
 }
 
-const serviceFor = (item) => (item.type === "domain" ? "Domain Registration" : "Premium Web Hosting");
-const titleFor = (item) => (item.type === "domain" ? item.domain : `${item.plan_name} — ${item.domain}`);
+const serviceFor = (item) =>
+  item.type === "domain"
+    ? "Domain Registration"
+    : item.type === "hosting"
+    ? "Premium Web Hosting"
+    : item.type === "vps"
+    ? "VPS Server"
+    : item.type === "rdp"
+    ? "RDP Server"
+    : "Order";
+const titleFor = (item) =>
+  item.type === "domain"
+    ? item.domain
+    : item.type === "hosting"
+    ? `${item.plan_name} — ${item.domain}`
+    : `${item.plan_name} (${item.region})`;
 
 class CheckoutController {
   // Public: validate + re-price a cart. Includes the buyer's wallet when signed in.
@@ -376,7 +437,7 @@ class CheckoutController {
             subtotal_usd > 0 ? round2(item.price_usd * (charged_usd / subtotal_usd)) : round2(item.price_usd);
           const pointsShareUsd = round2(item.price_usd - cashShare);
           if (cashShare > 0) {
-            await creditWallet(userId, cashShare, `refund:${order.orderNumber || (tx && tx._id) || "order"}:${item.domain}`);
+            await creditWallet(userId, cashShare, `refund:${order.orderNumber || (tx && tx._id) || "order"}:${item.domain || item.plan_id || item.type}`);
           }
           if (pointsShareUsd > 0 && pointValueUsd() > 0) {
             const restore = round2(pointsShareUsd / pointValueUsd());

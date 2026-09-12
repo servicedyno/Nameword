@@ -287,7 +287,7 @@ export default function HostingNomadly() {
           <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 mb-8" data-testid="dry-run-banner">
             <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              <span className="font-semibold">Test mode.</span> The hosting provider is in test mode — orders are validated and priced, but no account is provisioned yet.
+              <span className="font-semibold">Test mode.</span> Test mode is on — orders are validated and priced, but no account is provisioned yet.
             </p>
           </div>
         )}
