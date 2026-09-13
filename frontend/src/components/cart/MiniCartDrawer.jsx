@@ -6,7 +6,7 @@ import { useCart } from "../../hooks/useCart";
 import { useCartUI } from "../../context/CartUIContext";
 import { useAuth } from "../../hooks/useAuth";
 import checkoutAPI from "../../api/checkout";
-import WalletModal from "../modals/wallet-modal";
+import CryptoCheckoutModal from "./CryptoCheckoutModal";
 import AcceptedCoins from "./AcceptedCoins";
 import { money } from "../../utils/checkoutFormat";
 import { regionLabel } from "../../utils/regions";
@@ -33,7 +33,7 @@ export default function MiniCartDrawer() {
   const [quoting, setQuoting] = useState(false);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState(null);
-  const [showTopup, setShowTopup] = useState(false);
+  const [showCrypto, setShowCrypto] = useState(false);
   const clientOrderId = useRef(newClientOrderId());
 
   const payload = useMemo(
@@ -75,7 +75,8 @@ export default function MiniCartDrawer() {
 
   const walletBalance = quote?.wallet_balance_usd ?? balance;
   const subtotal = quote?.subtotal_usd ?? cart.subtotal;
-  const payable = round2(subtotal);
+  const pointsDiscount = round2(quote?.points_discount_usd ?? 0);
+  const payable = round2(quote?.payable_usd ?? subtotal);
   const shortfall = walletBalance == null ? null : Math.max(0, round2(payable - walletBalance));
   const canPayWallet = isAuthenticated && !!quote && !quoting && !paying && cart.count > 0 && shortfall != null && shortfall <= 0;
 
@@ -105,19 +106,19 @@ export default function MiniCartDrawer() {
     }
   };
 
-  // Crypto: fund the wallet (native address/QR flow) then auto-complete the order.
+  // Direct crypto-order payment (bypasses the wallet). On confirmation the order
+  // is provisioned and reward points are earned on the crypto paid.
   const payWithCrypto = () => {
     setPayError(null);
-    setShowTopup(true);
+    setShowCrypto(true);
   };
-  const onTopupSuccess = () => {
-    setShowTopup(false);
+  const onCryptoSuccess = (order) => {
+    setShowCrypto(false);
     setPayError(null);
+    cart.clear();
     window.dispatchEvent(new Event("wallet:updated"));
-    setTimeout(() => {
-      refreshQuote();
-      pay();
-    }, 600);
+    close();
+    navigate(`/checkout/success/${order._id}`, { state: { order } });
   };
 
   const goFullCart = () => {
@@ -185,8 +186,14 @@ export default function MiniCartDrawer() {
             <div className="border-t border-line px-5 py-4 dark:border-white/[0.06]" data-testid="mini-cart-footer">
               <div className="mb-3 flex items-center justify-between text-sm">
                 <span className="text-ink-soft dark:text-gray-400">Subtotal</span>
-                <span className="text-base font-bold text-primary dark:text-white nw-mono" data-testid="mini-cart-subtotal">{money(payable)}</span>
+                <span className="text-base font-bold text-primary dark:text-white nw-mono" data-testid="mini-cart-subtotal">{money(subtotal)}</span>
               </div>
+              {pointsDiscount > 0 && (
+                <div className="mb-3 flex items-center justify-between text-xs text-brand-700 dark:text-brand-300" data-testid="mini-cart-points-applied">
+                  <span>Reward points applied</span>
+                  <span className="nw-mono">− {money(pointsDiscount)}</span>
+                </div>
+              )}
 
               {isAuthenticated ? (
                 <>
@@ -238,8 +245,8 @@ export default function MiniCartDrawer() {
         </aside>
       </div>
 
-      {showTopup && (
-        <WalletModal presetAmount={payable} onClose={() => setShowTopup(false)} onSuccess={onTopupSuccess} />
+      {showCrypto && (
+        <CryptoCheckoutModal orderPayload={cart.toPayload()} payable={payable} onClose={() => setShowCrypto(false)} onSuccess={onCryptoSuccess} />
       )}
     </>
   );

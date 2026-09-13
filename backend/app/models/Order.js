@@ -48,13 +48,29 @@ const orderItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const orderCryptoSchema = new mongoose.Schema(
+  {
+    paymentId: { type: String },
+    address: { type: String },
+    destinationTag: { type: String, default: null },
+    currency: { type: String },
+    cryptoAmount: { type: Number, default: null },
+    amountUsd: { type: Number, default: null },
+    qrCode: { type: String, default: null },
+    status: { type: String, default: "pending" },
+    txHash: { type: String, default: null },
+    expireAt: { type: Date },
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, index: true },
     orderNumber: { type: String, unique: true },
     clientOrderId: { type: String },
     mode: { type: String, enum: ["live", "dry_run", "unknown"], default: "unknown" },
-    status: { type: String, enum: ["paid", "partial", "failed"], default: "paid" },
+    status: { type: String, enum: ["paid", "partial", "failed", "awaiting_payment"], default: "paid" },
     items: { type: [orderItemSchema], default: [] },
     subtotal_usd: { type: Number, required: true },
     // Reward points applied as a discount (redemption).
@@ -70,11 +86,15 @@ const orderSchema = new mongoose.Schema(
     // --- C3: background provisioning lifecycle ---
     provisioning: {
       type: String,
-      enum: ["pending", "processing", "complete"],
+      enum: ["pending", "processing", "complete", "awaiting_payment"],
       default: "pending",
       index: true,
     },
     provisioningLockedAt: { type: Date, default: null },
+    // --- Direct crypto-order payment (bypasses the wallet) ---
+    payment_method: { type: String, enum: ["wallet", "crypto"], default: "wallet" },
+    payment_status: { type: String, enum: ["paid", "awaiting_payment", "expired", "failed"], default: "paid" },
+    crypto: { type: orderCryptoSchema, default: null },
   },
   { timestamps: true }
 );

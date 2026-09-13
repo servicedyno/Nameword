@@ -1173,4 +1173,6 @@ module.exports = {
         listCryptoTopups,
         cancelCryptoTopup,
         listRewardPointLogs,
+        addWalletTopupRewardPoints,
+        getWalletTopupRewardRate,
 };

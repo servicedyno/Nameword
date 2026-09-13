@@ -6,6 +6,7 @@ const User = require("../../models/User");
 const RewardPointLog = require("../../models/RewardPointLog");
 const ownership = require("../../services/ownership");
 const { createPaymentRecord } = require("../../utils/paymentHelper");
+const { createCryptoPayment, getPaymentStatus, getSupportedCurrencies, getConfiguredCoins, ensureWallet: ensureDynoWallet } = require("../../helpers/dynoPayHelper");
 
 // ---- Reward points config -------------------------------------------------
 // USD value of one reward point when redeemed (default $0.02; mirrors frontend
@@ -314,17 +315,9 @@ async function recomputeOrderFinancials(order) {
   const pv = pointValueUsd();
   order.points_restored = pv > 0 ? round2(Math.max(0, order.points_discount_usd - committedPointsUsd) / pv) : 0;
 
-  // Earn points only on cash kept by successfully provisioned items.
-  const earnCash = round2(
-    items
-      .filter((i) => i.status === "active" || i.status === "test_mode")
-      .reduce((s, i) => s + (Number(i.cash_charged_usd) || 0), 0)
-  );
-  const target = round2(earnCash * purchaseRewardRate());
-  const delta = round2(target - (Number(order.points_earned) || 0));
-  if (delta > 0) await logPoints(userId, delta, "credit");
-  else if (delta < 0) await logPoints(userId, -delta, "debit");
-  order.points_earned = target;
+  // Reward points are earned ONLY when funding with crypto (wallet top-up, or a
+  // direct crypto order). An order paid from wallet balance earns nothing here.
+  // (points_earned is set elsewhere for crypto orders; left untouched for wallet.)
 
   const failed = items.filter((i) => i.status === "failed").length;
   order.status = items.length && failed === items.length ? "failed" : failed > 0 ? "partial" : "paid";
@@ -430,8 +423,10 @@ class CheckoutController {
         body.wallet_balance_usd = round2(walletUsd(wallet));
 
         // Reward points: what the buyer holds, and how much can be applied here.
+        // Reward points are ALWAYS auto-applied (max redeemable) so the buyer
+        // only pays the remaining balance via crypto or wallet.
         const { applied, discount, point_value_usd } = computeRedemption(
-          req.body?.redeem_points,
+          pointsBalance,
           pointsBalance,
           subtotal_usd
         );
@@ -475,8 +470,10 @@ class CheckoutController {
 
       // Reward points redemption — clamp to the buyer's balance and 100% of the order.
       const pointsBalance = await getPointsBalance(userId);
+      // Reward points are ALWAYS auto-applied (max redeemable); the remaining
+      // balance is paid from wallet. The frontend no longer opts in.
       const { applied: points_redeemed, discount: points_discount_usd } = computeRedemption(
-        req.body?.redeem_points,
+        pointsBalance,
         pointsBalance,
         subtotal_usd
       );
@@ -910,12 +907,6 @@ class CheckoutController {
       console.error("[checkout] renewal payment record failed:", e?.message || e);
     }
 
-    const pts = round2(price * purchaseRewardRate());
-    if (pts > 0) {
-      await logPoints(order.userId, pts, "credit");
-      order.points_earned = round2((Number(order.points_earned) || 0) + pts);
-    }
-
     order.markModified("items");
     await order.save();
     const after = await Wallet.findOne({ userId: order.userId });
@@ -1033,6 +1024,185 @@ class CheckoutController {
       });
     } catch (err) {
       return CheckoutController.fail(res, err);
+    }
+  }
+
+  // POST /checkout/orders/crypto — pay for an order DIRECTLY with crypto (bypasses
+  // the wallet). Auto-redeems points, bills the remaining balance in crypto, and
+  // earns reward points on the crypto paid (like a top-up) once it confirms.
+  static async createCryptoOrder(req, res) {
+    const userId = req.user.id;
+    const clientOrderId = req.body?.client_order_id ? String(req.body.client_order_id).slice(0, 80) : null;
+    try {
+      if (clientOrderId) {
+        const existing = await Order.findOne({ userId, clientOrderId });
+        if (existing) {
+          const p = existing.crypto || null;
+          return res.status(200).json({
+            success: true,
+            idempotent: true,
+            order: existing,
+            payment: p ? { orderId: String(existing._id), paymentId: p.paymentId, address: p.address, destinationTag: p.destinationTag, currency: p.currency, cryptoAmount: p.cryptoAmount, amountUsd: p.amountUsd, qrCode: p.qrCode, expireAt: p.expireAt } : null,
+          });
+        }
+      }
+      const cur = String(req.body?.currency || "").toUpperCase().trim();
+      if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
+
+      const [items, mode] = await Promise.all([priceItems(req.body?.items), getMode()]);
+      const subtotal_usd = round2(items.reduce((s, i) => s + i.price_usd, 0));
+
+      // Points are ALWAYS auto-applied (max redeemable).
+      const pointsBalance = await getPointsBalance(userId);
+      const { applied: points_redeemed, discount: points_discount_usd } = computeRedemption(pointsBalance, pointsBalance, subtotal_usd);
+      const charged_usd = round2(Math.max(0, subtotal_usd - points_discount_usd));
+
+      // Split committed cash + points across items (reconcile rounding on the last).
+      let cashAcc = 0, ptsAcc = 0;
+      items.forEach((it, i) => {
+        it.status = "pending";
+        it.attempts = 0;
+        if (i < items.length - 1 && subtotal_usd > 0) {
+          it.cash_charged_usd = round2(it.price_usd * (charged_usd / subtotal_usd));
+          it.points_charged_usd = round2(it.price_usd - it.cash_charged_usd);
+        } else {
+          it.cash_charged_usd = round2(charged_usd - cashAcc);
+          it.points_charged_usd = round2(points_discount_usd - ptsAcc);
+        }
+        cashAcc = round2(cashAcc + it.cash_charged_usd);
+        ptsAcc = round2(ptsAcc + it.points_charged_usd);
+      });
+
+      // Fully covered by points → no crypto needed. Provision immediately.
+      if (charged_usd <= 0) {
+        if (points_redeemed > 0) await logPoints(userId, points_redeemed, "debit");
+        const order0 = new Order({
+          userId, clientOrderId, mode, items,
+          subtotal_usd, points_redeemed, points_discount_usd, points_earned: 0,
+          charged_usd: 0, payment_method: "crypto", payment_status: "paid",
+          status: "paid", provisioning: "pending",
+        });
+        await order0.save();
+        setImmediate(() => CheckoutController.processOrder(order0._id).catch((e) => console.error("[checkout] crypto(points-only) processOrder:", e?.message || e)));
+        return res.status(201).json({ success: true, fully_covered: true, order: order0 });
+      }
+
+      // Validate the coin against the merchant's live configured coins.
+      try {
+        const supported = await getSupportedCurrencies();
+        const live = (supported?.data?.currencies || supported?.data?.all_supported || []).map((c) => String(c).toUpperCase());
+        const allow = getConfiguredCoins();
+        const effective = allow.length ? live.filter((c) => allow.includes(c)) : live;
+        if (effective.length && !effective.includes(cur)) {
+          return res.status(400).json({ success: false, message: `${cur} is not available. Please choose one of: ${effective.join(", ")}.`, supported: effective });
+        }
+      } catch (e) { /* non-fatal */ }
+
+      let walletToken = null;
+      try { walletToken = await ensureDynoWallet(userId); } catch (e) { /* optional */ }
+
+      const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+      const meta_data = { user_id: String(userId), userId: String(userId), amount: charged_usd, product: "order_payment", frontendEndPoint: "cart" };
+      const resp = await createCryptoPayment({ amount: charged_usd, currency: cur, redirect_uri: `${frontendBase}/cart`, meta_data, walletToken });
+      const d = resp?.data || {};
+      if (!d.address || !d.transaction_id) {
+        return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });
+      }
+      const destinationTag = (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null);
+      const tagStr = destinationTag == null ? null : String(destinationTag);
+      const expireAt = new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000);
+
+      // Burn the redeemed points now (held); refunded if the payment window expires.
+      if (points_redeemed > 0) await logPoints(userId, points_redeemed, "debit");
+
+      const order = new Order({
+        userId, clientOrderId, mode, items,
+        subtotal_usd, points_redeemed, points_discount_usd, points_earned: 0,
+        charged_usd, payment_method: "crypto", payment_status: "awaiting_payment",
+        status: "awaiting_payment", provisioning: "awaiting_payment",
+        crypto: {
+          paymentId: d.transaction_id, address: d.address, destinationTag: tagStr,
+          currency: d.currency || cur, cryptoAmount: Number(d.amount) || null,
+          amountUsd: Number(d.base_amount) || charged_usd, qrCode: d.qr_code || null,
+          status: "pending", expireAt,
+        },
+      });
+      await order.save();
+
+      return res.status(201).json({
+        success: true,
+        order: { _id: order._id, orderNumber: order.orderNumber, subtotal_usd, points_discount_usd, charged_usd },
+        payment: {
+          orderId: String(order._id), paymentId: d.transaction_id, address: d.address, destinationTag: tagStr,
+          currency: d.currency || cur, cryptoAmount: Number(d.amount) || null,
+          amountUsd: Number(d.base_amount) || charged_usd, qrCode: d.qr_code || null, expireAt,
+        },
+      });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
+    }
+  }
+
+  // GET /checkout/orders/:id/crypto-status — poll DynoPay; on confirmation, earn
+  // points on the crypto paid then provision. Refund held points if it expires.
+  static async getCryptoOrderStatus(req, res) {
+    try {
+      const userId = req.user.id;
+      const order = await Order.findOne({ _id: req.params.id, userId });
+      if (!order) return res.status(404).json({ success: false, message: "Order not found." });
+      if (order.payment_method !== "crypto" || order.payment_status === "paid") {
+        return res.status(200).json({ success: true, data: { status: "paid", order } });
+      }
+
+      const pay = order.crypto || {};
+      const expired = pay.expireAt && new Date(pay.expireAt) <= new Date();
+
+      let statusData = null;
+      try { const ps = await getPaymentStatus(pay.paymentId); statusData = ps?.data || null; } catch (e) { statusData = null; }
+      const rawStatus = String(statusData?.payment_status || statusData?.status || "").toLowerCase();
+      const isPaid = statusData?.is_paid === true || ["paid", "confirmed", "settled", "successful", "success", "completed"].includes(rawStatus);
+      const txHash = statusData?.incoming_tx_hash || null;
+
+      if (isPaid) {
+        order.payment_status = "paid";
+        if (order.crypto) { order.crypto.status = "paid"; order.crypto.txHash = txHash; }
+        const { getWalletTopupRewardRate, addWalletTopupRewardPoints } = require("../wallet/WalletController");
+        const earned = round2((Number(order.charged_usd) || 0) * getWalletTopupRewardRate());
+        order.points_earned = earned;
+        order.provisioning = "pending";
+        order.markModified("crypto");
+        await order.save();
+        if (Number(order.charged_usd) > 0) await addWalletTopupRewardPoints(userId, Number(order.charged_usd));
+        await CheckoutController.processOrder(order._id);
+        const fresh = await Order.findById(order._id);
+        return res.status(200).json({ success: true, data: { status: "paid", order: fresh } });
+      }
+
+      if (expired) {
+        if (order.payment_status !== "expired") {
+          order.payment_status = "expired";
+          order.status = "failed";
+          if (order.crypto) order.crypto.status = "expired";
+          if (Number(order.points_redeemed) > 0) await logPoints(userId, Number(order.points_redeemed), "credit");
+          order.markModified("crypto");
+          await order.save();
+        }
+        return res.status(200).json({ success: true, data: { status: "expired", order } });
+      }
+
+      let friendly = "pending";
+      if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
+      else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
+      if (friendly === "failed" && order.payment_status !== "failed") {
+        order.payment_status = "failed";
+        if (order.crypto) order.crypto.status = "failed";
+        if (Number(order.points_redeemed) > 0) await logPoints(userId, Number(order.points_redeemed), "credit");
+        order.markModified("crypto");
+        await order.save();
+      }
+      return res.status(200).json({ success: true, data: { status: friendly, orderId: String(order._id), confirmations: statusData?.confirmations, requiredConfirmations: statusData?.required_confirmations } });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error?.message || "Failed to check payment status." });
     }
   }
 

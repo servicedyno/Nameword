@@ -6,6 +6,11 @@ export const checkoutAPI = {
   quote: async (items, opts = {}) => (await apiClient.post(`${C}/quote`, { items, ...opts })).data,
   createOrder: async (items, clientOrderId, opts = {}) =>
     (await apiClient.post(`${C}/orders`, { items, client_order_id: clientOrderId, ...opts })).data,
+  // Direct crypto-order payment (bypasses the wallet): create + poll for confirmation.
+  createCryptoOrder: async (items, clientOrderId, currency) =>
+    (await apiClient.post(`${C}/orders/crypto`, { items, client_order_id: clientOrderId, currency })).data,
+  cryptoOrderStatus: async (id) =>
+    (await apiClient.get(`${C}/orders/${encodeURIComponent(id)}/crypto-status`)).data,
   listOrders: async () => (await apiClient.get(`${C}/orders`)).data,
   getOrder: async (id) => (await apiClient.get(`${C}/orders/${encodeURIComponent(id)}`)).data,
   // C3: async provisioning — live status poll + failed-item retry.

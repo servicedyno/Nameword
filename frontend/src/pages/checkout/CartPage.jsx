@@ -8,7 +8,7 @@ import { usePageMeta } from "../../hooks/usePageMeta";
 import { useAlert } from "../../context/AlertContext";
 import checkoutAPI from "../../api/checkout";
 import CartSummary from "../../components/checkout/CartSummary";
-import WalletModal from "../../components/modals/wallet-modal";
+import CryptoCheckoutModal from "../../components/cart/CryptoCheckoutModal";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 import { regionLabel } from "../../utils/regions";
 import Loader from "../../components/common/Loader";
@@ -130,9 +130,7 @@ export default function CartPage() {
   const [problems, setProblems] = useState({});
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState(null);
-  const [redeemPoints, setRedeemPoints] = useState(0);
-  const [showTopup, setShowTopup] = useState(false);
-  const [topupPreset, setTopupPreset] = useState(0);
+  const [showCrypto, setShowCrypto] = useState(false);
   const clientOrderId = useRef(newClientOrderId());
 
   const orderPayload = useMemo(() => cart.toPayload(), [cart.items]);
@@ -187,10 +185,10 @@ export default function CartPage() {
   const subtotal = quote?.subtotal_usd ?? cart.subtotal;
   const pointValue = quote?.point_value_usd ?? 0.02;
   const pointsBalance = Number(quote?.points_balance ?? 0);
-  const maxRedeem = Number(quote?.max_redeemable_points ?? 0);
-  const appliedPoints = Math.max(0, Math.min(Number(redeemPoints) || 0, maxRedeem));
-  const pointsDiscount = Math.round(appliedPoints * pointValue * 100) / 100;
-  const payable = Math.round(Math.max(0, subtotal - pointsDiscount) * 100) / 100;
+  // Points are auto-applied server-side (max redeemable); reflect that here.
+  const appliedPoints = Number(quote?.points_applied ?? 0);
+  const pointsDiscount = Number(quote?.points_discount_usd ?? 0);
+  const payable = Number(quote?.payable_usd ?? Math.round(Math.max(0, subtotal - pointsDiscount) * 100) / 100);
   const shortfall = walletBalance == null ? 0 : Math.max(0, Math.round((payable - walletBalance) * 100) / 100);
   const hasProblems = Object.keys(problems).length > 0;
   const customNsIncomplete = cart.domains.some(
@@ -202,7 +200,7 @@ export default function CartPage() {
     setPaying(true);
     setPayError(null);
     try {
-      const res = await checkoutAPI.createOrder(orderPayload, clientOrderId.current, appliedPoints > 0 ? { redeem_points: appliedPoints } : {});
+      const res = await checkoutAPI.createOrder(orderPayload, clientOrderId.current, {});
       const order = res?.order;
       cart.clear();
       window.dispatchEvent(new Event("wallet:updated"));
@@ -224,27 +222,17 @@ export default function CartPage() {
     }
   };
 
-  // C4: crypto top-up finished (wallet credited) → auto-resume the order.
-  // The server re-checks the balance in createOrder, so we just retry payment;
-  // if it's still short (e.g. price moved), the shortfall UI shows again.
-  const handleTopupSuccess = () => {
-    setShowTopup(false);
-    setPayError(null);
-    window.dispatchEvent(new Event("wallet:updated"));
-    // small delay so the credit is fully settled before we re-price + charge
-    setTimeout(() => {
-      refreshQuote();
-      pay();
-    }, 600);
-  };
-
-  // C4: dedicated "Pay with crypto" on the cart. Funds the wallet via the native
-  // crypto flow (address + QR + polling), then auto-completes the order in one step.
-  // Preset = the full order amount (any leftover stays as wallet credit).
+  // Direct crypto-order payment (bypasses the wallet). On confirmation the order
+  // is provisioned and reward points are earned on the crypto paid.
   const payWithCrypto = () => {
     setPayError(null);
-    setTopupPreset(payable);
-    setShowTopup(true);
+    setShowCrypto(true);
+  };
+  const onCryptoSuccess = (order) => {
+    setShowCrypto(false);
+    cart.clear();
+    window.dispatchEvent(new Event("wallet:updated"));
+    navigate(`/checkout/success/${order._id}`, { replace: true, state: { order } });
   };
 
   const onRemove = (id) => {
@@ -318,32 +306,14 @@ export default function CartPage() {
                         {pointsBalance} pts · {money(pointsBalance * pointValue)}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-ink-soft dark:text-gray-400" data-testid="cart-points-explainer">
-                      1 point = {money(pointValue)} · earn 1 point for every $1 you spend
+                    <p className="mt-2 text-sm text-ink-soft dark:text-gray-400" data-testid="cart-points-applied-note">
+                      {appliedPoints > 0 ? (
+                        <>Auto-applied <span className="font-semibold text-primary dark:text-white" data-testid="cart-points-applied">{appliedPoints}</span> pts
+                        <span className="text-brand-700 dark:text-brand-300"> (− {money(pointsDiscount)})</span> to this order.</>
+                      ) : (
+                        <>Your points are applied automatically at checkout.</>
+                      )}
                     </p>
-                    <input
-                      type="range"
-                      min={0}
-                      max={maxRedeem}
-                      step={1}
-                      value={appliedPoints}
-                      onChange={(e) => setRedeemPoints(Math.max(0, Math.min(Number(e.target.value), maxRedeem)))}
-                      className="mt-3 w-full accent-[var(--color-brand-600,#4f46e5)]"
-                      data-testid="cart-points-slider"
-                      aria-label="Reward points to redeem"
-                    />
-                    <div className="mt-2 flex items-center justify-between text-sm">
-                      <span className="text-ink-soft dark:text-gray-400">
-                        Using <span className="font-semibold text-primary dark:text-white" data-testid="cart-points-applied">{appliedPoints}</span> pts
-                        {pointsDiscount > 0 && <span className="text-brand-700 dark:text-brand-300"> (− {money(pointsDiscount)})</span>}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => setRedeemPoints(maxRedeem)} disabled={appliedPoints >= maxRedeem} className="font-medium text-brand-700 dark:text-brand-300 hover:underline disabled:opacity-40" data-testid="cart-points-max">Use max</button>
-                        {appliedPoints > 0 && (
-                          <button type="button" onClick={() => setRedeemPoints(0)} className="text-ink-soft hover:text-primary dark:text-gray-400" data-testid="cart-points-clear">Clear</button>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 )}
                 <div className="rounded-xl border border-line dark:border-gray-800 p-4">
@@ -365,7 +335,7 @@ export default function CartPage() {
                   </div>
                   {shortfall > 0 && (
                     <p className="mt-3 text-xs text-ink-soft dark:text-gray-400" data-testid="cart-shortfall-hint">
-                      Not enough wallet balance — use <span className="font-medium text-primary dark:text-white">Pay with crypto</span> below to fund your wallet and complete this order in one step.
+                      Not enough wallet balance — use <span className="font-medium text-primary dark:text-white">Pay with crypto</span> below to pay this order directly and earn reward points.
                     </p>
                   )}
                 </div>
@@ -395,11 +365,12 @@ export default function CartPage() {
         </div>
       )}
 
-      {showTopup && (
-        <WalletModal
-          presetAmount={topupPreset}
-          onClose={() => setShowTopup(false)}
-          onSuccess={handleTopupSuccess}
+      {showCrypto && (
+        <CryptoCheckoutModal
+          orderPayload={orderPayload}
+          payable={payable}
+          onClose={() => setShowCrypto(false)}
+          onSuccess={onCryptoSuccess}
         />
       )}
     </div>
