@@ -1,4 +1,4 @@
-import MainLayout from "../layouts/MainLayout";
+import ProductShell from "../components/layout/ProductShell";
 import { ProductHero, SectionHeading, FeatureGrid, Steps, CtaBand, IMAGES } from "../components/marketing/marketing-ui";
 import { LuGlobe, LuNetwork, LuCloud, LuServer, LuWallet, LuShoppingCart, LuUserPlus, LuKeyRound, LuTerminal, LuCode, LuCheck } from "react-icons/lu";
 import { useLanguage } from "../hooks/useLanguage";
@@ -27,7 +27,7 @@ export default function Api() {
   -H "Accept: application/json"`;
 
   return (
-    <MainLayout fluid>
+    <ProductShell>
       <div onClickCapture={rememberKeys}>
         <ProductHero
           eyebrow={s.eyebrow}
@@ -98,6 +98,6 @@ export default function Api() {
       <div onClickCapture={rememberKeys}>
         <CtaBand title={s.ctaTitle} subtitle={s.ctaLead} primaryTo={keysTo} primaryLabel={s.ctaPrimary} secondaryTo="/pricing" secondaryLabel={s.ctaSecondary} image={IMAGES.harbour} />
       </div>
-    </MainLayout>
+    </ProductShell>
   );
 }

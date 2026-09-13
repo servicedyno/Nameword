@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import Navbar from "../layout/Navbar";
-import Footer from "../layout/Footer";
+import ProductShell from "../layout/ProductShell";
 import { resellerProduct } from "../../api/reseller";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -220,8 +219,7 @@ export default function ServersPage({ product = "vps" }) {
   };
 
   return (
-    <>
-      <Navbar />
+    <ProductShell>
       {/* Branded hero */}
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
         <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
@@ -468,8 +466,7 @@ export default function ServersPage({ product = "vps" }) {
         </div>
       )}
 
-      <Footer />
-    </>
+    </ProductShell>
   );
 }
 

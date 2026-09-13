@@ -26,7 +26,7 @@ const BOTTOM_TABS = [
   { key: "account", to: "/account-setting", icon: LuUser },
 ];
 
-const FrontLayout = () => {
+const FrontLayout = ({ children, fluid = false }) => {
   const { user, refreshUser } = useAuth();
   const { language, changeLanguage, t } = useLanguage();
   const languageDropDown = useDropdown();
@@ -180,9 +180,7 @@ const FrontLayout = () => {
 
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
-          <div className="main-content">
-            <Outlet />
-          </div>
+          {fluid ? (children ?? <Outlet />) : <div className="main-content">{children ?? <Outlet />}</div>}
           <div className="mt-8 flex flex-col gap-3 px-4 pb-6 text-13 font-medium text-ink-soft lg:px-10">
             <div className="flex gap-4">
               <NavLink to="/terms-and-conditions" className="nw-link">{t.footer.termsAndConditions}</NavLink>

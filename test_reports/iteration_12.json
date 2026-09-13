@@ -1,0 +1,34 @@
+{
+  "summary": "Frontend-only layout verification for the new ProductShell wrapper (signed-in => FrontLayout app shell, signed-out => storefront Navbar/Footer). Tested at 1440x900, 1024x768 and 390x844. 6 of 7 signed-in product routes correctly render the app shell (rail-overview + wallet-chip + rewards-chip + user-menu-button, no storefront brand-logo/sign-in). All 6 signed-out product routes correctly show the storefront (brand-logo, Sign in, Create account, BTC/ETH/USDT crypto chips) with NO rail/wallet. Sidebar persistence across dashboard->domains->hosting: OK. Laptop 1024 shows rail visible + bottom-tabs hidden. Mobile 390 shows rail hidden + bottom-tabs visible + hamburger present. HOWEVER /dns-manager (signed-in) crashes into the ErrorBoundary ('Something went wrong') with 'TypeError: Cannot read properties of undefined (reading toString)'. Root cause is a pre-existing bug in Sidebar.jsx that is now exposed on every signed-in visit to /dns-manager.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "components/front-admin/admin-common/sidebar.jsx (line ~756)",
+        "issue": "On isDomainRoute pages (/dns-manager, /domain-overview, /contact-info) the sidebar renders <select> options via domains.map((d) => <option value={d.id.toString()}>). When any domain in DomainContext has an undefined id, this throws 'Cannot read properties of undefined (reading toString)' inside Array.map, which propagates to the top-level ErrorBoundary and replaces the entire /dns-manager page with 'Something went wrong'. Result: signed-in /dns-manager is completely unusable (no app shell, no page content). Other product pages (/domains, /hosting, /vps, /rdp, /pricing, /api) are unaffected because they are not isDomainRoute and the select is not rendered.",
+        "selector": "[data-testid=\"rail-overview\"] (never renders on /dns-manager because component tree crashes before Sidebar/AppRail mount)",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix sidebar.jsx domain-selector map to be null-safe: `value={String(d.id ?? d.websiteName ?? '')}` and filter out `domains.filter(d => d && (d.id != null || d.websiteName))` before mapping. Also guard the similar `d.id.toString() === selectedValue` on line ~472 (`String(d?.id ?? '') === selectedValue`) and the `key={d.id}` (fallback to websiteName).",
+    "After the fix, /dns-manager should render the FrontLayout app shell (rail-overview visible, wallet-chip, rewards-chip, user-menu-button) with the DNS manager content below it, matching the other product pages."
+  ],
+  "critical_code_review_comments": [
+    "sidebar.jsx assumes every domain in DomainContext has a defined `id` — it does not. At least one domain in buyer@nameword.local's list is missing id, which crashes any isDomainRoute page. This bug likely existed before ProductShell too (via MainLayout) but was previously hidden if /dns-manager wasn't visited; the refactor did not introduce it, but ProductShell testing surfaces it.",
+    "FrontLayout.jsx handles children ?? <Outlet /> and the `fluid` prop correctly. ProductShell.jsx cleanly branches on useAuth().user — implementation matches the spec and passes on 6/7 pages.",
+    "Storefront frame for signed-out visitors is fully intact on all six product pages (brand-logo, Sign in, Create account, BTC/ETH/USDT footer chips present)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "86% (6/7 signed-in product pages OK; 6/6 signed-out storefront OK; sidebar persistence OK; laptop+mobile OK; only /dns-manager signed-in fails)"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345",
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The ProductShell wrap works for /domains, /hosting, /vps, /rdp, /pricing, /api — verified at 1440, 1024 and 390 widths. The only failure is /dns-manager signed-in which crashes the ErrorBoundary from Sidebar's domain-selector <select> when any domain has undefined id. After main agent fixes sidebar.jsx (null-safe .toString on d.id in the domains.map and the finder above), re-test /dns-manager at 1440x900 while signed in as buyer@nameword.local — expect rail-overview, wallet-chip, rewards-chip, user-menu-button all count=1 and the DNS Manager UI to render.",
+  "rca of the issue": "REPRO: 1) Sign in as buyer@nameword.local / Buyer@12345. 2) Navigate to /dns-manager. RESULT: page shows ErrorBoundary 'Something went wrong', console throws `TypeError: Cannot read properties of undefined (reading 'toString')` from Array.map. RCA: /dns-manager is defined as an isDomainRoute in sidebar.jsx (const domainRoutes = ['/domain-overview','/dns-manager','/contact-info']). On isDomainRoute the sidebar renders a <select> populated by `domains.map((d) => <option key={d.id} value={d.id.toString()}>{d.websiteName}</option>)` (~line 756). If DomainContext returns any domain with `id === undefined`, calling `.toString()` on it throws. This aborts render of Sidebar -> FrontLayout -> ProductShell -> the whole page, escalating to the top-level ErrorBoundary. MITIGATION: guard the field, e.g. `value={String(d.id ?? d.websiteName ?? '')}` and filter empties before mapping; also fix the sibling `d.id.toString() === selectedValue` finder to `String(d?.id ?? '') === selectedValue`."
+}

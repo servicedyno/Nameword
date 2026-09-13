@@ -177,6 +177,15 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Full-wrap product pages in app frame for signed-in users (Option 2) (2026-06) — DONE, tested 100% (frontend)
+- **Goal**: for signed-in users, render product pages inside the app shell (persistent sidebar) so the sidebar never disappears; signed-out users keep the storefront frame.
+- **New `ProductShell`** (`components/layout/ProductShell.jsx`): if `useAuth().user` → `<DomainProvider><FrontLayout fluid>{children}</FrontLayout></DomainProvider>`; else → storefront `Navbar + children + Footer`.
+- **`FrontLayout` refactor**: now accepts `({ children, fluid })`, renders `children ?? <Outlet/>`, and skips the `.main-content` padding wrapper when `fluid` (so marketing pages render edge-to-edge with the sidebar).
+- **Pages refactored** to wrap in `<ProductShell>` (removed their own Navbar/Footer/MainLayout): `DomainsNomadly`, `HostingNomadly`, `DnsManagerNomadly`, `ServersPage` (VPS + RDP), `Pricing`, `Api`. HomePage/Privacy/Terms/Help stay storefront.
+- **Bug fix (latent, exposed by this change)**: `sidebar.jsx` domain-selector crashed via `d.id.toString()` when a domain had undefined `id` (only rendered on isDomainRoute pages like /dns-manager, which now show the sidebar). Made null-safe: `String(d?.id ?? '')`, filter `d && (d.id != null || d.websiteName)`, key/value `String(d.id ?? d.websiteName ?? '')`.
+- VERIFIED (iteration_12 + iteration_13, 100%): all 7 signed-in product pages (/domains, /hosting, /vps, /rdp, /pricing, /api, /dns-manager) render the app shell (rail + wallet/rewards chips + user menu, no storefront navbar); all 6 signed-out product pages render the storefront (navbar + footer coin chips, no rail); sidebar persists across dashboard↔product navigation; correct at 1440 / 1024 / 390; no console errors.
+
+
 ### Navigation bridge for signed-in users (Option 1) (2026-06) — DONE, tested 100% (frontend, 3 viewports)
 - **Problem**: signed-in users got stranded on storefront/product pages (only a name dropdown with no app links), the logo always went to the public landing page, and the sidebar vanished on laptop widths (1024–1279px).
 - **Account menu**: `UserDropdownMenu.jsx` rewritten into a full "Manage account" menu — quick links to Dashboard, Domains, Wallet, Rewards, Orders, My services, Subscriptions, Payment history, Help + existing settings links + "View public site" (→ `/`) + Logout. Used on both the storefront navbar and the in-app top bar.

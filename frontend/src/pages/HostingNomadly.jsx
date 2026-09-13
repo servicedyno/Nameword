@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer";
+import ProductShell from "../components/layout/ProductShell";
 import resellerAPI from "../api/reseller";
 import WalletNudge from "../components/reseller/WalletNudge";
 import { useAlert } from "../context/AlertContext";
@@ -342,8 +341,7 @@ export default function HostingNomadly() {
   };
 
   return (
-    <>
-      <Navbar />
+    <ProductShell>
       {/* Branded hero */}
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
         <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
@@ -744,7 +742,6 @@ export default function HostingNomadly() {
         </div>
       )}
 
-      <Footer />
-    </>
+    </ProductShell>
   );
 }

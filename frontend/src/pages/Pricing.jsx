@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import MainLayout from "../layouts/MainLayout";
+import ProductShell from "../components/layout/ProductShell";
 import { SectionHeading, CtaBand, PricingTiers, IMAGES } from "../components/marketing/marketing-ui";
 import resellerAPI from "../api/reseller";
 import { useLanguage } from "../hooks/useLanguage";
@@ -208,7 +208,7 @@ export default function Pricing() {
   };
 
   return (
-    <MainLayout fluid>
+    <ProductShell>
       {/* Hero */}
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
         <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
@@ -354,6 +354,6 @@ export default function Pricing() {
         secondaryLabel={t.site.home.pricing.searchCta}
         image={IMAGES.harbour}
       />
-    </MainLayout>
+    </ProductShell>
   );
 }

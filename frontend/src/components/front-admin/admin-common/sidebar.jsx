@@ -469,7 +469,7 @@ export default function Sidebar({ setIsEnlarge }) {
       // For domain routes, find from domains array
       selectedDomain = domains.find(
         (d) =>
-          d.id.toString() === selectedValue || d.websiteName === selectedValue,
+          String(d?.id ?? "") === selectedValue || d?.websiteName === selectedValue,
       );
     }
 
@@ -752,11 +752,16 @@ export default function Sidebar({ setIsEnlarge }) {
                     )
                   ) : // For domain routes, show all domains
                   domains.length > 0 ? (
-                    domains.map((d) => (
-                      <option key={d.id} value={d.id.toString()}>
-                        {d.websiteName}
-                      </option>
-                    ))
+                    domains
+                      .filter((d) => d && (d.id != null || d.websiteName))
+                      .map((d) => {
+                        const val = String(d.id ?? d.websiteName ?? "");
+                        return (
+                          <option key={val} value={val}>
+                            {d.websiteName}
+                          </option>
+                        );
+                      })
                   ) : (
                     <option value="">{t.admin.noDomainsFound}</option>
                   )}

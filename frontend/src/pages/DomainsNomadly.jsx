@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer";
+import ProductShell from "../components/layout/ProductShell";
 import resellerAPI from "../api/reseller";
 import { useAlert } from "../context/AlertContext";
 import { usePageMeta } from "../hooks/usePageMeta";
@@ -197,8 +196,7 @@ export default function DomainsNomadly() {
   const takenSuggestions = suggestions.filter((s) => !s.available);
 
   return (
-    <>
-      <Navbar />
+    <ProductShell>
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
         <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
         <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
@@ -328,7 +326,6 @@ export default function DomainsNomadly() {
         </div>
       )}
 
-      <Footer />
-    </>
+    </ProductShell>
   );
 }
