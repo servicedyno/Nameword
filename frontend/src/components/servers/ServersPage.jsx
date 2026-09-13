@@ -7,6 +7,7 @@ import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { useBuyer } from "../../hooks/useBuyer";
 import { useCart } from "../../hooks/useCart";
+import { useCartUI } from "../../context/CartUIContext";
 import { regionLabel } from "../../utils/regions";
 import { Link } from "react-router";
 import {
@@ -25,6 +26,7 @@ import {
   FiAlertTriangle,
   FiZap,
   FiShoppingCart,
+  FiArrowRight,
 } from "react-icons/fi";
 
 // Jurisdictions offered today (labels come from locales/site.*.js -> servers.regions)
@@ -90,6 +92,7 @@ export default function ServersPage({ product = "vps" }) {
   const [region, setRegion] = useState("EU");
   const { isAuthenticated, mode, balance } = useBuyer();
   const cart = useCart();
+  const { open: openCart } = useCartUI();
 
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -267,7 +270,7 @@ export default function ServersPage({ product = "vps" }) {
           </div>
         </div>
       </section>
-      <main className="nw-container py-12">
+      <main className={`nw-container py-12 ${cart.count > 0 ? "pb-28" : ""}`}>
 
         {/* Mode banner (signed-in only) */}
         {isAuthenticated && mode === "dry_run" && (
@@ -463,6 +466,28 @@ export default function ServersPage({ product = "vps" }) {
               <Row label="IP" value={creds.ip} />
               <Row label="Username" value={creds.username || meta.user} />
               <Row label="Password" value={creds.password || (creds.mode === "dry_run" ? "(only shown in live mode)" : "—")} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky cart bar — a persistent, always-visible way to reach the cart
+          and the crypto checkout after adding a plan (mirrors the domains page). */}
+      {cart.count > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line dark:border-white/[0.08] bg-white/95 dark:bg-gray-950/95 backdrop-blur-md" data-testid="server-cart-bar">
+          <div className="nw-container flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="nw-icon h-10 w-10 shrink-0"><FiShoppingCart size={18} /></span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-primary dark:text-white" data-testid="server-cart-bar-count">{cart.count} item{cart.count === 1 ? "" : "s"} in cart</p>
+                <p className="text-xs text-ink-soft dark:text-gray-400 truncate">{cart.servers.map((s) => s.plan_name || s.plan_id).join(", ") || "Ready to checkout"}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 shrink-0">
+              <span className="hidden sm:block text-lg font-bold text-primary dark:text-white nw-mono" data-testid="server-cart-bar-total">{money(cart.subtotal)}</span>
+              <button type="button" onClick={openCart} className="nw-btn-primary" data-testid="server-cart-bar-checkout">
+                View cart &amp; checkout <FiArrowRight size={16} />
+              </button>
             </div>
           </div>
         </div>

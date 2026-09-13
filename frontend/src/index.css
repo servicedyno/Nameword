@@ -1172,3 +1172,55 @@ input[type="checkbox"]:checked {
   animation: nw-flash-kf 1.6s ease-out;
   border-radius: 0.75rem;
 }
+
+/* ---- Payment success celebration (crypto paid / wallet credited) ---- */
+@keyframes nw-cele-pop {
+  0% { transform: scale(0); opacity: 0; }
+  55% { transform: scale(1.14); opacity: 1; }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.nw-cele-circle { animation: nw-cele-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes nw-cele-check-kf { to { stroke-dashoffset: 0; } }
+.nw-cele-check-path {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: nw-cele-check-kf 0.4s 0.32s ease-out forwards;
+}
+
+@keyframes nw-cele-ring-kf {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.nw-cele-ring { animation: nw-cele-ring-kf 0.9s 0.2s ease-out forwards; }
+
+@keyframes nw-cele-text-kf {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.nw-cele-text { animation: nw-cele-text-kf 0.4s 0.35s ease-out both; }
+
+@keyframes nw-confetti-kf {
+  0% { transform: translate3d(0, -12%, 0) rotate(0deg); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate3d(var(--nw-drift, 0px), 260px, 0) rotate(var(--nw-rot, 360deg)); opacity: 0; }
+}
+.nw-confetti-piece {
+  position: absolute;
+  top: 0;
+  border-radius: 2px;
+  will-change: transform, opacity;
+  animation-name: nw-confetti-kf;
+  animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nw-cele-circle { animation: none !important; transform: none; opacity: 1; }
+  .nw-cele-ring { animation: none !important; opacity: 0; }
+  .nw-cele-text { animation: none !important; opacity: 1; transform: none; }
+  .nw-cele-check-path { animation: none !important; stroke-dashoffset: 0; }
+  .nw-confetti-piece { display: none !important; }
+}

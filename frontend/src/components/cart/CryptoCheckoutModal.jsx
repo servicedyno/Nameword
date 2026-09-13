@@ -6,6 +6,7 @@ import checkoutAPI from "../../api/checkout";
 import { walletAPI } from "../../api/walletApi";
 import { money } from "../../utils/checkoutFormat";
 import CryptoStatusTimeline from "./CryptoStatusTimeline";
+import PaymentSuccessCelebration from "./PaymentSuccessCelebration";
 
 const newClientOrderId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -47,6 +48,11 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
   const [paidClicked, setPaidClicked] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(null);
+  // Success celebration: shown briefly when the payment confirms, then we
+  // auto-close/navigate via onSuccess so buyers get instant reassurance.
+  const [celebrate, setCelebrate] = useState(false);
+  const finishRef = useRef(false);
+  const celebrateTimerRef = useRef(null);
   // underpaid → "switch coin" sub-flow
   const [showSwitch, setShowSwitch] = useState(false);
   const [switchCurrency, setSwitchCurrency] = useState("");
@@ -78,13 +84,26 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
     setTimeout(() => setCopied(null), 1500);
   };
 
+  // Payment confirmed → celebrate, then hand back to the caller (navigate to the
+  // order-success page). Guarded so it only fires once.
+  const finishPaid = (order) => {
+    if (finishRef.current) return;
+    finishRef.current = true;
+    clearTimeout(pollRef.current);
+    setError(null);
+    setCelebrate(true);
+    celebrateTimerRef.current = setTimeout(() => onSuccess?.(order), 2100);
+  };
+
+  useEffect(() => () => clearTimeout(celebrateTimerRef.current), []);
+
   const generate = async () => {
     if (!currency) return;
     setCreating(true);
     setError(null);
     try {
       const res = await checkoutAPI.createCryptoOrder(orderPayload, clientOrderId.current, currency);
-      if (res?.fully_covered && res?.order) { onSuccess(res.order); return; }
+      if (res?.fully_covered && res?.order) { finishPaid(res.order); return; }
       if (!res?.payment?.address) { setError("Could not generate a payment address. Please try another coin."); return; }
       setPay(res.payment);
       setInfo({ status: "awaiting_payment" });
@@ -106,7 +125,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
         const res = await checkoutAPI.cryptoOrderStatus(pay.orderId);
         const data = res?.data || {};
         if (!alive) return;
-        if (data.status === "paid") { onSuccess(data.order); return; }
+        if (data.status === "paid") { finishPaid(data.order); return; }
         if (data.status === "expired" || data.status === "failed") {
           setInfo(data);
           setError(data.status === "expired" ? "This payment window expired. Please start again." : "Payment failed or was cancelled.");
@@ -163,7 +182,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-950 dark:border dark:border-white/[0.06] max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-white px-5 py-4 dark:border-white/[0.06] dark:bg-gray-950">
           <div className="flex items-center gap-2">
-            {pay && (
+            {pay && !celebrate && (
               <button type="button" onClick={back} aria-label="Change coin" className="header-icon-btn h-8 w-8" data-testid="crypto-modal-back">
                 <IoArrowBack size={18} />
               </button>
@@ -178,7 +197,13 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
         </div>
 
         <div className="px-5 py-5">
-          {!pay ? (
+          {celebrate ? (
+            <PaymentSuccessCelebration
+              title="Payment confirmed!"
+              amountLabel={money(payable)}
+              subtitle="Your order is confirmed — setting things up now…"
+            />
+          ) : !pay ? (
             <>
               <p className="text-sm text-ink-soft dark:text-gray-400">
                 Paying <span className="font-semibold text-primary dark:text-white nw-mono">{money(payable)}</span> directly with crypto — no wallet needed. You&apos;ll earn reward points on this payment.

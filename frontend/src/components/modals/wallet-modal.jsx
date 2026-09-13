@@ -1,6 +1,6 @@
 import { IoArrowBack, IoCardOutline, IoClose, IoCopyOutline } from "react-icons/io5";
 import { PiWarningBold } from "react-icons/pi";
-import { FiCheckCircle, FiLoader } from "react-icons/fi";
+import { FiLoader } from "react-icons/fi";
 import { FaBitcoin, FaEthereum } from "react-icons/fa6";
 import { SiTether, SiLitecoin, SiDogecoin, SiBitcoincash, SiSolana, SiPolygon, SiRipple } from "react-icons/si";
 import { LuCoins } from "react-icons/lu";
@@ -9,6 +9,7 @@ import { walletAPI } from "../../api/walletApi";
 import { useAlert } from "../../context/AlertContext";
 import Loader from "../common/Loader";
 import CryptoStatusTimeline from "../cart/CryptoStatusTimeline";
+import PaymentSuccessCelebration from "../cart/PaymentSuccessCelebration";
 import { useLanguage } from "../../hooks/useLanguage";
 
 const MIN_TOPUP = 10;
@@ -349,10 +350,12 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
               </div>
 
               {credited ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-12 text-center" data-testid="topup-success">
-                  <FiCheckCircle className="text-tealdark" size={56} />
-                  <p className="text-lg font-semibold text-primary dark:text-white">${Number(pay.amountUsd).toFixed(2)} added to your wallet</p>
-                  <p className="text-sm text-secondary">You can close this window.</p>
+                <div data-testid="topup-success">
+                  <PaymentSuccessCelebration
+                    title="Payment received!"
+                    amountLabel={`$${Number(pay.amountUsd).toFixed(2)}`}
+                    subtitle="Added to your wallet. This window will close automatically."
+                  />
                 </div>
               ) : (
                 <>

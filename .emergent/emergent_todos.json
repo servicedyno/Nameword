@@ -1,0 +1,30 @@
+[
+  {
+    "content": "App setup: env files, yarn install, supervisor, live verification",
+    "status": "completed"
+  },
+  {
+    "content": "Feature 2: Create reusable animated PaymentSuccessCelebration component + CSS keyframes",
+    "status": "completed"
+  },
+  {
+    "content": "Feature 2: Wire celebration + auto-close into CryptoCheckoutModal (direct crypto order paid)",
+    "status": "completed"
+  },
+  {
+    "content": "Feature 2: Upgrade WalletModal credited screen to animated celebration (keep auto-close)",
+    "status": "completed"
+  },
+  {
+    "content": "Feature 1: Add persistent sticky cart bar to VPS/RDP ServersPage (opens mini-cart/crypto flow)",
+    "status": "completed"
+  },
+  {
+    "content": "Rebuild frontend prod bundle + restart, screenshot verify both features",
+    "status": "completed"
+  },
+  {
+    "content": "Run testing agent on checkout entry + crypto celebration flows",
+    "status": "completed"
+  }
+]
