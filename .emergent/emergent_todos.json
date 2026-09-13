@@ -1,18 +1,34 @@
 [
   {
-    "content": "Order Success Confetti: add the paid celebration/confetti to the order-success page on mount",
-    "status": "completed"
+    "content": "Explore User/RewardPointLog models, auth (register + Google), checkout order-complete + crypto-paid paths, rewards routes/frontend",
+    "status": "in_progress"
   },
   {
-    "content": "Cart Badge Pulse: gently pulse the header cart icon the first time an item is added (once per browser)",
-    "status": "completed"
+    "content": "Rewards core: add idempotent point helpers + RewardPointLog reference field (welcome/order/referral); central award logic",
+    "status": "pending"
   },
   {
-    "content": "Dynopay Brand Sweep: change leftover 'DynoPay' in code comments -> 'Dynopay' (comments only, not identifiers/env)",
-    "status": "completed"
+    "content": "Welcome $5 (250 pts): grant once on signup (email + Google) with idempotency flag",
+    "status": "pending"
   },
   {
-    "content": "Rebuild prod bundle + restart, screenshot verify order-success celebration + cart pulse",
-    "status": "completed"
+    "content": "Welcome back-fill: one-time script to grant 250 pts to all existing users (idempotent)",
+    "status": "pending"
+  },
+  {
+    "content": "Per-order earn: award 0.5 pt/$1 of amount paid on order completion (wallet + crypto), idempotent per order",
+    "status": "pending"
+  },
+  {
+    "content": "Referral: User fields + code/link, signup ref capture, award 250 pts to both on referee's first paid order",
+    "status": "pending"
+  },
+  {
+    "content": "Frontend: referral link/code UI + welcome/earn reflected in rewards banner & rewards history",
+    "status": "pending"
+  },
+  {
+    "content": "Test end-to-end with testing agent (welcome grant, order earn, referral, backfill) + fix issues",
+    "status": "pending"
   }
 ]
