@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { walletAPI } from "../../api/walletApi";
 import { useAlert } from "../../context/AlertContext";
 import Loader from "../common/Loader";
+import CryptoStatusTimeline from "../cart/CryptoStatusTimeline";
 import { useLanguage } from "../../hooks/useLanguage";
 
 const MIN_TOPUP = 10;
@@ -68,9 +69,14 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
   const [submitting, setSubmitting] = useState(false);
   const [topupError, setTopupError] = useState("");
   const [pay, setPay] = useState(resumePayment || null); // { paymentId, address, currency, cryptoAmount, amountUsd, qrCode }
-  const [status, setStatus] = useState(resumePayment?.status === "confirming" ? "confirming" : "waiting"); // waiting | confirming | credited | expired | failed
+  const [status, setStatus] = useState(resumePayment?.status === "confirming" ? "confirming" : "waiting"); // waiting | detected | confirming | credited | expired | failed
   const [credited, setCredited] = useState(false);
   const [copied, setCopied] = useState("");
+  // Whether the buyer tapped "I've sent it" (reveals the live status timeline).
+  // Resumed payments jump straight to the timeline since they were mid-flow.
+  const [sentClicked, setSentClicked] = useState(!!resumePayment);
+  const [confirmations, setConfirmations] = useState(null);
+  const [requiredConfirmations, setRequiredConfirmations] = useState(null);
   const successRef = useRef(false);
   const pollRef = useRef(null);
 
@@ -129,6 +135,8 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
         markCredited();
       } else {
         if (d.status) setStatus(d.status);
+        if (d.confirmations != null) setConfirmations(Number(d.confirmations));
+        if (d.requiredConfirmations != null) setRequiredConfirmations(Number(d.requiredConfirmations));
         if (manual) {
           showAlert("No payment detected yet — crypto can take a few minutes to confirm. We'll credit your wallet automatically once it lands.", { type: "warning", duration: 4000 });
         }
@@ -213,6 +221,15 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
   }, [status]);
 
   const netHint = pay ? NETWORK_HINT[pay.currency] || pay.currency : "";
+  // Map the top-up status onto the shared payment timeline.
+  const timelineStatus = credited
+    ? "paid"
+    : status === "confirming"
+    ? "confirming"
+    : status === "detected"
+    ? "detected"
+    : "awaiting_payment";
+  const showTimeline = credited || sentClicked || ["detected", "confirming"].includes(status);
 
   return (
     <div className="fixed inset-0 z-50 bg-white/80 dark:bg-gray-600/80 overflow-auto py-5">
@@ -401,17 +418,32 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                     <span>Send the exact amount on the {netHint} network only. Addresses are time-limited — please send promptly.</span>
                   </div>
 
-                  <div className={`flex items-center gap-2 mt-3 text-xs font-medium ${status === "confirming" ? "text-tealdark" : "text-secondary"}`} data-testid="topup-status">
-                    <FiLoader className="animate-spin" />
-                    <span>{statusLabel}</span>
-                  </div>
+                  {showTimeline ? (
+                    <div className="mt-4 rounded-xl border border-stokecolor bg-surface-2 p-4 dark:border-gray-700 dark:bg-white/[0.04]" data-testid="topup-status-timeline">
+                      <p className="mb-3 text-sm font-semibold text-primary dark:text-white">Payment status</p>
+                      <CryptoStatusTimeline status={timelineStatus} confirmations={confirmations} requiredConfirmations={requiredConfirmations} />
+                      <p className="mt-3 text-[12px] text-secondary dark:text-gray-400">
+                        This updates automatically — keep this open until it&apos;s confirmed. Crypto can take a few minutes.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 text-secondary mt-3 text-xs font-medium" data-testid="topup-status">
+                      <FiLoader className="animate-spin mt-0.5" />
+                      <span>{statusLabel}</span>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between gap-2 mt-4">
-                    <button type="button" onClick={() => checkStatus(true)} className="btn-outline max-w-max text-sm" data-testid="topup-check-now">
-                      I&apos;ve sent it — check now
+                    <button
+                      type="button"
+                      onClick={() => { setSentClicked(true); checkStatus(true); }}
+                      className="add-to-cart max-w-max text-sm"
+                      data-testid="topup-ive-paid"
+                    >
+                      {showTimeline ? "Check now" : "I've sent it"}
                     </button>
-                    <button type="button" onClick={onClose} className="add-to-cart max-w-max text-sm">
-                      Done
+                    <button type="button" onClick={onClose} className="btn-outline max-w-max text-sm">
+                      Close
                     </button>
                   </div>
                 </>

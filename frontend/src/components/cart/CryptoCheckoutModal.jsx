@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { IoClose, IoCopyOutline, IoArrowBack, IoCheckmarkCircle } from "react-icons/io5";
+import { IoClose, IoCopyOutline, IoArrowBack } from "react-icons/io5";
 import { PiWarningBold } from "react-icons/pi";
 import { FaBitcoin } from "react-icons/fa";
 import checkoutAPI from "../../api/checkout";
 import { walletAPI } from "../../api/walletApi";
 import { money } from "../../utils/checkoutFormat";
+import CryptoStatusTimeline from "./CryptoStatusTimeline";
 
 const newClientOrderId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -35,58 +36,6 @@ const coinLabel = (c) => {
   return m ? `${t} — ${m.name} · ${m.network}` : t;
 };
 const coinNetwork = (c) => COIN_META[prettyCoin(c)]?.network || prettyCoin(c);
-
-const STEPS = [
-  { key: "awaiting_payment", label: "Awaiting payment" },
-  { key: "detected", label: "Payment detected" },
-  { key: "confirming", label: "Confirming on-chain" },
-  { key: "paid", label: "Confirmed" },
-];
-const STEP_INDEX = { awaiting_payment: 0, detected: 1, underpaid: 1, confirming: 2, paid: 3 };
-
-function Timeline({ status, confirmations, requiredConfirmations }) {
-  const active = STEP_INDEX[status] ?? 0;
-  return (
-    <ol className="space-y-3" data-testid="crypto-timeline">
-      {STEPS.map((s, i) => {
-        const done = i < active || status === "paid";
-        const current = i === active && status !== "paid";
-        return (
-          <li key={s.key} className="flex items-center gap-3" data-testid={`crypto-step-${s.key}`}>
-            <span className="relative flex h-6 w-6 shrink-0 items-center justify-center">
-              {done ? (
-                <IoCheckmarkCircle className="h-6 w-6 text-emerald-500" />
-              ) : current ? (
-                <>
-                  <span className="absolute h-6 w-6 animate-ping rounded-full bg-amber-400/40" />
-                  <span className="h-3 w-3 rounded-full bg-amber-500" />
-                </>
-              ) : (
-                <span className="h-3 w-3 rounded-full border-2 border-line dark:border-white/20" />
-              )}
-            </span>
-            <span
-              className={`text-sm ${
-                done
-                  ? "font-medium text-primary dark:text-white"
-                  : current
-                  ? "font-semibold text-primary dark:text-white"
-                  : "text-ink-soft dark:text-gray-500"
-              }`}
-            >
-              {s.label}
-              {current && s.key === "confirming" && confirmations != null && (
-                <span className="ml-1 text-ink-soft dark:text-gray-400">
-                  ({confirmations}/{requiredConfirmations ?? "?"})
-                </span>
-              )}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
 
 export default function CryptoCheckoutModal({ orderPayload, payable, onClose, onSuccess }) {
   const [coins, setCoins] = useState([]);
@@ -389,7 +338,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
                 </div>
               ) : showTimeline ? (
                 <div className="rounded-xl border border-line bg-surface-2 p-4 dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-modal-status">
-                  <Timeline status={info.status} confirmations={info.confirmations} requiredConfirmations={info.requiredConfirmations} />
+                  <CryptoStatusTimeline status={info.status} confirmations={info.confirmations} requiredConfirmations={info.requiredConfirmations} />
                   <p className="mt-3 text-[12px] text-ink-soft dark:text-gray-400">
                     This updates automatically — keep this open until it&apos;s confirmed.
                   </p>

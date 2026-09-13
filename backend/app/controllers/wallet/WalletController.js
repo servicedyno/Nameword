@@ -1042,11 +1042,15 @@ const getCryptoTopupStatus = async (req, res) => {
                         });
                 }
 
-                let friendly = "pending";
-                if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
-                else if (["expired"].includes(rawStatus)) friendly = "expired";
-                else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
-                if (["confirming", "expired", "failed"].includes(friendly) && record.status !== friendly) { record.status = friendly; await record.save(); }
+                const confirmations = statusData?.confirmations != null ? Number(statusData.confirmations) : null;
+                let friendly = "awaiting_payment";
+                if (["expired"].includes(rawStatus)) friendly = "expired";
+                else if (["failed", "cancelled", "canceled", "rejected"].includes(rawStatus)) friendly = "failed";
+                else if (confirmations != null && confirmations > 0) friendly = "confirming";
+                else if (txHash || ["pending", "detected", "processing", "confirming", "received", "mempool", "unconfirmed", "underpaid", "partial"].includes(rawStatus)) friendly = "detected";
+                // Persist only stable states so the resume/pending filters keep matching.
+                const persist = ["confirming", "expired", "failed"].includes(friendly) ? friendly : null;
+                if (persist && record.status !== persist) { record.status = persist; await record.save(); }
 
                 return res.status(200).json({
                         success: true,
