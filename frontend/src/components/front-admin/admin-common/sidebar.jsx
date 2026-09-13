@@ -509,7 +509,7 @@ export default function Sidebar({ setIsEnlarge }) {
           {!isHostingRoute && !isDomainRoute ? (
             <div className="space-y-6">
               {/* Dashboard */}
-              <NavLink to={"/dashboard"} className="sidebar-items active">
+              <NavLink to={"/dashboard"} end className={({ isActive }) => `sidebar-items ${isActive ? "active" : ""}`}>
                 {t.admin.dashboard}
               </NavLink>
 

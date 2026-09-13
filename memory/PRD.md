@@ -177,6 +177,13 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Active link highlight + "/" command search (2026-06) — DONE, tested 100% (frontend)
+- **"/" quick-search**: the existing CommandPalette (was Cmd/Ctrl+K only) now also opens on the `/` key, guarded so it's ignored while typing in an input/textarea/select/contenteditable (verified `a/b` types normally inside the palette). Top-bar `global-search` button's kbd hint updated to `/`; mobile search icon got `data-testid='global-search-mobile'`. Palette filters by label+keywords, arrow/enter/esc navigation, jumps to any section.
+- **Account menu active highlight**: `UserDropdownMenu.jsx` quick links now use `isActive(to)` (pathname + hash aware, special-casing `/wallet` vs `/wallet#rewards`) to apply a brand active style + `aria-current='page'`.
+- **Sidebar/rail active highlight**: AppRail already highlighted the active section; fixed `sidebar.jsx` contextual "Dashboard" link which was hardcoded `active` (now `NavLink end` + function className, so it highlights only on `/dashboard`).
+- VERIFIED (iteration_14, 100% / 10 checks): `/` opens palette (input focused), filters, Enter navigates, Esc closes, Cmd/Ctrl+K still works, `/` ignored while typing; account menu + rail highlight the current section and swap correctly across routes; contextual Dashboard no longer permanently active; 0 console errors at 1440 + 390.
+
+
 ### Full-wrap product pages in app frame for signed-in users (Option 2) (2026-06) — DONE, tested 100% (frontend)
 - **Goal**: for signed-in users, render product pages inside the app shell (persistent sidebar) so the sidebar never disappears; signed-out users keep the storefront frame.
 - **New `ProductShell`** (`components/layout/ProductShell.jsx`): if `useAuth().user` → `<DomainProvider><FrontLayout fluid>{children}</FrontLayout></DomainProvider>`; else → storefront `Navbar + children + Footer`.

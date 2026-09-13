@@ -3,17 +3,26 @@ import useDropdown from "../../hooks/useDropdown";
 import Loader from "./Loader";
 import { IoChevronDown } from "react-icons/io5";
 import { useAlert } from "../../context/AlertContext";
-import { NavLink, useNavigate } from "react-router";
+import { NavLink, useNavigate, useLocation } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 
 const UserDropdownMenu = ({ classAdd = false }) => {
   const { user, logout, loading } = useAuth();
   const userDropDown = useDropdown();
   const navigate = useNavigate();
+  const { pathname, hash } = useLocation();
   const { showAlert } = useAlert();
   const { t } = useLanguage();
   const menu = t.common.userMenu;
   const admin = t.admin || {};
+
+  // Highlight the link matching the page the user is currently on.
+  const isActive = (to) => {
+    const base = to.split("#")[0].split("?")[0];
+    if (to.includes("#rewards")) return pathname === "/wallet" && hash === "#rewards";
+    if (base === "/wallet") return pathname.startsWith("/wallet") && hash !== "#rewards";
+    return pathname === base || pathname.startsWith(base + "/");
+  };
 
   const handleLogout = async () => {
     try {
@@ -85,8 +94,9 @@ const UserDropdownMenu = ({ classAdd = false }) => {
                   <NavLink
                     key={l.to}
                     to={l.to}
-                    className="user-menu"
+                    className={`user-menu ${isActive(l.to) ? "!bg-brand-50 !text-brand-700 font-semibold rounded-lg dark:!bg-white/[0.06] dark:!text-brand-300" : ""}`}
                     onClick={userDropDown.close}
+                    aria-current={isActive(l.to) ? "page" : undefined}
                     data-testid={`user-menu-${l.testid}`}
                   >
                     {l.label}

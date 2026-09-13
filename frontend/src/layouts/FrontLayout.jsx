@@ -47,12 +47,20 @@ const FrontLayout = ({ children, fluid = false }) => {
     });
   };
 
-  // Cmd/Ctrl + K command palette
+  // Cmd/Ctrl + K or "/" opens the command palette
   useEffect(() => {
     const onKey = (e) => {
+      const el = e.target;
+      const typing =
+        el &&
+        (["input", "textarea", "select"].includes((el.tagName || "").toLowerCase()) ||
+          el.isContentEditable);
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
         e.preventDefault();
         setPaletteOpen((o) => !o);
+      } else if (e.key === "/" && !typing) {
+        e.preventDefault();
+        setPaletteOpen(true);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -120,12 +128,12 @@ const FrontLayout = ({ children, fluid = false }) => {
           >
             <LuSearch className="h-4 w-4" />
             <span className="text-15">{app.searchPlaceholder}</span>
-            <kbd className="ml-auto rounded border border-line bg-white px-1.5 py-0.5 text-[11px] font-semibold text-ink-soft dark:border-gray-700 dark:bg-gray-800">⌘K</kbd>
+            <kbd className="ml-auto rounded border border-line bg-white px-1.5 py-0.5 text-[11px] font-semibold text-ink-soft dark:border-gray-700 dark:bg-gray-800">/</kbd>
           </button>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
             {/* search icon (mobile) */}
-            <button onClick={() => setPaletteOpen(true)} className="sm:hidden header-icon-btn" aria-label="Search"><LuSearch className="h-5 w-5" /></button>
+            <button onClick={() => setPaletteOpen(true)} className="sm:hidden header-icon-btn" aria-label="Search" data-testid="global-search-mobile"><LuSearch className="h-5 w-5" /></button>
 
             {/* reward points */}
             <NavLink to="/wallet#rewards" title={app.rewards} data-testid="rewards-chip" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 sm:px-3 py-1.5 text-13 font-semibold text-primary dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-gray-200">
