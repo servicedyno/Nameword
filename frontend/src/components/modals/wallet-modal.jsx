@@ -1,4 +1,4 @@
-import { IoCardOutline, IoClose, IoCopyOutline } from "react-icons/io5";
+import { IoArrowBack, IoCardOutline, IoClose, IoCopyOutline } from "react-icons/io5";
 import { PiWarningBold } from "react-icons/pi";
 import { FiCheckCircle, FiLoader } from "react-icons/fi";
 import { FaBitcoin, FaEthereum } from "react-icons/fa6";
@@ -132,6 +132,17 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [step, credited, checkStatus]);
+
+  // Return to the amount/coin picker so the user can choose a different
+  // cryptocurrency or amount. The previously entered amount + coin are kept.
+  const goBack = useCallback(() => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    successRef.current = false;
+    setCredited(false);
+    setStatus("waiting");
+    setPay(null);
+    setStep("amount");
+  }, []);
 
   const startTopup = async () => {
     if (!amountValid) {
@@ -300,6 +311,14 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                 </div>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    className="mt-3 inline-flex items-center gap-1.5 self-start text-sm font-medium text-secondary hover:text-primary dark:hover:text-white"
+                    data-testid="topup-change-coin"
+                  >
+                    <IoArrowBack size={16} /> Change coin or amount
+                  </button>
                   <div className="mt-3 flex flex-col items-center gap-3">
                     {pay.qrCode && (
                       <img src={pay.qrCode} alt="Payment QR code" className="h-44 w-44 rounded-lg border border-stokecolor dark:border-gray-700 bg-white p-2" data-testid="topup-qr" />

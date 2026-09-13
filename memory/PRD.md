@@ -177,6 +177,12 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Wallet top-up: "Change coin or amount" back button (2026-06) — DONE, tested 100% (frontend)
+- **Bug**: once on the pay screen (after "Get address"), the only actions were "check now" and "Done" (which closed the modal) — a user who picked ETH couldn't switch to BTC without abandoning the modal.
+- **Fix**: added `goBack()` + a `data-testid='topup-change-coin'` "Change coin or amount" button on the pay screen (shown pre-credit) in `wallet-modal.jsx`. It stops the status poll, resets pay/status/credited, and returns to step "amount" while preserving the entered amount and selected coin, so the user can choose a different coin and regenerate an address.
+- VERIFIED (iteration_9): ETH → back (amount 15 preserved, picker shown) → BTC → new BTC address generated.
+
+
 ### Points explainer + bounded pending-topup auto-refresh (2026-06) — DONE, tested 100% (frontend)
 - **Points explainer**: added `data-testid='cart-points-explainer'` in the cart reward panel (`CartPage.jsx`) — "1 point = $0.02 · earn 1 point for every $1 you spend" (the $0.02 is derived from the quote's `point_value_usd`).
 - **Auto-refresh pending top-ups**: `TopupHistory.jsx` now quietly re-checks pending/confirming top-ups every 60s (`POLL_MS`), actively probing each live pending via `getCryptoTopupStatus` (which credits if paid) then reloading the list and firing `wallet:updated` on a credit. Bounded so it never polls forever: stops when no live pending remains, stops once a top-up passes its `expireAt`, and hard-caps at `MAX_POLLS=20` (~20 min); the 5-min backend reconcile job still credits late payments. Resets its window on a new `wallet:updated`. Verified throttled to ~60s (1 cycle / 85s window), no loop, no console errors.

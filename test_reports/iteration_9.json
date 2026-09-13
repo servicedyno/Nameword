@@ -1,0 +1,22 @@
+{
+  "summary": "Verified the wallet top-up 'Change coin or amount' back button fix. Logged in as buyer@nameword.local, opened wallet Top Up, entered 15 and selected ETH, generated a real DynoPay address (0.00593855 ETH, addr 0xe6ca...f455). Confirmed the new data-testid='topup-change-coin' back button ('Change coin or amount') is present, clicking it returns to the amount/coin picker with amount '15' preserved and all coin buttons (BTC/ETH/USDT-TRC20) visible. Selected BTC and regenerated: new pay screen shows 0.0001941 BTC to bc1qfgv4...j4l2, confirming the currency switch works. Bug fix verified end-to-end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Console warning: 'Missing environment variables: [VITE_API_KEY]' logged on app load. Non-blocking but should be cleaned up or gated behind DEV-only check."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345",
+  "seed_data_creation": "None (real DynoPay pending top-ups created for ETH and BTC at $15; will expire naturally).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "wallet-modal.jsx goBack() correctly preserves currency and amount and clears pay/status/credited state; topup-change-coin only appears on pay screen pre-credit. ETH->back->BTC switch flow validated on prod build via vite preview.",
+  "rca of the issue": "N/A - fix verified working."
+}
