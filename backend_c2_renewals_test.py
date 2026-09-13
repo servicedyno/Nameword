@@ -18,7 +18,7 @@ import random
 import sys
 
 # Configuration
-BASE_URL = "https://nameword-staging.preview.emergentagent.com"
+BASE_URL = "https://hosting-hub-53.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 TIMEOUT = 30
 
