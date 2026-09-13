@@ -6,6 +6,7 @@
 - FEATURE 2 "Paid Celebration": `components/cart/PaymentSuccessCelebration.jsx` (animated checkmark + confetti, reduced-motion aware; keyframes in `index.css`). Wired into `CryptoCheckoutModal.jsx` + `wallet-modal.jsx`.
 - BRAND: user-facing "DynoPay" → "Dynopay" in modals + locale VALUES. Comment/log brand sweep via `\bDynoPay\b(?!-Webhook)` (kept identifiers `verifyDynoPaySignature`/`handleDynoPaymentWebhook`, locale KEYS, `DYNO_PAY_*`, and `X-DynoPay-Webhook-Id`).
 - CONFETTI on order-success (`pages/checkout/OrderSuccess.jsx` via reusable `ConfettiBurst`, non-failed only, ~2.8s). CART PULSE: header `CartNavButton.jsx` gently pulses once on first-ever add (localStorage `nw_cart_pulsed`).
+- REWARD BANNER on order-success (`components/checkout/RewardPointsBanner.jsx`, data-testid=reward-points-banner): real balance via `walletAPI.getRewardPointLogs()` + first-order detection via `checkoutAPI.listOrders()`; shows +earned points, balance (~$ value @ 0.02/pt), "Register another domain" CTA. Non-failed orders only.
 - Verified: testing_agent iteration_16 = 100%; screenshots confirm order confetti (30 pieces) + cart pulse (flag None→1) + "Powered by Dynopay".
 
 

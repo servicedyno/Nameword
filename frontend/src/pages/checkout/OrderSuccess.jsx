@@ -6,6 +6,7 @@ import { usePageMeta } from "../../hooks/usePageMeta";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 import Loader from "../../components/common/Loader";
 import { ConfettiBurst } from "../../components/cart/PaymentSuccessCelebration";
+import RewardPointsBanner from "../../components/checkout/RewardPointsBanner";
 
 const STATUS = {
   active: { label: "Active", cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
@@ -84,6 +85,8 @@ export default function OrderSuccess() {
           </p>
         </div>
       )}
+
+      {order.status !== "failed" && <RewardPointsBanner order={order} />}
 
       <div className="nw-card mt-8 !p-0 overflow-hidden">
         <ul className="divide-y divide-line dark:divide-gray-800">
