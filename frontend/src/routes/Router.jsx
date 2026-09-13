@@ -25,6 +25,7 @@ import DomainsNomadly from "../pages/DomainsNomadly";
 import DnsManagerNomadly from "../pages/DnsManagerNomadly";
 import ProtectedRoute from "../hocs/Protected";
 import UnprotectedRoute from "../hocs/UnProtected";
+import { useAuth } from "../hooks/useAuth";
 
 /* front admin section */
 import Dashboard from "../pages/front-admin/dashboard";
@@ -45,8 +46,11 @@ import TermsAndConditions from "../pages/TermsAndConditions";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 
 const IsEmailVerified = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const email = localStorage.getItem("email");
-  if (!email) {
+  // Allow EITHER a mid-signup guest (localStorage "email" set) OR an authenticated
+  // but still-unverified user (soft gate: they tapped "Enter code" in the banner).
+  if (!email && !isAuthenticated) {
     return <Navigate to="/sign-in" replace />;
   }
   return children;
@@ -83,14 +87,6 @@ function Router() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
         <Route
-          path="/otp-code"
-          element={
-            <IsEmailVerified>
-              <OtpCode />
-            </IsEmailVerified>
-          }
-        />
-        <Route
           path="/2fa/verify"
           element={
             <IsQrCode>
@@ -99,6 +95,19 @@ function Router() {
           }
         />
         <Route path="/change-email" element={<ChangeEmail />} />
+      </Route>
+
+      {/* OTP is reachable by BOTH a mid-signup guest AND an authenticated-but-
+          unverified user (soft gate), so it is NOT inside UnprotectedRoute. */}
+      <Route element={<AuthLayout />}>
+        <Route
+          path="/otp-code"
+          element={
+            <IsEmailVerified>
+              <OtpCode />
+            </IsEmailVerified>
+          }
+        />
       </Route>
 
       <Route path="/home" element={<LegacyDomainRedirect />} />

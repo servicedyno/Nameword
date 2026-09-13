@@ -29,6 +29,12 @@ const OtpCode = () => {
         }
     }, [error])
 
+    // Soft gate: when we arrive authenticated (e.g. via the verify-email banner)
+    // there may be no localStorage "email" yet — fall back to the logged-in user's.
+    useEffect(() => {
+        if (!email && user?.email) setEmail(user.email);
+    }, [user, email]);
+
     const handleChange = (e, index) => {
         clearError();
         const value = e.target.value.replace(/\D/g, ""); // Only digits
@@ -103,7 +109,7 @@ const OtpCode = () => {
 
                     updateUser(data?.data);
                     const path = localStorage.getItem("path");
-                    navigate(path || '/', { replace: true });
+                    navigate(path || '/dashboard', { replace: true });
                 }
             }, 2000);
         } catch (error) {

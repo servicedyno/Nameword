@@ -1,9 +1,10 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
-## ⏳ IN PROGRESS (2026-09) — Onboarding + Email redesign — READ `/app/memory/ONBOARDING_EMAIL_HANDOFF.md` FIRST
+## ✅ DONE (2026-09) — Onboarding + Email redesign — (handoff: `/app/memory/ONBOARDING_EMAIL_HANDOFF.md`)
 - Decisions: SOFT gate (login immediately + polished "Confirm your email" screen + persistent verify reminder, skippable); redesign ALL 32 email templates on one shared branded layout; add Welcome email; use current indigo brand logo from APP_URL.
 - ✅ DONE (backend): fixed dead logo/asset host (was railway 404 → now `${APP_URL}/email-logo.png`, served 200); nunjucks GLOBALS in `app.js` (logoUrl/appUrl/brand/social/year); shared `views/mails/layout.html` + `views/mails/_components.html` (button/otp/details/note macros); ALL 32 templates rewritten + NEW `welcome.html` (all 33 render 0-error); Welcome email wired on first email verification in `VerificationController`.
-- ⛔ PENDING: FRONTEND onboarding flow NOT started (route signup→/otp-code keeping session, "Skip for now", app-wide VerifyEmailBanner when `!isProfileVerified`). DELIVERY BLOCKER: Brevo sender is placeholder `hello@nameword.local` (unverified) → real sends will fail until a verified sender/domain is set in `.env`; a live send was NOT tested this session. Details + full template variable inventory in the handoff doc.
+- ✅ DONE (frontend, 2026-09, verified by testing agent 6/6): SOFT-GATE shipped. CreateAccount routes signup→/otp-code via `window.location.assign` (beats the UnprotectedRoute guest-guard race); `/otp-code` moved OUT of the guest-only guard and `IsEmailVerified` now allows an authenticated-but-unverified user (Router.jsx); OtpCode adds "Skip for now" (→/dashboard) + falls back to `user.email`; NEW app-wide `components/common/VerifyEmailBanner.jsx` mounted in FrontLayout shows only when `user && !isProfileVerified` with Enter code / Resend / dismiss (sessionStorage); i18n en/es/fr added.
+- ✅ DONE (delivery, 2026-09): Brevo sender set to VERIFIED `hi@nameword.com` (BREVO_EMAIL + MAIL_FROM_ADDRESS + ADMIN_MAIL_ADDRESS in backend/.env); live test send returned a Brevo messageId — verification/OTP/welcome/reset emails now deliver. DELIVERY BLOCKER RESOLVED.
 
 
 ## ✅ THIS SESSION (2026-09) — Reward program overhaul (welcome + per-order bonus + referral)
@@ -39,10 +40,8 @@
 - Google OAuth will only complete if `…/auth/google/callback` is whitelisted in the Google Cloud console for this client id.
 
 
-## ⏳ ONGOING TASK (2026-06) — READ `/app/memory/REMOVE_EMAIL_TASK.md` FIRST
-Status: **NOT STARTED** (only exploration done; no code changed).
-User asked to: (1) remove the "Private Email" product **everywhere it's advertised** (landing page + nav + footer + Pricing page + command palette) and **delete the `/email` page/route**, keeping all account/auth email; (2) change cPanel billing copy "monthly or annual" → "7 days or monthly" on the landing product card and the Hosting page feature copy (do NOT touch the functional Monthly/Annual toggle).
-Full exact edit list (files, line numbers, EN/FR/ES strings) + verification steps are in **`/app/memory/REMOVE_EMAIL_TASK.md`**. Note: frontend is a PROD build — run `sudo supervisorctl restart frontend` (~30s) after edits before testing.
+## ✅ DONE (2026-06, re-verified 2026-09) — Remove "Private Email" product + cPanel copy (details: `/app/memory/REMOVE_EMAIL_TASK.md`)
+Status: **DONE** (verified in current code 2026-09). Email.jsx deleted; no `/email` route/import; no product email link in nav/footer/command-palette/landing grid; cPanel copy = "7 days or monthly" (EN) / "7 días o mensual" (ES) / "7 jours ou mensuel" (FR) on the landing card + the "Paid from your wallet" hosting feature copy. The only remaining "Private Email" text is a DEAD, unreferenced top-level `email: {}` marketing block in the site locales (intentionally left; removing accented FR/ES is risky for zero benefit).
 
 ## ✅ Landing Page Re-Image — COMPLETE (2026-06, tested 100%)
 - User choices: AI-generated cinematic imagery (indigo/obsidian palette, abstract tech + privacy motifs, no faces, no padlocks); keep animated HeroShowcase panel over image + gradient.
@@ -53,7 +52,8 @@ Full exact edit list (files, line numbers, EN/FR/ES strings) + verification step
 - Frontend served as PROD build (`/app/frontend/.prod` present → `yarn build && vite preview`); after code changes run `sudo supervisorctl restart frontend` (~30s) to rebuild.
 
 ## NEXT (from backlog)
-- P1 Verify Brevo sender (outbound email), P1 Google OAuth redirect whitelisting for pod URL, P1 DynoPay top-up smoke test, P2 backend health sweep.
+- ✅ DONE 2026-09: Verify Brevo sender (outbound email) — sender `hi@nameword.com` verified, live send returns messageId.
+- P1 Google OAuth redirect whitelisting for pod URL, P1 DynoPay top-up smoke test, P2 backend health sweep.
 
 ## 🎨 (superseded) "Keyhole N" Logo Redesign — COMPLETE (see section at bottom)
 - User selected Concept 2 "Keyhole N". Full spec, file map, code snippets, raster steps and verification checklist are in **`/app/memory/LOGO_IMPLEMENTATION.md`** — the next agent should read that first and execute it end-to-end.

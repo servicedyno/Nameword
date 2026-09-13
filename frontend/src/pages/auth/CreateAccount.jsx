@@ -41,9 +41,10 @@ const CreateAccount = () => {
       const data = await register(userData);
       showAlert(data?.message, { duration: 2500, type: "success" });
       // Soft gate: sign-up signs the user in, then drops them on the "Confirm your
-      // email" screen. They stay logged in and can "Skip for now" — an app-wide
-      // banner keeps nudging them to verify until isProfileVerified flips true.
-      navigate("/otp-code", { replace: true });
+      // email" screen. register() flips auth state and CreateAccount sits inside the
+      // guest-only guard, so an SPA navigate() would lose the race and get bounced to
+      // /dashboard. A hard navigation avoids that — /otp-code is reachable while authed.
+      window.location.assign("/otp-code");
     } catch (error) {
       console.error("Registration failed:", error);
     } finally {
