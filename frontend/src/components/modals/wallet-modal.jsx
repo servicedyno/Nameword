@@ -375,6 +375,24 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                           </button>
                         </div>
                       </div>
+
+                      {pay.destinationTag && (
+                        <div className="rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500/50 dark:bg-amber-500/10" data-testid="topup-tag-block">
+                          <div className="mb-1 flex items-center gap-1.5">
+                            <PiWarningBold className="shrink-0 text-amber-600 dark:text-amber-400" size={14} />
+                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">Destination tag — required</p>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-sm font-bold text-primary dark:text-white break-all" data-testid="topup-tag">{pay.destinationTag}</span>
+                            <button type="button" onClick={() => copy(pay.destinationTag, "tag")} className="btn-outline !py-1 !px-2 text-xs shrink-0" aria-label="Copy destination tag">
+                              <IoCopyOutline size={14} /> {copied === "tag" ? "Copied" : "Copy"}
+                            </button>
+                          </div>
+                          <p className="mt-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                            You must include this tag in your {pay.currency} transfer, or your payment won&apos;t be credited.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 

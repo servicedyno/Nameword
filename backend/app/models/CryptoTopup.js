@@ -11,6 +11,7 @@ const cryptoTopupSchema = new mongoose.Schema(
     cryptoAmount: { type: Number, default: null }, // amount payable in crypto
     amountUsd: { type: Number, required: true }, // USD value credited on confirmation
     address: { type: String, required: true },
+    destinationTag: { type: String, default: null }, // XRP/XLM-style memo/tag; REQUIRED to credit tag-based coins
     qrCode: { type: String, default: null }, // provider-supplied QR (data URL) for resuming
     status: {
       type: String,

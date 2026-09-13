@@ -943,7 +943,7 @@ const createCryptoTopup = async (req, res) => {
 		await CryptoTopup.create({
 			userId, paymentId: d.transaction_id, currency: d.currency || cur,
 			cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum,
-			address: d.address, qrCode: d.qr_code || null, status: "pending", expireAt: new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000), meta: meta_data,
+			address: d.address, destinationTag: (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null) == null ? null : String(d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo), qrCode: d.qr_code || null, status: "pending", expireAt: new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000), meta: meta_data,
 		});
 
 		return res.status(201).json({
@@ -952,6 +952,7 @@ const createCryptoTopup = async (req, res) => {
 			data: {
 				paymentId: d.transaction_id, address: d.address, currency: d.currency || cur,
 				cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum, qrCode: d.qr_code || null,
+				destinationTag: (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null) == null ? null : String(d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo),
 			},
 		});
 	} catch (error) {
@@ -1073,6 +1074,7 @@ const listPendingCryptoTopups = async (req, res) => {
 			cryptoAmount: r.cryptoAmount,
 			amountUsd: r.amountUsd,
 			qrCode: r.qrCode || null,
+			destinationTag: r.destinationTag || null,
 			status: r.status,
 			createdAt: r.createdAt,
 			expireAt: r.expireAt,
