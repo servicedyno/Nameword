@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only verification (iteration 6) of wallet crypto top-up fixes at desktop 1920x800 on the preview URL. Logged in as buyer@nameword.local. All 5 acceptance criteria PASSED: (1) top-bar wallet-chip shows $50.00 and rewards-chip shows 2187.2 pts immediately after login; (2) Top Up modal on /wallet renders EXACTLY 3 coin buttons with icons — data-testid topup-coin-BTC (BTC / Bitcoin, SVG icon), topup-coin-ETH (ETH / Ethereum (ERC-20), SVG icon), topup-coin-USDT-TRC20 (USDT / Tron (TRC-20), SVG icon); no XRP/SOL/LTC/DOGE/BCH, no <select> element in modal, no 'Loading coins…' text, clicking BTC sets aria-pressed=true; (3) after entering $10 and clicking Get address, real DynoPay call returned a valid pay screen — topup-address='bc1qmqlehndq63jdyfk6jhnparhtv0r403x20jq63y', topup-amount-crypto='0.00012941 BTC', topup-qr present; (4) 'I've sent it — check now' surfaces a visible warning toast: \"No payment detected yet — crypto can take a few minutes to confirm. We'll credit your wallet automatically once it lands.\" (5) window.dispatchEvent(new Event('wallet:updated')) does NOT error and chip stays at $50.00; navigating /dashboard <-> /wallet keeps chip at $50.00 and rewards at 2187.2 pts (never reverts to $0.00 or —).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Top bar (all authed pages)", "issues": ["Minor: wallet chip text has a leading space (' $50.00') and rewards chip ' 2187.2 pts' — cosmetic only, likely from icon+space concatenation."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Console noise: multiple 'userDropDown {isOpen:false,...}' console.log statements fire on every render — remove debug logs from the user dropdown component before production.",
+    "Startup warning 'Missing environment variables: [VITE_API_KEY]' on every page load — either drop the check or provide the var; currently harmless but pollutes console."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345 (used; ~$50 wallet, 2187.2 reward pts)",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All wallet top-up fixes verified end-to-end on desktop. Login path is /sign-in (not /login). Coin picker + address gen + check-now toast + wallet:updated event + cross-route chip persistence all work. DynoPay live address generation succeeded for BTC $10 -> 0.00012941 BTC. Mobile not explicitly tested but modal layout at desktop was clean.",
+  "rca of the issue": "N/A — regression PASSED. Prior bugs (missing coin icons, unsupported coins like XRP shown, chip stuck at $0.00 after top-up) are fully resolved by wallet-modal.jsx coinMeta()+icon buttons, FrontLayout.jsx wallet:updated listener + refreshUser, and backend fetchSupportedCryptoCurrency now returning only configured coins."
+}

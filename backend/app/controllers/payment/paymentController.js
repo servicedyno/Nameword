@@ -7,7 +7,7 @@ const VPSDisk = require('../../models/VPSDisk');
 const { fetchVPSPlansWithCosts } = require('../../helpers/computeEngineHelper');
 require('dotenv').config();
 
-const { ensureWallet } = require('../../helpers/dynoPayHelper');
+const { ensureWallet, getConfiguredCoins } = require('../../helpers/dynoPayHelper');
 
 const baseUrl = (process.env.DYNO_PAY_BASE_URL || 'https://dynopay.com/api').trim().replace(/\/+$/, '');
 // Build DynoPay headers. Pass a per-user walletToken for endpoints that need the customer Bearer.
@@ -18,16 +18,12 @@ const apiHeaders = (walletToken) => {
 };
 const headers = apiHeaders();
 
-// To fetch supported currencies
+// To fetch supported currencies — return ONLY the coins Nameword has configured
+// wallets for (env CRYPTO_TOPUP_COINS). DynoPay's global list includes coins we
+// can't actually receive (e.g. XRP), so we never expose the raw provider list.
 const fetchSupportedCryptoCurrency = async (req, res) => {
-    try {
-        const response = await axios.get(`${baseUrl}/user/getSupportedCurrency`, { headers });
-        return res.status(200).json({ success: true, data: response.data.data });
-    } catch (error) {
-        console.error('Error in Fetching Supported Crypto Currencies:', error?.response?.data?.message);
-        return res.status(500).json({ success: false, message: error?.response?.data?.message || "Internal Server Error" });
-    }
-};                
+    return res.status(200).json({ success: true, data: { currencies: getConfiguredCoins() } });
+};
 
 // const getVPSCryptoAddress = async (req, res) => {
 //   try {

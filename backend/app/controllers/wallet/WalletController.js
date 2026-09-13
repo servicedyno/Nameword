@@ -5,7 +5,7 @@ const Invoice = require("../../models/Invoice");
 const Counter = require("../../models/Counter");
 const RewardPointLog = require("../../models/RewardPointLog");
 const moment = require("moment");
-const { ensureWallet, generateAddFundsLink, fetchUserTransactionById, createCryptoPayment, getSupportedCurrencies, getPaymentStatus } = require("../../helpers/dynoPayHelper");
+const { ensureWallet, generateAddFundsLink, fetchUserTransactionById, createCryptoPayment, getSupportedCurrencies, getConfiguredCoins, getPaymentStatus } = require("../../helpers/dynoPayHelper");
 const CryptoTopup = require("../../models/CryptoTopup");
 const { createPaymentRecord, creditOverpaymentToWallet } = require("../../utils/paymentHelper");
 const { verifyDynoPaySignature, hasProcessed, markProcessed } = require("../../utils/dynoPayWebhook");
@@ -912,13 +912,11 @@ const createCryptoTopup = async (req, res) => {
 		}
 		const cur = String(currency || "").toUpperCase().trim();
 		if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
-		try {
-			const supported = await getSupportedCurrencies();
-			const list = (supported?.data?.currencies || supported?.data?.all_supported || []).map((c) => String(c).toUpperCase());
-			if (list.length && !list.includes(cur)) {
-				return res.status(400).json({ success: false, message: `${cur} is not supported.`, supported: list });
-			}
-		} catch (e) { /* non-fatal: proceed if the currency list is unavailable */ }
+		// Only allow coins Nameword has configured wallets for (BTC, ETH, USDT-TRC20).
+		const allowedCoins = getConfiguredCoins();
+		if (allowedCoins.length && !allowedCoins.includes(cur)) {
+			return res.status(400).json({ success: false, message: `${cur} is not available. Please choose ${allowedCoins.join(", ")}.`, supported: allowedCoins });
+		}
 
 		const userDetails = await User.findById(userId);
 		if (!userDetails) return res.status(404).json({ success: false, message: "User not found" });

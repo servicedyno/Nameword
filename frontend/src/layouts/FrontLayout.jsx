@@ -2,7 +2,7 @@ import Sidebar from "../components/front-admin/admin-common/sidebar";
 import AppRail from "../components/front-admin/admin-common/AppRail";
 import CommandPalette from "../components/common/CommandPalette";
 import { Outlet, NavLink, useLocation } from "react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { RxCross2 } from "react-icons/rx";
 import { CgMenu } from "react-icons/cg";
 import {
@@ -27,7 +27,7 @@ const BOTTOM_TABS = [
 ];
 
 const FrontLayout = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { language, changeLanguage, t } = useLanguage();
   const languageDropDown = useDropdown();
   const notifDropDown = useDropdown();
@@ -63,18 +63,27 @@ const FrontLayout = () => {
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   // fetch wallet balance for the top-bar chip
-  useEffect(() => {
-    let alive = true;
-    if (!user) return;
+  const fetchBalance = useCallback(() => {
+    if (!user) { setBalance(null); return; }
     walletAPI.getWallet()
       .then((res) => {
-        if (!alive) return;
         const b = res?.data?.balance;
         setBalance(Number(b?.USD ?? b?.default ?? 0));
       })
       .catch(() => {});
-    return () => { alive = false; };
   }, [user]);
+
+  // Refresh on mount, when the user changes, and on every route change (so a
+  // top-up credited in the background shows up as soon as the user navigates).
+  useEffect(() => { fetchBalance(); }, [fetchBalance, pathname]);
+
+  // When a top-up/payment credits or debits the wallet, refresh the balance chip
+  // AND the user (reward points come from the auth user object).
+  useEffect(() => {
+    const onWallet = () => { fetchBalance(); refreshUser?.(); };
+    window.addEventListener("wallet:updated", onWallet);
+    return () => window.removeEventListener("wallet:updated", onWallet);
+  }, [fetchBalance, refreshUser]);
 
   const handleLanguageChange = (lang) => { changeLanguage(lang); languageDropDown.close(); };
   const app = t.site.app;

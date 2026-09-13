@@ -177,6 +177,20 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Wallet crypto top-up bug fixes — coin allow-list, icons, top-bar/points refresh (2026-06) — DONE, tested 100% (frontend)
+- **Root cause**: after a top-up credited (via polling or the 5-min lifecycle job) nothing told the client to refresh, so the top-bar wallet chip stayed at its stale mount value ($0.00) and reward points stayed stale (the Wallet page looked correct only because it re-fetches on mount). The coin dropdown listed DynoPay's full global list (XRP etc.) that Nameword has no wallet for, and coins had no icons.
+- **Configured coin allow-list**: backend `paymentController.fetchSupportedCryptoCurrency` now returns ONLY `getConfiguredCoins()` (env `CRYPTO_TOPUP_COINS`, default `BTC,ETH,USDT-TRC20`) — no more raw DynoPay list / "Not found" errors. `WalletController.createCryptoTopup` validates the requested coin against the same allow-list. New helper `getConfiguredCoins()` in `dynoPayHelper.js`.
+- **Coin picker with icons**: `wallet-modal.jsx` replaced the plain `<select>` with a 3-button segmented picker (FaBitcoin/FaEthereum/SiTether via `coinMeta()`), each with icon + ticker + network hint.
+- **Top-bar + points refresh**: `wallet-modal.jsx` `markCredited()` dispatches a `wallet:updated` window event; `FrontLayout.jsx` now refetches the balance chip on mount, on route change, and on `wallet:updated`, and also calls the new `refreshUser()` (added to `AuthContext`) to refresh reward points. `CartUIContext` already listens to `wallet:updated`.
+- **Check-now feedback**: "I've sent it — check now" now shows a warning toast when no payment is detected yet (was silent).
+- **Reward earn rate**: set `WALLET_TOPUP_REWARD_RATE=1` (env) to match the "$1 = 1 point" marketing (was defaulting to 0.02 → $10 gave 0.20 pts that displayed as 0).
+- Removed a stray `console.log` firing every render in `UserDropdownMenu.jsx`.
+- VERIFIED (testing_agent iteration_6.json, 100%): login shows real chip ($50.00) + points (2187.2); Top Up modal shows exactly BTC/ETH/USDT-TRC20 with icons (no XRP), no `<select>`, no stuck "Loading coins…"; real DynoPay BTC address generated for $10; check-now warning toast shown; `wallet:updated` event + cross-route navigation keep the chip correct (never reverts to $0.00). NOTE: a real on-chain credit can't be completed in test, so the credit→refresh path is verified by wiring + event, not a live payment.
+
+### Removed social icon from footer (2026-06) — DONE
+- Removed the X/Twitter link (the only social icon on the public site) and its unused import from `components/layout/Footer.jsx`.
+
+
 ### Help page (hero + search + crypto guide) & footer accepted coins (2026-06) — DONE, tested 100% (frontend)
 - **On-brand help page**: `pages/front-admin/HelpSupport.jsx` now opens with a marketing hero (eyebrow "HELP CENTER", H1 "How can we help?", subtitle) on top of the existing marketing Navbar/Footer (MainLayout). NeedHelp contact block is now always visible below.
 - **Help search**: added a search box (`help-search-input`) that filters Q&A across ALL topics client-side (flattens every section via `answerToText`), with results panel (`help-search-results`), empty state (`help-search-empty`) and a clear button (`help-search-clear`) that returns to the browse-by-topic view (`help-browse`).

@@ -1,6 +1,9 @@
 import { IoCardOutline, IoClose, IoCopyOutline } from "react-icons/io5";
 import { PiWarningBold } from "react-icons/pi";
 import { FiCheckCircle, FiLoader } from "react-icons/fi";
+import { FaBitcoin, FaEthereum } from "react-icons/fa6";
+import { SiTether } from "react-icons/si";
+import { LuCoins } from "react-icons/lu";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { walletAPI } from "../../api/walletApi";
 import { useAlert } from "../../context/AlertContext";
@@ -25,6 +28,15 @@ const NETWORK_HINT = {
   XRP: "XRP Ledger",
   BCH: "Bitcoin Cash",
   POLYGON: "Polygon",
+};
+
+// Coin icon + brand colour + short ticker for the picker.
+const coinMeta = (code) => {
+  const c = String(code || "").toUpperCase();
+  if (c === "BTC") return { icon: FaBitcoin, color: "#f7931a", label: "BTC" };
+  if (c === "ETH") return { icon: FaEthereum, color: "#627eea", label: "ETH" };
+  if (c.startsWith("USDT")) return { icon: SiTether, color: "#26a17b", label: "USDT" };
+  return { icon: LuCoins, color: "#6366f1", label: c };
 };
 
 const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
@@ -86,25 +98,30 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
     successRef.current = true;
     setCredited(true);
     setStatus("credited");
+    // Tell the rest of the app (top-bar wallet chip + reward points) to refresh.
+    window.dispatchEvent(new Event("wallet:updated"));
     showAlert("Payment received — your wallet has been topped up.", { type: "success", duration: 3000 });
     onSuccess?.();
     setTimeout(() => onClose?.(), 2500);
   }, [onClose, onSuccess, showAlert]);
 
-  const checkStatus = useCallback(async () => {
+  const checkStatus = useCallback(async (manual = false) => {
     if (successRef.current || !pay?.paymentId) return;
     try {
       const res = await walletAPI.getCryptoTopupStatus(pay.paymentId);
       const d = res?.data || {};
       if (d.credited === true || d.status === "credited") {
         markCredited();
-      } else if (d.status) {
-        setStatus(d.status);
+      } else {
+        if (d.status) setStatus(d.status);
+        if (manual) {
+          showAlert("No payment detected yet — crypto can take a few minutes to confirm. We'll credit your wallet automatically once it lands.", { type: "warning", duration: 4000 });
+        }
       }
     } catch {
-      /* transient error while polling — keep trying */
+      if (manual) showAlert("Couldn't check the status right now. Please try again in a moment.", { type: "error", duration: 3000 });
     }
-  }, [pay, markCredited]);
+  }, [pay, markCredited, showAlert]);
 
   // Poll while the pay screen is open.
   useEffect(() => {
@@ -208,25 +225,40 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
 
                 {/* Currency */}
                 <div>
-                  <label htmlFor="topup-currency" className="block text-sm font-medium text-primary dark:text-gray-200 mb-1">
+                  <label className="block text-sm font-medium text-primary dark:text-gray-200 mb-1">
                     Pay with
                   </label>
-                  <select
-                    id="topup-currency"
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    className="input-field w-full admin-form"
-                    data-testid="topup-currency-select"
-                    disabled={currencies.length === 0}
-                  >
-                    {currencies.length === 0 && <option value="">Loading coins…</option>}
-                    {currencies.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                        {NETWORK_HINT[c] ? ` — ${NETWORK_HINT[c]}` : ""}
-                      </option>
-                    ))}
-                  </select>
+                  {currencies.length === 0 ? (
+                    <p className="text-sm text-secondary py-2" data-testid="topup-coins-loading">Loading coins…</p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2" data-testid="topup-currency-group">
+                      {currencies.map((c) => {
+                        const meta = coinMeta(c);
+                        const Icon = meta.icon;
+                        const selected = currency === c;
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => setCurrency(c)}
+                            aria-pressed={selected}
+                            data-testid={`topup-coin-${c}`}
+                            className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 transition-colors ${
+                              selected
+                                ? "border-darkbtn ring-2 ring-darkbtn/30 bg-darkbtn/5 dark:bg-darkbtn/10"
+                                : "border-stokecolor dark:border-gray-700 hover:border-darkbtn/50"
+                            }`}
+                          >
+                            <Icon className="h-6 w-6" style={{ color: meta.color }} />
+                            <span className="text-sm font-semibold text-primary dark:text-white">{meta.label}</span>
+                            {NETWORK_HINT[c] && (
+                              <span className="text-[11px] leading-tight text-secondary text-center">{NETWORK_HINT[c]}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-md border border-stokecolor dark:border-gray-700 bg-mutebg dark:bg-gray-800 text-secondary">
@@ -310,7 +342,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                   </div>
 
                   <div className="flex items-center justify-between gap-2 mt-4">
-                    <button type="button" onClick={checkStatus} className="btn-outline max-w-max text-sm" data-testid="topup-check-now">
+                    <button type="button" onClick={() => checkStatus(true)} className="btn-outline max-w-max text-sm" data-testid="topup-check-now">
                       I&apos;ve sent it — check now
                     </button>
                     <button type="button" onClick={onClose} className="add-to-cart max-w-max text-sm">

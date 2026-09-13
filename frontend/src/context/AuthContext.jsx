@@ -84,6 +84,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Lightweight refresh of the signed-in user (e.g. after a wallet top-up credits
+  // reward points) — no loading flag, no redirect on transient errors.
+  const refreshUser = async () => {
+    try {
+      const userData = await authAPI.getCurrentUser();
+      localStorage.setItem("user", JSON.stringify(userData.data));
+      setUser(userData.data);
+    } catch {
+      /* transient — keep last known user */
+    }
+  };
+
   const clearstorage = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -527,6 +539,7 @@ export const AuthProvider = ({ children }) => {
     setResetPasswordSuccess,
     resetPasswordSuccess,
     checkAuth,
+    refreshUser,
     setError,
     onTelegramLogin,
     linkTelegramAccount,

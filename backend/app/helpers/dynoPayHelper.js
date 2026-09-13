@@ -154,6 +154,19 @@ const getSupportedCurrencies = async () => {
   return response.data;
 };
 
+// Coins Nameword actually accepts (must have a wallet configured in DynoPay).
+// DynoPay's getSupportedCurrency lists EVERY coin it supports globally (BTC, ETH,
+// XRP, SOL, …), most of which we have no wallet for — paying those returns
+// `currency_not_available`. So the UI + top-up validation are restricted to this
+// configured allow-list (env CRYPTO_TOPUP_COINS, default BTC,ETH,USDT-TRC20).
+const getConfiguredCoins = () => {
+  const raw = (process.env.CRYPTO_TOPUP_COINS || "BTC,ETH,USDT-TRC20").trim();
+  return raw
+    .split(",")
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+};
+
 // Ensure the user has a DynoPay customer/wallet token (optional for userless checkout).
 const ensureWallet = async (userID) => {
   const user = await User.findById({ _id: userID });
@@ -181,6 +194,7 @@ module.exports = {
   createEmbeddedSession,
   createCryptoPayment,
   getSupportedCurrencies,
+  getConfiguredCoins,
   generatePaymentLink,
   generateAddFundsLink,
   fetchDynoWalletBalance,

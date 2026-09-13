@@ -30,8 +30,6 @@ const UserDropdownMenu = ({ classAdd = false }) => {
 
   if (!user) return null;
 
-  console.log(userDropDown, "userDropDown");
-
   return (
     <>
       <div
