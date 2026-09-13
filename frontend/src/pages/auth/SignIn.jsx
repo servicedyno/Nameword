@@ -13,6 +13,7 @@ import { NavLink } from "react-router";
 import Loader from "../../components/common/Loader";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
+import { getStoredRef } from "../../utils/referral";
 
 const SignIn = () => {
   const { t } = useLanguage();
@@ -51,7 +52,9 @@ const SignIn = () => {
   };
 
   const handleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+    const ref = getStoredRef();
+    const base = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+    window.location.href = ref ? `${base}?ref=${encodeURIComponent(ref)}` : base;
   };
 
   useEffect(() => {

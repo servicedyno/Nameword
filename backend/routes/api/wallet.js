@@ -13,6 +13,7 @@ const {
         listCryptoTopups,
         cancelCryptoTopup,
         listRewardPointLogs,
+        getReferralInfo,
 } = require("../../app/controllers/wallet/WalletController");
 const {
         getPaymentHistory,
@@ -53,6 +54,7 @@ router.get("/crypto-topups", listCryptoTopups);
 router.get("/crypto-topup/:paymentId/status", getCryptoTopupStatus);
 router.post("/crypto-topup/:paymentId/cancel", cancelCryptoTopup);
 router.get("/reward-points", listRewardPointLogs);
+router.get("/referral", getReferralInfo);
 // Payment history - new implementation
 router.get("/transactions", getPaymentHistory);
 router.get("/transactions/:id", getPaymentById);

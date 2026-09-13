@@ -1154,12 +1154,42 @@ const listRewardPointLogs = async (req, res) => {
                         id: String(r._id),
                         points: toNum(r.rewardPoints),
                         operationType: r.operationType,
+                        reason: r.reason || null,
                         expiryDate: r.expiryDate || null,
                         createdAt: r.createdAt,
                 }));
                 return res.status(200).json({ success: true, data, balance });
         } catch (error) {
                 return res.status(500).json({ success: false, message: error?.message || "Failed to load reward-point history." });
+        }
+};
+
+
+// GET /api/v1/wallet/referral — the user's referral code, share link, and stats.
+const getReferralInfo = async (req, res) => {
+        try {
+                const userId = req.user.id;
+                const user = await User.findById(userId);
+                if (!user) return res.status(404).json({ success: false, message: "User not found." });
+                const rewards = require("../../services/rewards");
+                const code = await rewards.ensureReferralCode(user);
+                const base = (process.env.FRONTEND_URL || "").replace(/\/$/, "");
+                const link = `${base}/create-account?ref=${code}`;
+                const referred_count = await User.countDocuments({ referredBy: user._id });
+                const rewarded_count = await User.countDocuments({ referredBy: user._id, referralRewarded: true });
+                return res.status(200).json({
+                        success: true,
+                        data: {
+                                code,
+                                link,
+                                referred_count,
+                                rewarded_count,
+                                points_per_referral: rewards.referralPoints(),
+                                pending_count: Math.max(0, referred_count - rewarded_count),
+                        },
+                });
+        } catch (error) {
+                return res.status(500).json({ success: false, message: error?.message || "Failed to load referral info." });
         }
 };
 
@@ -1182,4 +1212,5 @@ module.exports = {
         listRewardPointLogs,
         addWalletTopupRewardPoints,
         getWalletTopupRewardRate,
+        getReferralInfo,
 };

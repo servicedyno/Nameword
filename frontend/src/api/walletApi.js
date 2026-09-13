@@ -69,6 +69,11 @@ export const walletAPI = {
         return response.data;
     },
 
+    getReferralInfo: async () => {
+        const response = await apiClient.get(ENDPOINTS.WALLET.REFERRAL);
+        return response.data;
+    },
+
     getHostbayTransactions: async (params = {}) => {
         const response = await apiClient.get(ENDPOINTS.WALLET.TRANSACTIONS, { params });
         return response.data;

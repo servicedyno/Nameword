@@ -16,6 +16,22 @@ const fmtPts = (n) => {
   return Number.isInteger(v) ? String(v) : v.toFixed(2);
 };
 
+// Human label for a ledger row based on its reason + direction.
+const reasonLabel = (r, credit, labels) => {
+  switch (r?.reason) {
+    case "welcome":
+      return labels.welcome || "Welcome bonus";
+    case "referral":
+      return labels.referral || "Referral reward";
+    case "referral_friend":
+      return labels.referralFriend || "Referral welcome";
+    case "purchase_bonus":
+      return labels.orderBonus || "Order bonus";
+    default:
+      return credit ? (labels.earned || "Earned") : (labels.redeemed || "Redeemed");
+  }
+};
+
 const RewardHistory = () => {
   const [rows, setRows] = useState(null);
   const { t } = useLanguage();
@@ -70,7 +86,7 @@ const RewardHistory = () => {
                     </span>
                     <div className="min-w-0">
                       <p className="font-medium text-primary dark:text-white">
-                        {credit ? (labels.earned || "Earned") : (labels.redeemed || "Redeemed")}
+                        {reasonLabel(r, credit, labels)}
                       </p>
                       <p className="text-xs text-secondary dark:text-gray-400 truncate">{fmtDate(r.createdAt)}</p>
                     </div>

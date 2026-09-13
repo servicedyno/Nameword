@@ -9,6 +9,7 @@ import { AlertProvider } from "./context/AlertContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { CartUIProvider } from "./context/CartUIContext";
 import MiniCartDrawer from "./components/cart/MiniCartDrawer";
+import { captureRefFromUrl } from "./utils/referral";
 
 validateEnvironment();
 
@@ -17,6 +18,8 @@ function App() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Remember any inbound referral code (?ref=CODE) for sign-up attribution.
+    captureRefFromUrl();
   }, [pathname]);
 
   return (

@@ -7,6 +7,7 @@ const RewardPointLog = require("../../models/RewardPointLog");
 const ownership = require("../../services/ownership");
 const { createPaymentRecord } = require("../../utils/paymentHelper");
 const { createCryptoPayment, getPaymentStatus, getSupportedCurrencies, getConfiguredCoins, ensureWallet: ensureDynoWallet } = require("../../helpers/dynoPayHelper");
+const rewards = require("../../services/rewards");
 
 // ---- Reward points config -------------------------------------------------
 // USD value of one reward point when redeemed (default $0.02; mirrors frontend
@@ -646,6 +647,34 @@ class CheckoutController {
       }
 
       await recomputeOrderFinancials(order);
+
+      // NEW: per-order loyalty bonus — 1% back (0.5 pt/$1) on the CASH actually
+      // paid, for BOTH wallet and crypto orders. Idempotent via bonus_granted;
+      // stacks on top of the points already earned when funding the wallet /
+      // paying by crypto. Never awarded on a fully-failed order.
+      try {
+        if (!order.bonus_granted && order.status !== "failed") {
+          const bonus = round2((Number(order.charged_usd) || 0) * rewards.purchaseBonusRate());
+          if (bonus > 0) {
+            await rewards.credit(order.userId, bonus, "purchase_bonus");
+            order.order_bonus_points = bonus;
+            order.points_earned = round2((Number(order.points_earned) || 0) + bonus);
+          }
+          order.bonus_granted = true;
+        }
+      } catch (e) {
+        console.error("[checkout] order bonus points failed:", e?.message || e);
+      }
+
+      // NEW: referral payout on the buyer's FIRST paid (non-failed) order.
+      try {
+        if (order.status !== "failed") {
+          await rewards.awardReferralOnFirstPaidOrder(order.userId);
+        }
+      } catch (e) {
+        console.error("[checkout] referral award failed:", e?.message || e);
+      }
+
       order.provisioning = "complete";
       order.provisioningLockedAt = null;
       order.markModified("items");

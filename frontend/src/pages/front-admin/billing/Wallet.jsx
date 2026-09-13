@@ -8,6 +8,7 @@ import { useAlert } from '../../../context/AlertContext';
 import Loader from '../../../components/common/Loader';
 import TopupHistory from '../../../components/front-admin/billing/TopupHistory';
 import RewardHistory from '../../../components/front-admin/billing/RewardHistory';
+import ReferralCard from '../../../components/front-admin/billing/ReferralCard';
 import { useQueryParams } from '../../../hooks/useQueryParams';
 import { useAuth } from '../../../hooks/useAuth';
 import { useLanguage } from '../../../hooks/useLanguage';
@@ -191,6 +192,9 @@ const Wallet = () => {
 
                 {/* Recent crypto top-ups */}
                 <TopupHistory onResume={handleResumeTopup} />
+
+                {/* Refer a friend */}
+                <ReferralCard />
 
                 {/* Reward points history */}
                 <RewardHistory />

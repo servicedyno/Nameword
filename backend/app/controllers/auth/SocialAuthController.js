@@ -5,12 +5,15 @@ const { AuthDataValidator } = require('@telegram-auth/server');
 const { objectToAuthDataMap } = require('@telegram-auth/server/utils');
 const { saveUserSession } = require('../../services/userSession');
 const { generateJwtToken } = require('../../helpers/generateJwt');
+const rewards = require('../../services/rewards');
 
 class SocialAuthController {
 
     initAuth(req, res) {
         const state = crypto.randomBytes(32).toString('hex');
         req.session.oauthState = state;
+        // Referral attribution for Google sign-ups: stash ?ref= for the callback.
+        if (req.query.ref) req.session.pendingReferral = String(req.query.ref).trim();
         let scopes = ['profile', 'email'];
         let url = `https://accounts.google.com/o/oauth2/v2/auth?scope=${scopes.join(' ')}&access_type=offline&prompt=consent&include_granted_scopes=true&response_type=code&redirect_uri=${process.env.GOOGLE_REDIRECT_URL}&client_id=${process.env.GOOGLE_CLIENT_ID}&state=${state}`;
         return res.redirect(url);
@@ -210,6 +213,14 @@ class SocialAuthController {
                     googleId: profile.id,
                     isProfileVerified: true
                 });
+
+                // Loyalty: welcome credit + referral code/attribution (best-effort).
+                try {
+                    await rewards.onSignup(userData, req.session.pendingReferral);
+                } catch (e) {
+                    console.error('[rewards] google onSignup failed:', e?.message || e);
+                }
+                delete req.session.pendingReferral;
 
                 const userSession = await saveUserSession({ req, userId: userData._id, loginType: "Google" });
 

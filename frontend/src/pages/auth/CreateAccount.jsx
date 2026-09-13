@@ -11,6 +11,7 @@ import ErrorComponent from "../../components/common/ErrorComponent";
 import Loader from "../../components/common/Loader";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
+import { getStoredRef } from "../../utils/referral";
 
 // Short sign-up: email + password + Google only (matches the checkout AccountGate
 // experience and the product design decision). Backend `registerSimpleRules`
@@ -33,6 +34,9 @@ const CreateAccount = () => {
         password: values.password,
         passwordConfirmation: values.passwordConfirmation,
       };
+      // Attach a stored referral code (from a ?ref= link) if present.
+      const ref = getStoredRef();
+      if (ref) userData.referralCode = ref;
 
       const data = await register(userData);
       showAlert(data?.message, { duration: 2500, type: "success" });
@@ -61,7 +65,9 @@ const CreateAccount = () => {
   }, [error]);
 
   const handleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+    const ref = getStoredRef();
+    const base = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+    window.location.href = ref ? `${base}?ref=${encodeURIComponent(ref)}` : base;
   };
 
   return (

@@ -7,6 +7,7 @@ import { usePageMeta } from "../../hooks/usePageMeta";
 import { google } from "../../components/common/icons";
 import CartSummary from "../../components/checkout/CartSummary";
 import Loader from "../../components/common/Loader";
+import { getStoredRef } from "../../utils/referral";
 
 const RETURN_PATH = "/cart";
 
@@ -91,7 +92,9 @@ export default function AccountGate() {
 
   const googleLogin = () => {
     localStorage.setItem("path", RETURN_PATH);
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+    const ref = getStoredRef();
+    const base = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+    window.location.href = ref ? `${base}?ref=${encodeURIComponent(ref)}` : base;
   };
 
   const shownError = localError || error;

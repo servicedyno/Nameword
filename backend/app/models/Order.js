@@ -86,6 +86,9 @@ const orderSchema = new mongoose.Schema(
     // Reward points earned for this purchase, and any restored on failed-item refunds.
     points_earned: { type: Number, default: 0 },
     points_restored: { type: Number, default: 0 },
+    // Per-order loyalty bonus (1% back on cash paid); granted once (idempotent).
+    order_bonus_points: { type: Number, default: 0 },
+    bonus_granted: { type: Boolean, default: false },
     charged_usd: { type: Number, required: true },
     refunded_usd: { type: Number, default: 0 },
     wallet_balance_after_usd: { type: Number },
