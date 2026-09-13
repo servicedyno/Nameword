@@ -62,9 +62,34 @@ class VerificationController {
     if (isOtpExpired) {
       throw new RequestValidationError([{ type: "field", path: "otp", msg: "OTP is invalid or expired." }]);
     }
+    const wasVerified = !!user.isProfileVerified;
     user.isProfileVerified = true
     await user.save()
     await VerificationCode.deleteOne({ email: user.email });
+
+    // First-time email confirmation → send the branded welcome email (best-effort;
+    // a mail failure must never block verification / sign-in).
+    if (!wasVerified) {
+      try {
+        const rewards = require("../../services/rewards");
+        const pv = parseFloat(process.env.REWARD_POINT_VALUE) || 0.02;
+        const points = rewards.welcomePoints();
+        const html = nunjucks.render("mails/welcome.html", {
+          name: user.name || user.email,
+          points,
+          rewardValue: (points * pv).toFixed(2),
+          ctaLink: `${env.FRONTEND_URL}/dashboard`,
+        });
+        await transporter.sendMail({
+          from: env.MAIL_FROM_ADDRESS,
+          to: user.email,
+          subject: `Welcome to Nameword — your $${(points * pv).toFixed(0)} is ready`,
+          html,
+        });
+      } catch (e) {
+        console.error("Welcome email failed (non-blocking):", e?.message || e);
+      }
+    }
     if (user.enabled2FA) {
       // Only generate new secret if user doesn't have one
       if (!user.twoFactorSecret) {

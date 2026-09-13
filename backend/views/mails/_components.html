@@ -1,0 +1,52 @@
+{# Reusable email components. Import in a template:  {% import "mails/_components.html" as ui %} #}
+
+{# Bulletproof CTA button (works in Outlook via role=presentation table). #}
+{% macro button(href, label, variant="primary") %}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 8px;">
+  <tr>
+    <td class="btn{% if variant == 'ghost' %} btn-ghost{% endif %}"
+        style="border-radius:10px;{% if variant == 'ghost' %}background:#eef2ff;border:1px solid #c7d2fe;{% else %}background:#4f46e5;{% endif %}">
+      <a href="{{ href }}" target="_blank"
+         style="display:inline-block;padding:14px 30px;font-size:15px;font-weight:700;{% if variant == 'ghost' %}color:#4f46e5;{% else %}color:#ffffff;{% endif %}text-decoration:none;">
+        {{ label }}
+      </a>
+    </td>
+  </tr>
+</table>
+{% endmacro %}
+
+{# Big verification code block. #}
+{% macro otp(code, label="Your verification code") %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;">
+  <tr>
+    <td class="otp-shell" style="background:#f5f7ff;border:1px solid #e0e5ff;border-radius:14px;padding:22px;text-align:center;">
+      <div class="otp-label" style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#6366f1;margin:0 0 8px;">{{ label }}</div>
+      <div class="otp-code" style="font-size:40px;line-height:1;font-weight:800;letter-spacing:12px;color:#4f46e5;font-family:'SFMono-Regular','Menlo','Consolas',monospace;padding-left:12px;">{{ code }}</div>
+      <div class="otp-hint" style="font-size:13px;color:#94a3b8;margin:12px 0 0;">This code expires in 10 minutes.</div>
+    </td>
+  </tr>
+</table>
+{% endmacro %}
+
+{# Key/value detail panel. Pass a list of [label, value] pairs. #}
+{% macro details(rows, variant="") %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="panel {{ variant }}" style="border-radius:12px;margin:6px 0 18px;">
+  <tr><td style="padding:8px 20px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      {% for r in rows %}
+      <tr>
+        <td class="kv-k" style="padding:8px 0;font-size:14px;color:#94a3b8;">{{ r[0] }}</td>
+        <td class="kv-v" align="right" style="padding:8px 0;font-size:14px;color:#0f172a;font-weight:600;">{{ r[1] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </td></tr>
+</table>
+{% endmacro %}
+
+{# Callout note panel. variant: '', accent, warn, danger, success #}
+{% macro note(text, variant="accent") %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="panel {% if variant %}panel-{{ variant }}{% endif %}" style="border-radius:12px;margin:6px 0 16px;">
+  <tr><td style="padding:14px 18px;font-size:14px;line-height:1.6;color:#475569;">{{ text | safe }}</td></tr>
+</table>
+{% endmacro %}
