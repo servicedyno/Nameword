@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaBitcoin, FaEthereum } from "react-icons/fa6";
 import { SiTether } from "react-icons/si";
 import { LuCoins } from "react-icons/lu";
@@ -29,26 +29,76 @@ const fmtDate = (d) => {
   }
 };
 
+// Auto-refresh cadence + a hard cap so we NEVER poll forever if a user opened a
+// top-up but never actually sent the crypto.
+const POLL_MS = 60000; // re-check pending top-ups once a minute
+const MAX_POLLS = 20; // ~20 minutes, then stop (the 5-min backend job still credits late payments)
+
+// A top-up worth re-checking: still pending/confirming and not past its expiry.
+const isLivePending = (r) =>
+  (r.status === "pending" || r.status === "confirming") &&
+  (!r.expireAt || new Date(r.expireAt).getTime() > Date.now());
+
 const TopupHistory = () => {
   const [rows, setRows] = useState(null);
   const { t } = useLanguage();
   const labels = t.admin?.topupHistory || {};
   const statusLabels = labels.status || {};
 
-  const load = useCallback(async () => {
+  const rowsRef = useRef([]);
+  const timerRef = useRef(null);
+  const pollCountRef = useRef(0);
+
+  const load = useCallback(async ({ probe = false } = {}) => {
     try {
+      // On auto-polls, actively query each live pending payment — that hits the
+      // provider and credits the wallet if the crypto has landed.
+      if (probe) {
+        const live = rowsRef.current.filter(isLivePending);
+        if (live.length) {
+          let credited = false;
+          await Promise.all(
+            live.map(async (r) => {
+              try {
+                const s = await walletAPI.getCryptoTopupStatus(r.paymentId);
+                const d = s?.data || {};
+                if (d.credited === true || d.status === "credited") credited = true;
+              } catch { /* transient — ignore */ }
+            })
+          );
+          // A payment just credited → refresh the balance chip + reward points too.
+          if (credited) window.dispatchEvent(new Event("wallet:updated"));
+        }
+      }
+
       const res = await walletAPI.getCryptoTopups();
-      setRows(Array.isArray(res?.data) ? res.data : []);
+      const list = Array.isArray(res?.data) ? res.data : [];
+      rowsRef.current = list;
+      setRows(list);
+
+      // Schedule the next quiet re-check ONLY while a live pending top-up exists
+      // and we're within the polling window.
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      if (list.some(isLivePending) && pollCountRef.current < MAX_POLLS) {
+        timerRef.current = setTimeout(() => {
+          pollCountRef.current += 1;
+          load({ probe: true });
+        }, POLL_MS);
+      }
     } catch {
-      setRows([]);
+      if (!probe) setRows([]);
     }
   }, []);
 
   useEffect(() => {
     load();
-    const onWallet = () => load();
+    // A fresh top-up (or a credit elsewhere) resets the polling window.
+    const onWallet = () => { pollCountRef.current = 0; load(); };
     window.addEventListener("wallet:updated", onWallet);
-    return () => window.removeEventListener("wallet:updated", onWallet);
+    return () => {
+      window.removeEventListener("wallet:updated", onWallet);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [load]);
 
   return (

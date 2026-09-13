@@ -318,6 +318,9 @@ export default function CartPage() {
                         {pointsBalance} pts · {money(pointsBalance * pointValue)}
                       </span>
                     </div>
+                    <p className="mt-1 text-xs text-ink-soft dark:text-gray-400" data-testid="cart-points-explainer">
+                      1 point = {money(pointValue)} · earn 1 point for every $1 you spend
+                    </p>
                     <input
                       type="range"
                       min={0}

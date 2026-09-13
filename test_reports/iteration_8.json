@@ -1,0 +1,55 @@
+{
+  "summary": "Iteration 8 (frontend-only). Verified two additive changes: (1) cart-points-explainer inside cart-rewards-panel and (2) bounded ~60s auto-refresh of pending crypto top-ups on /wallet. All three test items PASS. No order placed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_details": {
+    "points_explainer": {
+      "route": "/cart",
+      "cart_page_present": true,
+      "cart_rewards_panel_present": true,
+      "cart_points_explainer_present": true,
+      "explainer_text": "1 point = $0.02 · earn 1 point for every $1 you spend",
+      "position": "rendered directly under 'Reward points · 2187.2 pts · $43.74' balance row, above the slider (index 9 within panel, visually the line beneath the points balance)",
+      "order_placed": false,
+      "notes": "Added domain testuniq...xy.com via /domains then opened /cart. Screenshot confirms explainer line."
+    },
+    "topup_history_render": {
+      "route": "/wallet",
+      "topup_history_present": true,
+      "row_count": 14,
+      "statuses_seen": ["Pending","Expired","Failed","Pending","Pending","Pending","Pending","Pending","Pending","Pending","Pending","Pending","Pending","Pending"],
+      "console_errors": 0,
+      "infinite_loop": false
+    },
+    "bounded_auto_refresh": {
+      "observation_window_seconds": 85,
+      "polling_cycles_observed": 1,
+      "cycle_offset_seconds_from_start": 56.9,
+      "status_probe_requests": 12,
+      "list_requests_after_probe": 1,
+      "endpoints": [
+        "GET /api/v1/wallet/crypto-topup/{id}/status (x12, one per live pending row)",
+        "GET /api/v1/wallet/crypto-topups (x1 after probes)"
+      ],
+      "throttled_to_60s": true,
+      "continuous_or_tight_loop": false,
+      "matches_expected_POLL_MS_60000": true
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "TopupHistory.jsx probe cycle fires N parallel GETs for every live pending row (12 in this account). Correct per design but consider server-side rate limits if a user has many pending top-ups. Non-blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345",
+  "seed_data_creation": "None. Added a search-only domain (testuniq...xy.com) to cart to render CartPage; no order placed; cart entry left in place.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login form has 2 inputs (index 0=email, 1=password), submit button labeled 'Login'. /wallet requires auth; unauthenticated redirects. Buyer account has 12+ live pending crypto top-ups so probe cycles are dense but occur at ~60s cadence. Cart drawer redirects to /cart with data-testid=cart-page."
+}
