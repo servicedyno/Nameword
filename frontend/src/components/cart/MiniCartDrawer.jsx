@@ -7,6 +7,7 @@ import { useCartUI } from "../../context/CartUIContext";
 import { useAuth } from "../../hooks/useAuth";
 import checkoutAPI from "../../api/checkout";
 import WalletModal from "../modals/wallet-modal";
+import AcceptedCoins from "./AcceptedCoins";
 import { money } from "../../utils/checkoutFormat";
 import { regionLabel } from "../../utils/regions";
 
@@ -228,6 +229,10 @@ export default function MiniCartDrawer() {
               <button type="button" onClick={goFullCart} className="mt-2 inline-flex w-full items-center justify-center gap-2 text-xs text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white" data-testid="mini-cart-full-cart-link">
                 <FiExternalLink size={12} /> Open full cart (nameservers &amp; reward points)
               </button>
+
+              <div className="mt-3 border-t border-line pt-3 dark:border-white/[0.06]">
+                <AcceptedCoins />
+              </div>
             </div>
           )}
         </aside>
