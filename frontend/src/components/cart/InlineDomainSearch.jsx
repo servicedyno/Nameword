@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { TbSearch } from "react-icons/tb";
 import { FiCheck, FiPlus } from "react-icons/fi";
-import { FaBitcoin } from "react-icons/fa";
 import { useDomainSearch } from "../../hooks/useDomainSearch";
 import { useCart } from "../../hooks/useCart";
-import { useCartUI } from "../../context/CartUIContext";
 import { useAuth } from "../../hooks/useAuth";
 import { money } from "../../utils/checkoutFormat";
 
@@ -22,7 +20,6 @@ const clean = (raw) =>
 export default function InlineDomainSearch({ autoFocus = false }) {
   const { searchDomain, getTldSuggestions, tldSuggestions, loading } = useDomainSearch();
   const cart = useCart();
-  const { balance } = useCartUI();
   const { isAuthenticated } = useAuth();
 
   const [term, setTerm] = useState("");
@@ -59,7 +56,6 @@ export default function InlineDomainSearch({ autoFocus = false }) {
 
   const AddButton = ({ domain, price, registrar }) => {
     const inCart = cart.hasDomain(domain);
-    const needsTopup = isAuthenticated && balance != null && Number(balance) < Number(price);
     const add = () => {
       if (inCart) return;
       cart.addDomain({ domain, price_usd: price, registrar: registrar || "openprovider" });
@@ -75,10 +71,10 @@ export default function InlineDomainSearch({ autoFocus = false }) {
       <button
         type="button"
         onClick={add}
-        className={needsTopup ? "nw-btn-secondary nw-btn-sm" : "nw-btn-primary nw-btn-sm"}
+        className="nw-btn-primary nw-btn-sm"
         data-testid={`inline-search-add-${domain}`}
       >
-        {needsTopup ? (<><FaBitcoin size={14} /> Pay with crypto</>) : (<><FiPlus size={14} /> {isAuthenticated ? "Buy now" : "Add"}</>)}
+        <FiPlus size={14} /> {isAuthenticated ? "Buy now" : "Add to cart"}
       </button>
     );
   };

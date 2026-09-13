@@ -1,4 +1,4 @@
-import { hostingData, billing, favicon, Help } from "../../common/icons";
+import { hostingData, billing, Help } from "../../common/icons";
 import { NavLink, useLocation, useNavigate, useParams } from "react-router";
 import { RiGlobalLine } from "react-icons/ri";
 import {
@@ -496,16 +496,6 @@ export default function Sidebar({ setIsEnlarge }) {
     <aside className="h-full">
       <div className="flex flex-col justify-between h-full">
         <div>
-          <div className="mb-8">
-            <NavLink to={"/dashboard"}>
-              <img
-                src={favicon}
-                alt="Hosting"
-                className="w-8 h-8 lg:block hidden"
-              />
-            </NavLink>
-          </div>
-
           {!isHostingRoute && !isDomainRoute ? (
             <div className="space-y-6">
               {/* Dashboard */}

@@ -177,6 +177,12 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### UI polish — honest add-to-cart labels + single-logo shell (2026-06) — DONE, tested 100% (frontend)
+- **Misleading "Pay with crypto" buttons removed**: `InlineDomainSearch.jsx` and `adminCard.jsx` domain-suggestion / smart-suggestion cards used to swap their add button to a `<FaBitcoin/> Pay with crypto` label when the wallet balance was below the domain price — but the click only ADDS to cart (the mini-cart drawer then opens to pay), so the label was dishonest. Removed the `needsTopup`/balance branch entirely: `InlineDomainSearch` add button now always renders `<FiPlus/> Buy now` (signed-in) / `Add to cart` (guest); `adminCard` renders `{isAdding ? t.admin.adding : t.admin.buyNow}`. Dropped now-unused imports (`FaBitcoin`, `useCartUI`, `useAuth` where applicable) to keep lint/build clean. The cart drawer's own "Pay $X with crypto" checkout CTA is untouched (that one really does pay).
+- **Double Nameword logo fixed**: on desktop the favicon rendered twice — once in the icon rail (`AppRail.jsx`) and again atop the contextual panel (`sidebar.jsx`). Removed the top logo block + `favicon` import from `sidebar.jsx`; the rail is now the single source of the logo (verified desktop 1920, laptop 1024, and inside the mobile 390 hamburger drawer).
+- VERIFIED (iteration_15, frontend 100%, 0 console errors): 8 inline-search add buttons all show "Buy now" + plus icon (no BTC, no "Pay with crypto"), add→"In cart"→drawer opens; exactly one N logo in the signed-in shell at all 3 viewports; /dashboard↔/domains keeps rail + sidebar. Frontend is a PROD build → `yarn build` + `sudo supervisorctl restart frontend` were run.
+
+
 ### Active link highlight + "/" command search (2026-06) — DONE, tested 100% (frontend)
 - **"/" quick-search**: the existing CommandPalette (was Cmd/Ctrl+K only) now also opens on the `/` key, guarded so it's ignored while typing in an input/textarea/select/contenteditable (verified `a/b` types normally inside the palette). Top-bar `global-search` button's kbd hint updated to `/`; mobile search icon got `data-testid='global-search-mobile'`. Palette filters by label+keywords, arrow/enter/esc navigation, jumps to any section.
 - **Account menu active highlight**: `UserDropdownMenu.jsx` quick links now use `isActive(to)` (pathname + hash aware, special-casing `/wallet` vs `/wallet#rewards`) to apply a brand active style + `aria-current='page'`.

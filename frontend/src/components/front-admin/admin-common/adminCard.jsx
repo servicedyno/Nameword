@@ -1,9 +1,6 @@
 // components/AdminCard.jsx
 import { IoFlashOutline, IoClose } from "react-icons/io5";
-import { FaBitcoin } from "react-icons/fa";
 import { useCart } from "../../../hooks/useCart";
-import { useCartUI } from "../../../context/CartUIContext";
-import { useAuth } from "../../../hooks/useAuth";
 import { useAlert } from "../../../context/AlertContext";
 import { useState } from "react";
 import { useLanguage } from "../../../hooks/useLanguage";
@@ -19,8 +16,6 @@ const AdminCard = ({
   suggestion,
 }) => {
   const cart = useCart();
-  const { balance } = useCartUI();
-  const { isAuthenticated } = useAuth();
   const { showAlert } = useAlert();
   const [isAdding, setIsAdding] = useState(false);
   const { t } = useLanguage();
@@ -99,11 +94,7 @@ const AdminCard = ({
         className={`flex items-center admin-btn ${moreOptions ? "gap-2" : ""}`}
       >
         <a href="#" className="add-to-cart" onClick={handleBuyNow} data-testid={`admin-card-buy-${title || "suggestion"}`}>
-          {isAdding
-            ? t.admin.adding
-            : isAuthenticated && balance != null && Number(balance) < Number(price)
-              ? (<span className="inline-flex items-center gap-1.5"><FaBitcoin /> Pay with crypto</span>)
-              : t.admin.buyNow}
+          {isAdding ? t.admin.adding : t.admin.buyNow}
         </a>
         {moreOptions && (
           <a href="#" className="btn-outline" onClick={handleMoreOptionsClick}>

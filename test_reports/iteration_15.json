@@ -1,0 +1,22 @@
+{
+  "summary": "Iteration 15: Frontend-only verification of the two UI bug fixes on the signed-in shell (buyer@nameword.local). Both fixes PASS with 0 console errors: (a) InlineDomainSearch add buttons now show 'Buy now' with a plus icon on every alt-TLD card and no 'Pay with crypto' / Bitcoin icon appears anywhere on domain suggestion or smart-suggestion cards; add-to-cart works, item flips to 'In cart' state, and the mini-cart drawer opens (the cart's own 'Pay $X.XX with crypto' checkout CTA inside the drawer is expected and out-of-scope). (b) Exactly ONE Nameword N logo is rendered in the signed-in shell — in the left AppRail — on desktop 1920x900, laptop 1024x768, and inside the mobile 390x844 hamburger drawer; the contextual Sidebar panel no longer renders a duplicate logo at its top. Navigation between /dashboard and /domains keeps rail (9 rail items) + sidebar present.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AdminCard 'Smart Suggestion' section did not render on the buyer dashboard during this session (0 admin-card-buy-* buttons found even after scrolling the full page). The code path was still verified indirectly — the whole dashboard DOM contains zero occurrences of the string 'Pay with crypto' and zero bitcoin-classed SVGs, and the code diff shows the crypto branch was removed unconditionally from adminCard.jsx. If the Smart Suggestion carousel is supposed to always render for signed-in buyers, main agent may want to confirm the render condition (feature flag / data availability) — otherwise no action needed."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100% (all acceptance checks pass)"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345 (used)",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Verified viewports: 1920x900 (desktop), 1024x768 (laptop), 390x844 (mobile). Key evidence: 8 inline-search-add-<domain> buttons for 'coolstartup2027xyz' all rendered text='Buy now' with FiPlus svg (line/line icon), no Bitcoin path in inner HTML. After clicking inline-search-add-coolstartup2027xyz.com, inline-search-incart-coolstartup2027xyz.com appeared (count=1) and the cart drawer showed the item (mini-cart-drawer element found). Text scan across body for /pay with crypto/i returned 0 hits on /dashboard render (the cart drawer's checkout CTA 'Pay $39.00 with crypto' is a separate checkout button inside Your Cart drawer, not on suggestion cards — this is expected/desired behavior). Sidebar drawer (mobile) starts directly with 'Dashboard' heading — no duplicate favicon at its top. Console errors on /dashboard and /domains: 0.",
+  "rca of the issue": "N/A — both reported bugs are fixed and no regressions detected."
+}
