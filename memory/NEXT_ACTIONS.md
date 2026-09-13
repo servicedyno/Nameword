@@ -1,3 +1,73 @@
+> ⚠️ **MOST RECENT — 2026-06 (crypto payments + reward points). DO THIS FIRST, before anything below.**
+>
+> ### 🔴 P0 — PENDING TEST (mandatory, not yet done)
+> The **reward-points rework + direct crypto-order checkout** shipped this session was verified on the
+> backend via curl only. The **full UI flow and a *paid* confirmation were NOT end-to-end tested.**
+> The very next task is to run the **`testing_agent`** across the whole flow and fix anything it finds.
+>
+> **What to test (frontend + backend):**
+> 1. **Direct crypto order (bypasses wallet)** — On `/cart` and in the mini-cart drawer, "Pay with crypto"
+>    opens `CryptoCheckoutModal` (`components/cart/CryptoCheckoutModal.jsx`): pick a coin → "Get payment
+>    address" → shows QR + address + (for XRP) the amber destination-tag block → auto-polls
+>    `GET /checkout/orders/:id/crypto-status`. Use **`demo@nameword.local` / `Demo@12345`** (0 points, so
+>    it generates a real crypto charge). `buyer@` has ~2226 pts which auto-cover small orders (the
+>    `fully_covered` path — no crypto needed).
+> 2. **Simulate a PAID confirmation** — a real on-chain pay isn't possible in test. Either (a) temporarily
+>    stub `getPaymentStatus` to return `is_paid:true` for one run, or (b) directly flip the DynoPay
+>    sandbox/record, then confirm `crypto-status` returns `paid`, the order provisions, **reward points are
+>    earned on the crypto amount** (a `+N credit` appears in `GET /wallet/reward-points`), and the UI lands
+>    on `/checkout/success/:id`.
+> 3. **Auto-redeem** — every order auto-applies max points (CartPage shows "Auto-applied N pts (− $X)",
+>    the slider is gone; mini-cart shows "Reward points applied − $X"). Verify `quote` + `createOrder`
+>    return `points_applied`/`points_discount_usd` = max, and the payable is the remainder.
+> 4. **No earn on wallet payments** — paying an order from wallet balance (and renewals) must add **0**
+>    reward points. Only crypto top-ups and direct crypto orders earn.
+> 5. **Expiry refund** — an unpaid crypto order past its window (`crypto.expireAt`) must set
+>    `payment_status:"expired"` and **refund the held redeemed points** (a `+N credit` back to the ledger)
+>    when `crypto-status` is polled.
+> 6. **Reward-points history** — `/wallet` "Reward points history" card (`RewardHistory.jsx`) lists
+>    earned/redeemed rows; the coin trust strip (`AcceptedCoins.jsx`) shows on the mini-cart drawer.
+>
+> **Backend files:** `app/controllers/checkout/CheckoutController.js` (`createCryptoOrder`,
+> `getCryptoOrderStatus`, `recomputeOrderFinancials` [earn removed], `quote`/`createOrder` [auto-redeem],
+> `renewItem` [earn removed]); `app/models/Order.js` (`payment_method`, `payment_status`, `crypto` subdoc,
+> `awaiting_payment` enums); `app/controllers/wallet/WalletController.js` (exports
+> `addWalletTopupRewardPoints`, `getWalletTopupRewardRate`; `listRewardPointLogs`); `routes/api/checkout.js`.
+> **Frontend files:** `components/cart/CryptoCheckoutModal.jsx`, `pages/checkout/CartPage.jsx`,
+> `components/cart/MiniCartDrawer.jsx`, `components/front-admin/billing/RewardHistory.jsx`,
+> `components/cart/AcceptedCoins.jsx`, `api/checkout.js`.
+> **Reminder:** frontend is a PROD build — after any FE change run `cd /app/frontend && yarn build` then
+> `sudo supervisorctl restart frontend`.
+>
+> ### 🟡 P1 — Follow-ups (after the test passes)
+> 1. **Expiry sweeper cron** — add an `app/jobs/` job that periodically expires stale unpaid crypto orders
+>    and auto-refunds their held points (today it only happens lazily when `crypto-status` is polled).
+>    Register it in `app.js` like the other jobs (mirror `cryptoTopupLifecycle.js`).
+> 2. **Coin grid picker** — replace the `<select>` in `CryptoCheckoutModal` with the branded coin-logo grid
+>    (reuse the icon map in `AcceptedCoins.jsx` — consider extracting a shared `utils/coinMeta`).
+> 3. **Order payment badge** — show "Paid with crypto" vs "Paid from wallet" on the order history
+>    (`pages/front-admin/OrderHistory.jsx`) and receipt (`pages/checkout/OrderSuccess.jsx`), using the new
+>    `order.payment_method`. Also show `points_earned` on the crypto-order receipt.
+> 4. **Richer XRP QR** (optional) — DynoPay's QR already encodes the tag (`address?dt=…`); optionally build
+>    our own `ripple:<addr>?dt=<tag>&amount=<xrp>` QR for maximum wallet compatibility.
+> 5. **Memo-coin sweep** — apply the same destination-tag/memo display to any other memo-based coins DynoPay
+>    adds later (e.g. XLM).
+>
+> ### 🟢 P2 — Delight / conversion
+> - **Telegram alerts** (still MOCKED) — real bot notifications when a top-up/crypto order clears or an order provisions.
+> - **Live coin rate** on the cart's crypto button (show approx crypto amount before opening the modal).
+> - **"Why crypto?" trust strip** (no logs · offshore · instant) near checkout to lift first-payment conversion.
+>
+> ### Known state / gotchas for the tester
+> - Provider mode = **dry_run** → items provision as `test_mode`, wallet/crypto still charged in-app.
+> - `buyer@nameword.local` currently holds a large reward-points balance (auto-covers small orders). Reset
+>   with `cd /app/backend && node scripts/seed_test_users.js` (resets wallet to $50; does NOT clear points).
+> - XRP works and returns a **required destination tag** (shown in the wallet modal AND the crypto-order modal).
+> - Credentials in `/app/memory/test_credentials.md`.
+>
+> ---
+>
+
 # Nameword — Next Action Items (Engineering Handoff)
 
 **Last updated:** 2026-09-12
