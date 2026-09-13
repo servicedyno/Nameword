@@ -1104,7 +1104,7 @@ class CheckoutController {
 
       const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
       const meta_data = { user_id: String(userId), userId: String(userId), amount: charged_usd, product: "order_payment", frontendEndPoint: "cart" };
-      const resp = await createCryptoPayment({ amount: charged_usd, currency: cur, redirect_uri: `${frontendBase}/cart`, meta_data, walletToken });
+      const resp = await createCryptoPayment({ amount: charged_usd, currency: cur, redirect_uri: `${frontendBase}/cart`, meta_data, walletToken, customer_email: req.user.email, customer_name: req.user.name });
       const d = resp?.data || {};
       if (!d.address || !d.transaction_id) {
         return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });
@@ -1327,7 +1327,7 @@ class CheckoutController {
       try { walletToken = await ensureDynoWallet(userId); } catch (e) { /* optional */ }
       const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
       const meta_data = { user_id: String(userId), userId: String(userId), amount: remainingUsd, product: "order_payment", frontendEndPoint: "cart", order_id: String(order._id) };
-      const resp = await createCryptoPayment({ amount: remainingUsd, currency: cur, redirect_uri: `${frontendBase}/cart`, meta_data, walletToken });
+      const resp = await createCryptoPayment({ amount: remainingUsd, currency: cur, redirect_uri: `${frontendBase}/cart`, meta_data, walletToken, customer_email: req.user.email, customer_name: req.user.name });
       const d = resp?.data || {};
       if (!d.address || !d.transaction_id) {
         return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });

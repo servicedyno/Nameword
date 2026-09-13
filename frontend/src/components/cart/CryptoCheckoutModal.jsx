@@ -407,6 +407,20 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
             </div>
           )}
         </div>
+
+        {/* Powered by DynoPay */}
+        <a
+          href="https://dynopay.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 border-t border-line px-5 py-3 text-[11px] text-ink-soft transition-colors hover:text-primary dark:border-white/[0.06] dark:text-gray-500 dark:hover:text-white"
+          data-testid="powered-by-dynopay"
+          title="Crypto payments powered by DynoPay"
+        >
+          <span>Powered by</span>
+          <img src="/dynopay-icon.svg" alt="DynoPay" className="h-3.5 w-3.5" />
+          <span className="font-semibold">DynoPay</span>
+        </a>
       </div>
     </div>
   );

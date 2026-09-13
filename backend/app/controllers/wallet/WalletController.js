@@ -934,7 +934,7 @@ const createCryptoTopup = async (req, res) => {
                 const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
                 const meta_data = { user_id: String(userId), userId: String(userId), amount: amountNum, product: "wallet_topup", frontendEndPoint: fe };
 
-                const resp = await createCryptoPayment({ amount: amountNum, currency: cur, redirect_uri: `${frontendBase}/${fe}`, meta_data, walletToken });
+                const resp = await createCryptoPayment({ amount: amountNum, currency: cur, redirect_uri: `${frontendBase}/${fe}`, meta_data, walletToken, customer_email: userDetails.email, customer_name: userDetails.name || userDetails.email });
                 const d = resp?.data || {};
                 if (!d.address || !d.transaction_id) {
                         return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });

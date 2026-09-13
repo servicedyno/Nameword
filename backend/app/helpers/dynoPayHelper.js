@@ -131,12 +131,15 @@ const getPaymentStatus = async (paymentId) => {
 
 // Direct crypto charge — POST /user/cryptoPayment (x-api-key + per-user Bearer walletToken)
 // -> { success, message, data: { transaction_id, address, amount, currency, base_amount, base_currency, qr_code, redirect_uri } }
-const createCryptoPayment = async ({ amount, currency, redirect_uri, meta_data, walletToken }) => {
+const createCryptoPayment = async ({ amount, currency, redirect_uri, meta_data, walletToken, customer_email, customer_name }) => {
   const url = merchantUrl("/cryptoPayment");
   const headers = { ...authHeaders() };
   if (walletToken) headers.Authorization = `Bearer ${walletToken}`;
   const body = { amount: Number(amount), currency };
   if (redirect_uri) body.redirect_uri = redirect_uri;
+  // Always forward the buyer's email so DynoPay can send receipts / tie the payment to them.
+  if (customer_email) body.customer_email = customer_email;
+  if (customer_name) body.customer_name = customer_name;
   if (meta_data && typeof meta_data === "object" && Object.keys(meta_data).length > 0) body.meta_data = meta_data;
   try {
     const response = await axios.post(url, body, { headers });
