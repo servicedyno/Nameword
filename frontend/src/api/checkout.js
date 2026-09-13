@@ -11,6 +11,9 @@ export const checkoutAPI = {
     (await apiClient.post(`${C}/orders/crypto`, { items, client_order_id: clientOrderId, currency })).data,
   cryptoOrderStatus: async (id) =>
     (await apiClient.get(`${C}/orders/${encodeURIComponent(id)}/crypto-status`)).data,
+  // Finish an unpaid/underpaid crypto order with a different coin (bills the shortfall).
+  switchCryptoCurrency: async (id, currency) =>
+    (await apiClient.post(`${C}/orders/${encodeURIComponent(id)}/crypto/switch`, { currency })).data,
   listOrders: async () => (await apiClient.get(`${C}/orders`)).data,
   getOrder: async (id) => (await apiClient.get(`${C}/orders/${encodeURIComponent(id)}`)).data,
   // C3: async provisioning — live status poll + failed-item retry.

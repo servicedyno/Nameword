@@ -13,6 +13,8 @@ router.post("/orders", ...auth, CheckoutController.createOrder);
 router.post("/orders/crypto", ...auth, CheckoutController.createCryptoOrder);
 router.get("/orders", ...auth, CheckoutController.listOrders);
 router.get("/orders/:id/crypto-status", ...auth, CheckoutController.getCryptoOrderStatus);
+// Underpaid / unpaid crypto order — finish it with a DIFFERENT coin (bills the shortfall).
+router.post("/orders/:id/crypto/switch", ...auth, CheckoutController.switchCryptoCurrency);
 router.get("/orders/:id", ...auth, CheckoutController.getOrder);
 // C3: async provisioning — live status poll + failed-item retry.
 router.get("/orders/:id/status", ...auth, CheckoutController.getOrderStatus);

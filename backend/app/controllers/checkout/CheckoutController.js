@@ -36,6 +36,7 @@ class HttpError extends Error {
 const DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 const NS_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
 const round2 = (n) => Math.round(Number(n) * 100) / 100;
+const round6 = (n) => Math.round(Number(n) * 1e6) / 1e6;
 const normDomain = (d) => String(d || "").trim().toLowerCase();
 const SENSITIVE_RE = /password|pin|secret|token/i;
 
@@ -1123,7 +1124,7 @@ class CheckoutController {
         crypto: {
           paymentId: d.transaction_id, address: d.address, destinationTag: tagStr,
           currency: d.currency || cur, cryptoAmount: Number(d.amount) || null,
-          amountUsd: Number(d.base_amount) || charged_usd, qrCode: d.qr_code || null,
+          amountUsd: charged_usd, qrCode: d.qr_code || null,
           status: "pending", expireAt,
         },
       });
@@ -1135,7 +1136,7 @@ class CheckoutController {
         payment: {
           orderId: String(order._id), paymentId: d.transaction_id, address: d.address, destinationTag: tagStr,
           currency: d.currency || cur, cryptoAmount: Number(d.amount) || null,
-          amountUsd: Number(d.base_amount) || charged_usd, qrCode: d.qr_code || null, expireAt,
+          amountUsd: charged_usd, qrCode: d.qr_code || null, expireAt,
         },
       });
     } catch (err) {
@@ -1190,19 +1191,177 @@ class CheckoutController {
         return res.status(200).json({ success: true, data: { status: "expired", order } });
       }
 
-      let friendly = "pending";
-      if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
-      else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
-      if (friendly === "failed" && order.payment_status !== "failed") {
-        order.payment_status = "failed";
-        if (order.crypto) order.crypto.status = "failed";
-        if (Number(order.points_redeemed) > 0) await logPoints(userId, Number(order.points_redeemed), "credit");
+      // --- money math: received / remaining in the coin + USD ---
+      const payUsd = Number(pay.amountUsd) || Number(order.charged_usd) || 0;
+      const totalCrypto = Number(statusData?.amount) || Number(pay.cryptoAmount) || 0;
+      const recvCrypto = Number(statusData?.amount_received) || 0;
+      const remCrypto =
+        statusData?.amount_remaining != null
+          ? Number(statusData.amount_remaining)
+          : totalCrypto
+          ? round6(Math.max(0, totalCrypto - recvCrypto))
+          : null;
+      let receivedUsd = null;
+      let remainingUsd = null;
+      const baseCur = String(statusData?.base_currency || "").toUpperCase();
+      if (baseCur.startsWith("USD") && statusData?.amount_remaining_base != null) {
+        receivedUsd = round2(Number(statusData.amount_received_base) || 0);
+        remainingUsd = round2(Number(statusData.amount_remaining_base) || 0);
+      } else if (totalCrypto > 0) {
+        receivedUsd = round2(payUsd * (recvCrypto / totalCrypto));
+        remainingUsd = round2(Math.max(0, payUsd - receivedUsd));
+      }
+      const confirmations = statusData?.confirmations != null ? Number(statusData.confirmations) : null;
+      const requiredConfirmations = statusData?.required_confirmations != null ? Number(statusData.required_confirmations) : null;
+      const partial = recvCrypto > 0 && remCrypto != null && remCrypto > 0;
+
+      // Map DynoPay's raw status onto a granular lifecycle the UI renders as a timeline:
+      // awaiting_payment -> detected -> confirming -> (confirmed) ; plus underpaid/failed.
+      let friendly = "awaiting_payment";
+      if (["underpaid", "under_paid", "partial", "partially_paid"].includes(rawStatus) || partial) {
+        friendly = "underpaid";
+      } else if (["failed", "cancelled", "canceled", "rejected"].includes(rawStatus)) {
+        friendly = "failed";
+      } else if (confirmations != null && confirmations > 0) {
+        friendly = "confirming";
+      } else if (txHash || ["pending", "detected", "processing", "confirming", "received", "mempool", "unconfirmed"].includes(rawStatus)) {
+        friendly = "detected";
+      }
+
+      // Persist a snapshot so order history & a later switch see progress.
+      if (order.crypto) {
+        order.crypto.status = friendly;
+        if (txHash) order.crypto.txHash = txHash;
+        order.crypto.amountReceived = recvCrypto || order.crypto.amountReceived || 0;
+        order.crypto.amountRemaining = remCrypto;
+        order.crypto.confirmations = confirmations;
+        order.crypto.requiredConfirmations = requiredConfirmations;
+        if (friendly === "failed" && order.payment_status !== "failed") {
+          order.payment_status = "failed";
+          if (Number(order.points_redeemed) > 0) await logPoints(userId, Number(order.points_redeemed), "credit");
+        }
         order.markModified("crypto");
         await order.save();
       }
-      return res.status(200).json({ success: true, data: { status: friendly, orderId: String(order._id), confirmations: statusData?.confirmations, requiredConfirmations: statusData?.required_confirmations } });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          status: friendly,
+          orderId: String(order._id),
+          currency: pay.currency,
+          address: pay.address,
+          destinationTag: pay.destinationTag || null,
+          qrCode: pay.qrCode || null,
+          cryptoAmount: pay.cryptoAmount,
+          amountUsd: payUsd,
+          amountReceived: recvCrypto || 0,
+          amountRemaining: remCrypto,
+          amountReceivedUsd: receivedUsd,
+          amountRemainingUsd: remainingUsd,
+          creditedUsd: Number(pay.creditedUsd) || 0,
+          confirmations,
+          requiredConfirmations,
+          expireAt: pay.expireAt,
+        },
+      });
     } catch (error) {
       return res.status(500).json({ success: false, message: error?.message || "Failed to check payment status." });
+    }
+  }
+
+  // POST /checkout/orders/:id/crypto/switch — finish an unpaid/underpaid crypto order
+  // with a DIFFERENT coin. Credits whatever was already received, then bills the
+  // remaining USD as a fresh DynoPay payment in the newly chosen coin. The order is
+  // marked paid once that new payment confirms (received-so-far + new = order total).
+  static async switchCryptoCurrency(req, res) {
+    try {
+      const userId = req.user.id;
+      const cur = String(req.body?.currency || "").toUpperCase().trim();
+      if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
+      const order = await Order.findOne({ _id: req.params.id, userId });
+      if (!order) return res.status(404).json({ success: false, message: "Order not found." });
+      if (order.payment_method !== "crypto") return res.status(400).json({ success: false, message: "This order is not a crypto order." });
+      if (order.payment_status === "paid") return res.status(200).json({ success: true, data: { status: "paid", order } });
+      if (order.payment_status === "expired") return res.status(409).json({ success: false, message: "This payment window expired. Please start again." });
+
+      const pay = order.crypto || {};
+      if (cur === String(pay.currency || "").toUpperCase()) {
+        return res.status(400).json({ success: false, message: `You're already paying in ${cur}. Send the remaining amount to the same address.` });
+      }
+
+      // Credit anything already received on the CURRENT payment before switching.
+      let curReceivedUsd = 0;
+      try {
+        const ps = await getPaymentStatus(pay.paymentId);
+        const sd = ps?.data || {};
+        if (sd.is_paid === true) {
+          return res.status(200).json({ success: true, data: { status: "confirming", message: "Payment already received; confirming." } });
+        }
+        const totalCrypto = Number(sd.amount) || Number(pay.cryptoAmount) || 0;
+        const recvCrypto = Number(sd.amount_received) || 0;
+        const payUsd = Number(pay.amountUsd) || 0;
+        const baseCur = String(sd.base_currency || "").toUpperCase();
+        if (baseCur.startsWith("USD") && sd.amount_received_base != null) curReceivedUsd = round2(Number(sd.amount_received_base) || 0);
+        else if (totalCrypto > 0) curReceivedUsd = round2(payUsd * (recvCrypto / totalCrypto));
+      } catch (e) { /* assume nothing received if status unavailable */ }
+
+      const creditedUsd = round2((Number(pay.creditedUsd) || 0) + curReceivedUsd);
+      const remainingUsd = round2(Math.max(0, (Number(order.charged_usd) || 0) - creditedUsd));
+      if (remainingUsd <= 0) {
+        return res.status(200).json({ success: true, data: { status: "confirming", message: "Order already covered; confirming." } });
+      }
+
+      // Validate the coin against the merchant's live configured coins.
+      try {
+        const supported = await getSupportedCurrencies();
+        const live = (supported?.data?.currencies || supported?.data?.all_supported || []).map((c) => String(c).toUpperCase());
+        const allow = getConfiguredCoins();
+        const effective = allow.length ? live.filter((c) => allow.includes(c)) : live;
+        if (effective.length && !effective.includes(cur)) {
+          return res.status(400).json({ success: false, message: `${cur} is not available. Please choose one of: ${effective.join(", ")}.`, supported: effective });
+        }
+      } catch (e) { /* non-fatal */ }
+
+      let walletToken = null;
+      try { walletToken = await ensureDynoWallet(userId); } catch (e) { /* optional */ }
+      const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+      const meta_data = { user_id: String(userId), userId: String(userId), amount: remainingUsd, product: "order_payment", frontendEndPoint: "cart", order_id: String(order._id) };
+      const resp = await createCryptoPayment({ amount: remainingUsd, currency: cur, redirect_uri: `${frontendBase}/cart`, meta_data, walletToken });
+      const d = resp?.data || {};
+      if (!d.address || !d.transaction_id) {
+        return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });
+      }
+      const destinationTag = (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null);
+      const tagStr = destinationTag == null ? null : String(destinationTag);
+      const expireAt = new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000);
+
+      order.crypto = {
+        paymentId: d.transaction_id, address: d.address, destinationTag: tagStr,
+        currency: d.currency || cur, cryptoAmount: Number(d.amount) || null,
+        amountUsd: remainingUsd, qrCode: d.qr_code || null,
+        status: "awaiting_payment", creditedUsd, expireAt,
+      };
+      order.payment_status = "awaiting_payment";
+      order.status = "awaiting_payment";
+      order.markModified("crypto");
+      await order.save();
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          status: "awaiting_payment",
+          switched: true,
+          creditedUsd,
+          payment: {
+            orderId: String(order._id), paymentId: d.transaction_id, address: d.address, destinationTag: tagStr,
+            currency: d.currency || cur, cryptoAmount: Number(d.amount) || null,
+            amountUsd: remainingUsd, qrCode: d.qr_code || null, expireAt,
+          },
+        },
+      });
+    } catch (err) {
+      return CheckoutController.fail(res, err);
     }
   }
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { IoClose, IoCopyOutline, IoArrowBack } from "react-icons/io5";
+import { IoClose, IoCopyOutline, IoArrowBack, IoCheckmarkCircle } from "react-icons/io5";
 import { PiWarningBold } from "react-icons/pi";
 import { FaBitcoin } from "react-icons/fa";
 import checkoutAPI from "../../api/checkout";
@@ -8,9 +8,85 @@ import { money } from "../../utils/checkoutFormat";
 
 const newClientOrderId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
-// De-dupe coins by network so the picker isn't cluttered (USDT-TRC20/ERC20 → USDT…),
-// but keep the exact provider ticker for the API call.
 const prettyCoin = (c) => String(c || "").toUpperCase();
+
+// Human-friendly name + settlement network for each coin, so buyers pick the
+// right chain at a glance (e.g. RLUSD on the XRP Ledger vs RLUSD-ERC20 on Ethereum).
+const COIN_META = {
+  BTC: { name: "Bitcoin", network: "Bitcoin" },
+  ETH: { name: "Ethereum", network: "Ethereum" },
+  LTC: { name: "Litecoin", network: "Litecoin" },
+  DOGE: { name: "Dogecoin", network: "Dogecoin" },
+  BCH: { name: "Bitcoin Cash", network: "Bitcoin Cash" },
+  TRX: { name: "Tron", network: "Tron (TRC20)" },
+  SOL: { name: "Solana", network: "Solana" },
+  XRP: { name: "XRP", network: "XRP Ledger" },
+  POLYGON: { name: "Polygon", network: "Polygon (MATIC)" },
+  "USDT-TRC20": { name: "Tether USD", network: "Tron (TRC20)" },
+  "USDT-ERC20": { name: "Tether USD", network: "Ethereum (ERC20)" },
+  "USDT-POLYGON": { name: "Tether USD", network: "Polygon" },
+  "USDC-ERC20": { name: "USD Coin", network: "Ethereum (ERC20)" },
+  RLUSD: { name: "Ripple USD", network: "XRP Ledger" },
+  "RLUSD-ERC20": { name: "Ripple USD", network: "Ethereum (ERC20)" },
+};
+const coinLabel = (c) => {
+  const t = prettyCoin(c);
+  const m = COIN_META[t];
+  return m ? `${t} — ${m.name} · ${m.network}` : t;
+};
+const coinNetwork = (c) => COIN_META[prettyCoin(c)]?.network || prettyCoin(c);
+
+const STEPS = [
+  { key: "awaiting_payment", label: "Awaiting payment" },
+  { key: "detected", label: "Payment detected" },
+  { key: "confirming", label: "Confirming on-chain" },
+  { key: "paid", label: "Confirmed" },
+];
+const STEP_INDEX = { awaiting_payment: 0, detected: 1, underpaid: 1, confirming: 2, paid: 3 };
+
+function Timeline({ status, confirmations, requiredConfirmations }) {
+  const active = STEP_INDEX[status] ?? 0;
+  return (
+    <ol className="space-y-3" data-testid="crypto-timeline">
+      {STEPS.map((s, i) => {
+        const done = i < active || status === "paid";
+        const current = i === active && status !== "paid";
+        return (
+          <li key={s.key} className="flex items-center gap-3" data-testid={`crypto-step-${s.key}`}>
+            <span className="relative flex h-6 w-6 shrink-0 items-center justify-center">
+              {done ? (
+                <IoCheckmarkCircle className="h-6 w-6 text-emerald-500" />
+              ) : current ? (
+                <>
+                  <span className="absolute h-6 w-6 animate-ping rounded-full bg-amber-400/40" />
+                  <span className="h-3 w-3 rounded-full bg-amber-500" />
+                </>
+              ) : (
+                <span className="h-3 w-3 rounded-full border-2 border-line dark:border-white/20" />
+              )}
+            </span>
+            <span
+              className={`text-sm ${
+                done
+                  ? "font-medium text-primary dark:text-white"
+                  : current
+                  ? "font-semibold text-primary dark:text-white"
+                  : "text-ink-soft dark:text-gray-500"
+              }`}
+            >
+              {s.label}
+              {current && s.key === "confirming" && confirmations != null && (
+                <span className="ml-1 text-ink-soft dark:text-gray-400">
+                  ({confirmations}/{requiredConfirmations ?? "?"})
+                </span>
+              )}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 export default function CryptoCheckoutModal({ orderPayload, payable, onClose, onSuccess }) {
   const [coins, setCoins] = useState([]);
@@ -18,10 +94,14 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
   const [currency, setCurrency] = useState("");
   const [creating, setCreating] = useState(false);
   const [pay, setPay] = useState(null);
-  const [status, setStatus] = useState("pending");
-  const [confirmations, setConfirmations] = useState(null);
+  const [info, setInfo] = useState({ status: "awaiting_payment" });
+  const [paidClicked, setPaidClicked] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(null);
+  // underpaid → "switch coin" sub-flow
+  const [showSwitch, setShowSwitch] = useState(false);
+  const [switchCurrency, setSwitchCurrency] = useState("");
+  const [switching, setSwitching] = useState(false);
   const clientOrderId = useRef(newClientOrderId());
   const pollRef = useRef(null);
 
@@ -58,7 +138,8 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
       if (res?.fully_covered && res?.order) { onSuccess(res.order); return; }
       if (!res?.payment?.address) { setError("Could not generate a payment address. Please try another coin."); return; }
       setPay(res.payment);
-      setStatus("pending");
+      setInfo({ status: "awaiting_payment" });
+      setPaidClicked(false);
     } catch (err) {
       setError(err?.response?.data?.message || "Could not start the crypto payment. Please try again.");
     } finally {
@@ -66,7 +147,8 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
     }
   };
 
-  // Poll for confirmation while the address panel is shown.
+  // Poll for live status as soon as an address exists (so we can detect a deposit
+  // even before the buyer taps "I've paid").
   useEffect(() => {
     if (!pay?.orderId) return;
     let alive = true;
@@ -77,28 +159,60 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
         if (!alive) return;
         if (data.status === "paid") { onSuccess(data.order); return; }
         if (data.status === "expired" || data.status === "failed") {
-          setStatus(data.status);
+          setInfo(data);
           setError(data.status === "expired" ? "This payment window expired. Please start again." : "Payment failed or was cancelled.");
           return;
         }
-        setStatus(data.status || "pending");
-        if (data.confirmations != null) setConfirmations({ n: data.confirmations, req: data.requiredConfirmations });
+        setInfo(data);
         pollRef.current = setTimeout(tick, 6000);
       } catch {
         if (alive) pollRef.current = setTimeout(tick, 8000);
       }
     };
-    pollRef.current = setTimeout(tick, 5000);
+    pollRef.current = setTimeout(tick, 4000);
     return () => { alive = false; clearTimeout(pollRef.current); };
-  }, [pay?.orderId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pay?.orderId]);
 
-  const back = () => { setPay(null); setError(null); setStatus("pending"); setConfirmations(null); clientOrderId.current = newClientOrderId(); };
+  const back = () => {
+    setPay(null); setError(null); setInfo({ status: "awaiting_payment" });
+    setPaidClicked(false); setShowSwitch(false);
+    clientOrderId.current = newClientOrderId();
+  };
+
+  const doSwitch = async () => {
+    if (!switchCurrency) return;
+    setSwitching(true);
+    setError(null);
+    try {
+      const res = await checkoutAPI.switchCryptoCurrency(pay.orderId, switchCurrency);
+      const data = res?.data || {};
+      if (data.payment?.address) {
+        setPay(data.payment);
+        setInfo({ status: "awaiting_payment", creditedUsd: data.creditedUsd });
+        setShowSwitch(false);
+      } else if (data.status === "confirming" || data.status === "paid") {
+        // Already covered — let the poll finalize.
+        setShowSwitch(false);
+        setInfo(data);
+      } else {
+        setError("Could not switch coin. Please try again.");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Could not switch coin. Please try again.");
+    } finally {
+      setSwitching(false);
+    }
+  };
+
+  const isUnderpaid = info.status === "underpaid";
+  const showTimeline = paidClicked || ["detected", "confirming", "underpaid"].includes(info.status);
+  const otherCoins = coins.filter((c) => prettyCoin(c) !== prettyCoin(pay?.currency));
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-label="Pay with crypto" data-testid="crypto-checkout-modal">
       <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" onClick={onClose} data-testid="crypto-modal-overlay" />
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-950 dark:border dark:border-white/[0.06]">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4 dark:border-white/[0.06]">
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-950 dark:border dark:border-white/[0.06] max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-white px-5 py-4 dark:border-white/[0.06] dark:bg-gray-950">
           <div className="flex items-center gap-2">
             {pay && (
               <button type="button" onClick={back} aria-label="Change coin" className="header-icon-btn h-8 w-8" data-testid="crypto-modal-back">
@@ -118,10 +232,10 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
           {!pay ? (
             <>
               <p className="text-sm text-ink-soft dark:text-gray-400">
-                Paying <span className="font-semibold text-primary dark:text-white nw-mono">{money(payable)}</span> directly with crypto — no wallet needed. You'll earn reward points on this payment.
+                Paying <span className="font-semibold text-primary dark:text-white nw-mono">{money(payable)}</span> directly with crypto — no wallet needed. You&apos;ll earn reward points on this payment.
               </p>
               <label className="mt-4 block text-sm font-medium text-primary dark:text-white">
-                Choose a coin
+                Choose a coin &amp; network
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
@@ -134,10 +248,15 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
                   ) : coins.length === 0 ? (
                     <option value="">No coins available</option>
                   ) : (
-                    coins.map((c) => <option key={c} value={c}>{prettyCoin(c)}</option>)
+                    coins.map((c) => <option key={c} value={c}>{coinLabel(c)}</option>)
                   )}
                 </select>
               </label>
+              {currency && (
+                <p className="mt-1.5 text-xs text-ink-soft dark:text-gray-400" data-testid="crypto-modal-network-hint">
+                  Network: <span className="font-medium text-primary dark:text-white">{coinNetwork(currency)}</span> — only send {prettyCoin(currency)} on this network.
+                </p>
+              )}
               {error && (
                 <p className="mt-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300" role="alert" data-testid="crypto-modal-error">{error}</p>
               )}
@@ -151,6 +270,41 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
                 {creating ? "Generating address…" : `Get payment address`}
               </button>
             </>
+          ) : showSwitch ? (
+            /* ---- Switch-coin sub-view (complete underpaid order with another coin) ---- */
+            <div className="space-y-4" data-testid="crypto-modal-switch-panel">
+              <p className="text-sm text-ink-soft dark:text-gray-400">
+                Finish paying the remaining
+                {info.amountRemainingUsd != null && <span className="font-semibold text-primary dark:text-white"> {money(info.amountRemainingUsd)}</span>} with a different coin. We&apos;ll generate a fresh address for the balance.
+              </p>
+              <label className="block text-sm font-medium text-primary dark:text-white">
+                Choose another coin &amp; network
+                <select
+                  value={switchCurrency}
+                  onChange={(e) => setSwitchCurrency(e.target.value)}
+                  className="nw-input mt-1.5 w-full !py-2.5"
+                  data-testid="crypto-modal-switch-select"
+                >
+                  <option value="">Select a coin…</option>
+                  {otherCoins.map((c) => <option key={c} value={c}>{coinLabel(c)}</option>)}
+                </select>
+              </label>
+              {error && (
+                <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300" role="alert">{error}</p>
+              )}
+              <div className="flex gap-2">
+                <button type="button" onClick={() => { setShowSwitch(false); setError(null); }} className="btn-outline flex-1">Cancel</button>
+                <button
+                  type="button"
+                  onClick={doSwitch}
+                  disabled={switching || !switchCurrency}
+                  className="nw-btn-primary flex-1 disabled:opacity-60 disabled:cursor-not-allowed"
+                  data-testid="crypto-modal-switch-confirm"
+                >
+                  {switching ? "Generating…" : "Get new address"}
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4" data-testid="crypto-modal-pay-panel">
               <div className="text-center">
@@ -158,7 +312,14 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
                 <p className="text-2xl font-bold text-primary dark:text-white nw-mono" data-testid="crypto-modal-amount">
                   {pay.cryptoAmount || ""} {pay.currency}
                 </p>
-                <p className="text-xs text-ink-soft dark:text-gray-400">≈ {money(pay.amountUsd)} · Network: {pay.currency}</p>
+                <p className="text-xs text-ink-soft dark:text-gray-400">
+                  ≈ {money(pay.amountUsd)} · Network: <span className="font-medium text-primary dark:text-white">{coinNetwork(pay.currency)}</span>
+                </p>
+                {info.creditedUsd > 0 && (
+                  <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    {money(info.creditedUsd)} already credited from your earlier payment.
+                  </p>
+                )}
               </div>
 
               {pay.qrCode && (
@@ -197,13 +358,51 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
 
               {error ? (
                 <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300" role="alert" data-testid="crypto-modal-error">{error}</p>
-              ) : (
-                <div className="flex items-center justify-center gap-2 rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-ink-soft dark:bg-white/[0.06] dark:text-gray-400" data-testid="crypto-modal-status">
-                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500" />
-                  {status === "confirming"
-                    ? `Confirming on-chain${confirmations?.n != null ? ` (${confirmations.n}/${confirmations.req ?? "?"})` : "…"}`
-                    : "Waiting for your payment… this updates automatically"}
+              ) : isUnderpaid ? (
+                /* ---- Underpaid: same-coin top-up OR switch coin ---- */
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10" data-testid="crypto-modal-underpaid">
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <PiWarningBold className="shrink-0 text-amber-600 dark:text-amber-400" size={16} />
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Partial payment received</p>
+                  </div>
+                  <p className="text-13 text-amber-800 dark:text-amber-200">
+                    We received{" "}
+                    <span className="font-semibold">{info.amountReceived} {pay.currency}</span>
+                    {info.amountRemaining != null && (
+                      <> — send <span className="font-semibold">{info.amountRemaining} {pay.currency}</span> more
+                      {info.amountRemainingUsd != null && <> ({money(info.amountRemainingUsd)})</>} to finish.</>
+                    )}
+                  </p>
+                  <div className="mt-3 flex flex-col gap-2">
+                    <p className="text-[12px] text-amber-800 dark:text-amber-200">
+                      Option 1 — send the rest in <span className="font-semibold">{prettyCoin(pay.currency)}</span> to the same address above. This updates automatically.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setShowSwitch(true); setSwitchCurrency(""); setError(null); }}
+                      className="btn-outline w-full text-sm"
+                      data-testid="crypto-modal-switch-open"
+                    >
+                      Option 2 — pay the rest with another coin
+                    </button>
+                  </div>
                 </div>
+              ) : showTimeline ? (
+                <div className="rounded-xl border border-line bg-surface-2 p-4 dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-modal-status">
+                  <Timeline status={info.status} confirmations={info.confirmations} requiredConfirmations={info.requiredConfirmations} />
+                  <p className="mt-3 text-[12px] text-ink-soft dark:text-gray-400">
+                    This updates automatically — keep this open until it&apos;s confirmed.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPaidClicked(true)}
+                  className="nw-btn-primary w-full"
+                  data-testid="crypto-modal-ive-paid"
+                >
+                  I&apos;ve sent the payment
+                </button>
               )}
             </div>
           )}
