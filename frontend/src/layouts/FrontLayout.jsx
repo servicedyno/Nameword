@@ -1,6 +1,7 @@
 import Sidebar from "../components/front-admin/admin-common/sidebar";
 import AppRail from "../components/front-admin/admin-common/AppRail";
 import CommandPalette from "../components/common/CommandPalette";
+import VerifyEmailBanner from "../components/common/VerifyEmailBanner";
 import { Outlet, NavLink, useLocation } from "react-router";
 import { useState, useEffect, useCallback } from "react";
 import { RxCross2 } from "react-icons/rx";
@@ -188,6 +189,7 @@ const FrontLayout = ({ children, fluid = false }) => {
 
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <VerifyEmailBanner />
           {fluid ? (children ?? <Outlet />) : <div className="main-content">{children ?? <Outlet />}</div>}
           <div className="mt-8 flex flex-col gap-3 px-4 pb-6 text-13 font-medium text-ink-soft lg:px-10">
             <div className="flex gap-4">

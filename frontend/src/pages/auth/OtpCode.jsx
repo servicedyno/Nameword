@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { FaCheck } from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -18,7 +17,7 @@ const OtpCode = () => {
     const [errorToggle, setErrorToggle] = useState(false);
     const [verifying, setVerifying] = useState(false);
 
-    const { verifyEmailCode, sendEmailCode, error, clearError, resendLoading, updateUser } = useAuth();
+    const { verifyEmailCode, sendEmailCode, error, clearError, resendLoading, updateUser, user } = useAuth();
     const { showAlert } = useAlert();
 
     const inputsRef = useRef([]);
@@ -186,8 +185,21 @@ const OtpCode = () => {
                     <div className='flex flex-col'>
                         <OTPExpiryTimer expiresAt={localStorage.getItem("otpExpireAt") || null} handleResendCode={handleResendCode} resendLoading={resendLoading} />
                     </div>
-                    <div className="mt-0">
+                    <div className="mt-0 flex items-center justify-between gap-3">
                         <NavLink to="/sign-in" className="text-13 text-darkbtn dark:text-gray-200 hover:underline font-medium">{t.auth.backToLogin || "Back to Login"}</NavLink>
+                        {user && (
+                            <button
+                                type="button"
+                                data-testid="otp-skip"
+                                onClick={() => {
+                                    const path = localStorage.getItem("path");
+                                    navigate(path || "/dashboard", { replace: true });
+                                }}
+                                className="text-13 text-ink-soft dark:text-gray-400 hover:underline font-medium"
+                            >
+                                {t.auth.skipForNow || "Skip for now"}
+                            </button>
+                        )}
                     </div>
                 </div>
                 {resendLoading && <Loader />}

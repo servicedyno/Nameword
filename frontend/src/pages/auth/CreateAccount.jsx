@@ -40,13 +40,10 @@ const CreateAccount = () => {
 
       const data = await register(userData);
       showAlert(data?.message, { duration: 2500, type: "success" });
-      // Sign-up signs the user in; fall back to OTP only when no session was issued.
-      if (data?.token) {
-        const path = localStorage.getItem("path");
-        navigate(path || "/dashboard", { replace: true });
-      } else {
-        navigate("/otp-code", { replace: true });
-      }
+      // Soft gate: sign-up signs the user in, then drops them on the "Confirm your
+      // email" screen. They stay logged in and can "Skip for now" — an app-wide
+      // banner keeps nudging them to verify until isProfileVerified flips true.
+      navigate("/otp-code", { replace: true });
     } catch (error) {
       console.error("Registration failed:", error);
     } finally {
