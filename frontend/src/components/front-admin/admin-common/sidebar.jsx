@@ -8,6 +8,7 @@ import {
   IoIosArrowBack,
 } from "react-icons/io";
 import { HiOutlineExternalLink } from "react-icons/hi";
+import { LuCloud, LuMonitor, LuNetwork } from "react-icons/lu";
 import { useEffect, useMemo, useState } from "react";
 import { ImSun } from "react-icons/im";
 import { MdOutlineNightlight } from "react-icons/md";
@@ -518,18 +519,21 @@ export default function Sidebar({ setIsEnlarge }) {
                       {t.admin.domains}
                     </span>
                   </NavLink>
-                  <button
-                    type="button"
-                    className="right-link"
-                    onClick={() => toggleMenu("domains")}
-                  >
-                    <NavLink to="/domains">{t.admin.seeAll}</NavLink>
-                    {openMenus.domains ? (
-                      <IoIosArrowUp size={16} className="cursor-pointer" />
-                    ) : (
-                      <IoIosArrowDown size={16} className="cursor-pointer" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1.5 right-link">
+                    <NavLink to="/domains" onClick={closeSidebar}>{t.admin.seeAll}</NavLink>
+                    <button
+                      type="button"
+                      aria-label={t.admin.seeAll}
+                      aria-expanded={openMenus.domains}
+                      onClick={() => toggleMenu("domains")}
+                    >
+                      {openMenus.domains ? (
+                        <IoIosArrowUp size={16} className="cursor-pointer" />
+                      ) : (
+                        <IoIosArrowDown size={16} className="cursor-pointer" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {openMenus.domains && (
@@ -550,8 +554,13 @@ export default function Sidebar({ setIsEnlarge }) {
                         </li>
                       ))
                     ) : (
-                      <li>
-                        <NavLink to={""}>{t.admin.noDomainFound}</NavLink>
+                      <li className="px-1 py-1.5">
+                        <p className="text-13 text-lightgray-500 dark:text-gray-500">
+                          {t.admin.noDomainsYet || "No domains yet."}
+                        </p>
+                        <NavLink to="/domains" className="nw-link text-13" onClick={closeSidebar}>
+                          {t.admin.searchDomainCta || "Search a domain →"}
+                        </NavLink>
                       </li>
                     )}
                   </ul>
@@ -577,12 +586,9 @@ export default function Sidebar({ setIsEnlarge }) {
                       {t.admin.websites}
                     </span>
                   </NavLink>
-                  <div
-                    className="right-link"
-                    onClick={() => toggleMenu("hosting")}
-                  >
-                    <NavLink to="/hosting">{t.admin.seeAll}</NavLink>
-                    <button type="button">
+                  <div className="flex items-center gap-1.5 right-link">
+                    <NavLink to="/hosting" onClick={closeSidebar}>{t.admin.seeAll}</NavLink>
+                    <button type="button" aria-label={t.admin.seeAll} aria-expanded={openMenus.hosting} onClick={() => toggleMenu("hosting")}>
                       {openMenus.hosting ? (
                         <IoIosArrowUp size={16} />
                       ) : (
@@ -637,14 +643,47 @@ export default function Sidebar({ setIsEnlarge }) {
                         );
                       })
                     ) : (
-                      <li>
-                        <span className="text-secondary text-13">
+                      <li className="px-1 py-1.5">
+                        <p className="text-13 text-lightgray-500 dark:text-gray-500">
                           {t.admin.noHostingConnected}
-                        </span>
+                        </p>
+                        <NavLink to="/hosting" className="nw-link text-13" onClick={closeSidebar}>
+                          {t.admin.getHostingCta || "Get hosting →"}
+                        </NavLink>
                       </li>
                     )}
                   </ul>
                 )}
+              </div>
+
+              <hr className="sidebar-divider my-6" />
+
+              {/* Servers & DNS */}
+              <div className="flex flex-col gap-4">
+                <NavLink
+                  to="/vps"
+                  className={({ isActive }) => `flex items-center gap-2 text-lightgray-700 dark:text-gray-400 ${isActive ? "text-primary dark:text-white" : ""}`}
+                  onClick={closeSidebar}
+                >
+                  <LuCloud size={20} />
+                  <span className="font-medium text-15">{t.admin.vps || "VPS"}</span>
+                </NavLink>
+                <NavLink
+                  to="/rdp"
+                  className={({ isActive }) => `flex items-center gap-2 text-lightgray-700 dark:text-gray-400 ${isActive ? "text-primary dark:text-white" : ""}`}
+                  onClick={closeSidebar}
+                >
+                  <LuMonitor size={20} />
+                  <span className="font-medium text-15">{t.admin.rdp || "RDP"}</span>
+                </NavLink>
+                <NavLink
+                  to="/dns-manager"
+                  className={({ isActive }) => `flex items-center gap-2 text-lightgray-700 dark:text-gray-400 ${isActive ? "text-primary dark:text-white" : ""}`}
+                  onClick={closeSidebar}
+                >
+                  <LuNetwork size={20} />
+                  <span className="font-medium text-15">{t.admin.dnsManagement}</span>
+                </NavLink>
               </div>
 
               <hr className="sidebar-divider my-6" />
@@ -690,6 +729,11 @@ export default function Sidebar({ setIsEnlarge }) {
                     <li>
                       <NavLink to={"/payment-history"}>
                         {t.admin.paymentHistory}
+                      </NavLink>
+                    </li>
+                    <li>
+                      <NavLink to={"/wallet#rewards"}>
+                        {t.admin.rewards || "Rewards"}
                       </NavLink>
                     </li>
                   </ul>

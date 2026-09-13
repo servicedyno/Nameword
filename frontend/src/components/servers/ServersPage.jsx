@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import ProductShell from "../layout/ProductShell";
+import EmptyState from "../common/EmptyState";
 import { resellerProduct } from "../../api/reseller";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -362,13 +363,14 @@ export default function ServersPage({ product = "vps" }) {
               ))}
             </div>
           ) : servers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-line dark:border-gray-800 py-12 px-6">
-              <FiServer className="text-ink-soft mb-3" size={28} />
-              <p className="text-primary dark:text-white font-medium">{t.site.servers.none}</p>
-              <p className="text-secondary dark:text-gray-400 text-sm mt-1 max-w-md">
-                {mode === "dry_run" && t.site.servers.noneDryRun}
-              </p>
-            </div>
+            <EmptyState
+              compact
+              icon={FiServer}
+              title={t.site.servers.none}
+              description={mode === "dry_run" ? t.site.servers.noneDryRun : (t.site.servers.noneDesc || "Deploy your first server in seconds and pay from your prepaid wallet — no card on file.")}
+              primaryLabel={t.site.servers.deployCta || `Browse ${meta.title} plans`}
+              onPrimary={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            />
           ) : (
             <div className="space-y-4">
               {servers.map((s) => {

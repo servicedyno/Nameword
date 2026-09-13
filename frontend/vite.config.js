@@ -10,6 +10,13 @@ export default defineConfig({
     port: 3000,
     allowedHosts: true,
     proxy: {
+      // In the hosted preview the ingress routes /api and /auth to the backend,
+      // so these proxies are inert there. They only matter for local dev on
+      // localhost:3000 (and for in-container UI testing).
+      '/api': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
       '/auth': {
         target: 'http://localhost:8001',
         changeOrigin: true,
@@ -21,6 +28,10 @@ export default defineConfig({
     port: 3000,
     allowedHosts: true,
     proxy: {
+      '/api': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
       '/auth': {
         target: 'http://localhost:8001',
         changeOrigin: true,

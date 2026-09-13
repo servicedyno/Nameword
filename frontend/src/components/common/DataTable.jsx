@@ -8,7 +8,9 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { TbSearch, TbArrowDown, TbArrowUp } from "react-icons/tb";
+import { LuInbox } from "react-icons/lu";
 import { useLanguage } from "../../hooks/useLanguage";
+import EmptyState from "./EmptyState";
 
 const DataTable = ({
   data = [],
@@ -18,7 +20,14 @@ const DataTable = ({
   children,
   rowSelection,
   setRowSelection,
-  notFoundMessage
+  notFoundMessage,
+  emptyIcon,
+  emptyTitle,
+  emptyDescription,
+  emptyPrimaryTo,
+  emptyPrimaryLabel,
+  emptySecondaryTo,
+  emptySecondaryLabel,
 }) => {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -136,11 +145,18 @@ const DataTable = ({
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={table.getAllColumns().length}
-                  className="text-center py-4 text-secondary"
-                >
-                  {notFoundMessage || t.common.dataTable.noRecordsFound}
+                <td colSpan={table.getAllColumns().length} className="p-0">
+                  <EmptyState
+                    compact
+                    tone="neutral"
+                    icon={emptyIcon || LuInbox}
+                    title={emptyTitle || notFoundMessage || t.common.dataTable.noRecordsFound}
+                    description={emptyDescription}
+                    primaryTo={emptyPrimaryTo}
+                    primaryLabel={emptyPrimaryLabel}
+                    secondaryTo={emptySecondaryTo}
+                    secondaryLabel={emptySecondaryLabel}
+                  />
                 </td>
               </tr>
             )}

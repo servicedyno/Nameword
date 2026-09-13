@@ -1,4 +1,5 @@
 import { TbArrowDown } from "react-icons/tb";
+import { LuRepeat } from "react-icons/lu";
 import { useState, useEffect, useMemo } from "react";
 import { domainAPI } from "../../../api/domains";
 import { hostingAPI } from "../../../api/hosting";
@@ -206,6 +207,13 @@ const SubscriptionsTable = () => {
         data={subscriptions}
         columns={columns}
         notFoundMessage={t.admin.noActiveSubscriptionsFound}
+        emptyIcon={LuRepeat}
+        emptyTitle={t.admin.noActiveSubscriptionsFound}
+        emptyDescription={t.admin.subscriptionsEmptyDesc || "Your domains and hosting plans appear here once you have active services. Renewals and auto‑renew live here too."}
+        emptyPrimaryTo="/domains"
+        emptyPrimaryLabel={t.admin.registerDomainCta || "Register a domain"}
+        emptySecondaryTo="/hosting"
+        emptySecondaryLabel={t.admin.browseHostingCta || "Browse hosting"}
       />
       {loading && <Loader />}
     </>

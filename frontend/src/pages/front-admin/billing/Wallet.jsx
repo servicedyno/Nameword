@@ -23,7 +23,23 @@ const Wallet = () => {
     const { t } = useLanguage();
     const query = useQueryParams();
     const navigate = useNavigate();
-    const { pathname } = useLocation();
+    const { pathname, hash } = useLocation();
+
+    // Deep-link support: /wallet#rewards scrolls to (and briefly highlights)
+    // the loyalty rewards card so the Rewards nav item feels responsive.
+    useEffect(() => {
+        if (hash === "#rewards") {
+            const el = document.getElementById("rewards");
+            if (el) {
+                const timer = setTimeout(() => {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.classList.add("nw-flash");
+                    setTimeout(() => el.classList.remove("nw-flash"), 1600);
+                }, 250);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [hash, walletLoading]);
 
     const fetchWalletBalance = useCallback(async () => {
         setWalletLoading(true);

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/app/test_navigation.py", line 7, in <module>
+    from playwright.async_api import async_playwright
+ModuleNotFoundError: No module named 'playwright'

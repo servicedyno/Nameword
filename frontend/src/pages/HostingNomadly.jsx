@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import ProductShell from "../components/layout/ProductShell";
+import EmptyState from "../components/common/EmptyState";
 import resellerAPI from "../api/reseller";
 import WalletNudge from "../components/reseller/WalletNudge";
 import { useAlert } from "../context/AlertContext";
@@ -499,11 +500,14 @@ export default function HostingNomadly() {
               {[0, 1].map((i) => <div key={i} className="h-20 rounded-xl border border-lightgray dark:border-gray-800 animate-pulse" />)}
             </div>
           ) : accounts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-line dark:border-gray-800 py-12 px-6">
-              <FiServer className="text-ink-soft mb-3" size={28} />
-              <p className="text-primary dark:text-white font-medium">No hosting accounts yet</p>
-              <p className="text-secondary dark:text-gray-400 text-sm mt-1">Pick a plan above to get started.</p>
-            </div>
+            <EmptyState
+              compact
+              icon={FiServer}
+              title="No hosting accounts yet"
+              description="Spin up cPanel hosting on an offshore, privacy‑first server. Pick a plan above and pay from your prepaid wallet."
+              primaryLabel="Choose a plan"
+              onPrimary={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            />
           ) : (
             <div className="space-y-4">
               {accounts.map((a) => {
