@@ -10,7 +10,7 @@ import time
 from typing import Dict, Any
 
 # Base URL from frontend/.env
-BASE_URL = "https://78e5777d-131c-462c-86a4-0b501352ab77.preview.emergentagent.com/api/v1"
+BASE_URL = "https://config-nameword.preview.emergentagent.com/api/v1"
 
 # Test credentials
 BUYER_EMAIL = "buyer@nameword.local"
