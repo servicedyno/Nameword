@@ -650,6 +650,7 @@ export const es = {
     save: "Ahorrar",
     adding: "Agregando...",
     buyNow: "Comprar ahora",
+    addToCart: "Añadir al carrito",
     moreOptions: "Más opciones",
     failedToAddDomainToCart: "Error al agregar dominio al carrito",
     // Billing Tables

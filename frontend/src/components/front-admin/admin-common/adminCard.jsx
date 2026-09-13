@@ -94,7 +94,7 @@ const AdminCard = ({
         className={`flex items-center admin-btn ${moreOptions ? "gap-2" : ""}`}
       >
         <a href="#" className="add-to-cart" onClick={handleBuyNow} data-testid={`admin-card-buy-${title || "suggestion"}`}>
-          {isAdding ? t.admin.adding : t.admin.buyNow}
+          {isAdding ? t.admin.adding : t.admin.addToCart}
         </a>
         {moreOptions && (
           <a href="#" className="btn-outline" onClick={handleMoreOptionsClick}>

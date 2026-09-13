@@ -650,6 +650,7 @@ export const en = {
     save: "Save",
     adding: "Adding...",
     buyNow: "Buy now",
+    addToCart: "Add to cart",
     moreOptions: "More options",
     failedToAddDomainToCart: "Failed to add domain to cart",
     // Billing Tables

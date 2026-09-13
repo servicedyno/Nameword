@@ -3,7 +3,6 @@ import { TbSearch } from "react-icons/tb";
 import { FiCheck, FiPlus } from "react-icons/fi";
 import { useDomainSearch } from "../../hooks/useDomainSearch";
 import { useCart } from "../../hooks/useCart";
-import { useAuth } from "../../hooks/useAuth";
 import { money } from "../../utils/checkoutFormat";
 
 const clean = (raw) =>
@@ -20,7 +19,6 @@ const clean = (raw) =>
 export default function InlineDomainSearch({ autoFocus = false }) {
   const { searchDomain, getTldSuggestions, tldSuggestions, loading } = useDomainSearch();
   const cart = useCart();
-  const { isAuthenticated } = useAuth();
 
   const [term, setTerm] = useState("");
   const [searched, setSearched] = useState(false);
@@ -74,7 +72,7 @@ export default function InlineDomainSearch({ autoFocus = false }) {
         className="nw-btn-primary nw-btn-sm"
         data-testid={`inline-search-add-${domain}`}
       >
-        <FiPlus size={14} /> {isAuthenticated ? "Buy now" : "Add to cart"}
+        <FiPlus size={14} /> Add to cart
       </button>
     );
   };
