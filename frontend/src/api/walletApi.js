@@ -64,6 +64,11 @@ export const walletAPI = {
         return response.data;
     },
 
+    getRewardPointLogs: async () => {
+        const response = await apiClient.get(ENDPOINTS.WALLET.REWARD_POINTS);
+        return response.data;
+    },
+
     getHostbayTransactions: async (params = {}) => {
         const response = await apiClient.get(ENDPOINTS.WALLET.TRANSACTIONS, { params });
         return response.data;

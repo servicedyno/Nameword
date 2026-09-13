@@ -145,6 +145,7 @@ export const ENDPOINTS = {
     CRYPTO_TOPUPS: '/wallet/crypto-topups',
     CRYPTO_TOPUP_CANCEL: (paymentId) => `/wallet/crypto-topup/${paymentId}/cancel`,
     SUPPORTED_CURRENCY: '/payment/getSupportedCurrency',
+    REWARD_POINTS: '/wallet/reward-points',
     TRANSACTIONS: '/wallet/transactions',
     REFUNDS: '/wallet/refunds',
   },

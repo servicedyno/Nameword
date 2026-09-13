@@ -673,22 +673,22 @@ const handleDynoPaymentWebhook = async (req, res) => {
                         method: responseData?.data?.payment_mode || "dynopay",
                         reference: reference,
                         status: isSuccess ? "completed" : "failed",
-			from: "dynocash",
-			idempotencyKey: isSuccess ? ((payment_id || transaction_id || transaction_reference) ? `dynopay:${payment_id || transaction_id || transaction_reference}` : undefined) : undefined,
+                        from: "dynocash",
+                        idempotencyKey: isSuccess ? ((payment_id || transaction_id || transaction_reference) ? `dynopay:${payment_id || transaction_id || transaction_reference}` : undefined) : undefined,
                 });
                 try {
-			await transaction.save();
-		} catch (e) {
-			if (e && e.code === 11000) {
-				console.log("[Payment] flow=wallet_add_funds | duplicate (idempotencyKey) skipped");
-				markProcessed(webhookId);
-				return res.status(200).json({ success: true, message: `$${amount} has already been added to wallet` });
-			}
-			throw e;
-		}
+                        await transaction.save();
+                } catch (e) {
+                        if (e && e.code === 11000) {
+                                console.log("[Payment] flow=wallet_add_funds | duplicate (idempotencyKey) skipped");
+                                markProcessed(webhookId);
+                                return res.status(200).json({ success: true, message: `$${amount} has already been added to wallet` });
+                        }
+                        throw e;
+                }
 
-		if (isSuccess) {
-			const currency = "USD";
+                if (isSuccess) {
+                        const currency = "USD";
                         const currentBalance = wallet.balance.get(currency) || 0;
                         wallet.balance.set(currency, currentBalance + amount);
                         wallet.lastTransactionAt = new Date();
@@ -850,118 +850,118 @@ const CRYPTO_TOPUP_MIN = () => Math.max(1, Number(process.env.CRYPTO_TOPUP_MIN_A
 // Reusable, idempotent wallet top-up credit (mirrors the webhook success branch).
 // Idempotency: skips if a completed dynocash credit already references paymentId or transactionReference.
 const creditWalletTopup = async ({ userId, amountUsd, paymentId, transactionReference, paymentMode = "crypto" }) => {
-	const amount = Number(amountUsd);
-	if (!userId || !amount || amount <= 0) {
-		return { credited: false, alreadyCredited: false, reason: "invalid_input" };
-	}
-	const keys = [paymentId, transactionReference].filter(Boolean).map(String);
-	if (keys.length) {
-		const escaped = keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-		const existing = await Transaction.findOne({ userId, type: "credit", from: "dynocash", reference: { $regex: escaped } }).lean();
-		if (existing) {
-			const w = await Wallet.findOne({ userId });
-			return { credited: false, alreadyCredited: true, newBalance: w ? Number(w.balance.get("USD") || 0) : 0 };
-		}
-	}
-	let wallet = await Wallet.findOne({ userId });
-	if (!wallet) { wallet = new Wallet({ userId, balance: new Map() }); await wallet.save(); }
-	const reference = `dynopay_wallet_${transactionReference || paymentId || "unknown"}_${Date.now()}`;
-	const idempotencyKey = paymentId ? `dynopay:${paymentId}` : (transactionReference ? `dynopay:${transactionReference}` : undefined);
-	const transaction = new Transaction({
-		userId, walletId: wallet._id, amount, currency: "USD", type: "credit",
-		method: paymentMode === "crypto" ? "crypto" : "dynopay", reference, status: "completed", from: "dynocash", idempotencyKey,
-	});
-	try {
-		await transaction.save();
-	} catch (e) {
-		if (e && e.code === 11000) {
-			const w = await Wallet.findOne({ userId });
-			return { credited: false, alreadyCredited: true, newBalance: w ? Number(w.balance.get("USD") || 0) : 0 };
-		}
-		throw e;
-	}
-	const currentBalance = wallet.balance.get("USD") || 0;
-	wallet.balance.set("USD", currentBalance + amount);
-	wallet.lastTransactionAt = new Date();
-	await wallet.save();
-	try {
-		const Payment = require("../../models/Payment");
-		const existingPayment = await Payment.findOne({ userId, service: "Other", "metadata.payment_id": paymentId, "metadata.flow": "wallet_add_funds" });
-		if (!existingPayment) {
-			await createPaymentRecord({
-				userId, service: "Other", title: `Wallet Top-up - $${amount.toFixed(2)}`, amount, currency: "USD",
-				paymentMethod: paymentMode === "crypto" ? "crypto" : "other", status: "completed", transactionId: transaction._id,
-				metadata: { payment_id: paymentId, reference, flow: "wallet_add_funds", method: "crypto_topup" },
-			});
-		}
-	} catch (e) { console.error("[crypto-topup] payment record/invoice failed:", e?.message || e); }
-	await addWalletTopupRewardPoints(userId, amount);
-	console.log(`[crypto-topup] wallet credited $${amount} for user ${userId} | ref ${reference}`);
-	return { credited: true, alreadyCredited: false, newBalance: wallet.balance.get("USD"), transactionId: transaction._id };
+        const amount = Number(amountUsd);
+        if (!userId || !amount || amount <= 0) {
+                return { credited: false, alreadyCredited: false, reason: "invalid_input" };
+        }
+        const keys = [paymentId, transactionReference].filter(Boolean).map(String);
+        if (keys.length) {
+                const escaped = keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+                const existing = await Transaction.findOne({ userId, type: "credit", from: "dynocash", reference: { $regex: escaped } }).lean();
+                if (existing) {
+                        const w = await Wallet.findOne({ userId });
+                        return { credited: false, alreadyCredited: true, newBalance: w ? Number(w.balance.get("USD") || 0) : 0 };
+                }
+        }
+        let wallet = await Wallet.findOne({ userId });
+        if (!wallet) { wallet = new Wallet({ userId, balance: new Map() }); await wallet.save(); }
+        const reference = `dynopay_wallet_${transactionReference || paymentId || "unknown"}_${Date.now()}`;
+        const idempotencyKey = paymentId ? `dynopay:${paymentId}` : (transactionReference ? `dynopay:${transactionReference}` : undefined);
+        const transaction = new Transaction({
+                userId, walletId: wallet._id, amount, currency: "USD", type: "credit",
+                method: paymentMode === "crypto" ? "crypto" : "dynopay", reference, status: "completed", from: "dynocash", idempotencyKey,
+        });
+        try {
+                await transaction.save();
+        } catch (e) {
+                if (e && e.code === 11000) {
+                        const w = await Wallet.findOne({ userId });
+                        return { credited: false, alreadyCredited: true, newBalance: w ? Number(w.balance.get("USD") || 0) : 0 };
+                }
+                throw e;
+        }
+        const currentBalance = wallet.balance.get("USD") || 0;
+        wallet.balance.set("USD", currentBalance + amount);
+        wallet.lastTransactionAt = new Date();
+        await wallet.save();
+        try {
+                const Payment = require("../../models/Payment");
+                const existingPayment = await Payment.findOne({ userId, service: "Other", "metadata.payment_id": paymentId, "metadata.flow": "wallet_add_funds" });
+                if (!existingPayment) {
+                        await createPaymentRecord({
+                                userId, service: "Other", title: `Wallet Top-up - $${amount.toFixed(2)}`, amount, currency: "USD",
+                                paymentMethod: paymentMode === "crypto" ? "crypto" : "other", status: "completed", transactionId: transaction._id,
+                                metadata: { payment_id: paymentId, reference, flow: "wallet_add_funds", method: "crypto_topup" },
+                        });
+                }
+        } catch (e) { console.error("[crypto-topup] payment record/invoice failed:", e?.message || e); }
+        await addWalletTopupRewardPoints(userId, amount);
+        console.log(`[crypto-topup] wallet credited $${amount} for user ${userId} | ref ${reference}`);
+        return { credited: true, alreadyCredited: false, newBalance: wallet.balance.get("USD"), transactionId: transaction._id };
 };
 
 // POST /api/v1/wallet/crypto-topup  { amount, currency, frontendEndPoint? }
 const createCryptoTopup = async (req, res) => {
-	try {
-		const userId = req.user.id;
-		const { amount, currency, frontendEndPoint } = req.body;
-		const amountNum = Number(amount);
-		const min = CRYPTO_TOPUP_MIN();
-		if (Number.isNaN(amountNum) || amountNum < min) {
-			return res.status(400).json({ success: false, message: `Minimum crypto top-up amount is $${min}.` });
-		}
-		const cur = String(currency || "").toUpperCase().trim();
-		if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
-		// Validate against the merchant's live configured coins from DynoPay
-		// (optionally narrowed by the CRYPTO_TOPUP_COINS env allow-list).
-		try {
-			const supported = await getSupportedCurrencies();
-			const live = (supported?.data?.currencies || supported?.data?.all_supported || []).map((c) => String(c).toUpperCase());
-			const allow = getConfiguredCoins();
-			const effective = allow.length ? live.filter((c) => allow.includes(c)) : live;
-			if (effective.length && !effective.includes(cur)) {
-				return res.status(400).json({ success: false, message: `${cur} is not available. Please choose one of: ${effective.join(", ")}.`, supported: effective });
-			}
-		} catch (e) { /* non-fatal: proceed if the currency list is unavailable */ }
+        try {
+                const userId = req.user.id;
+                const { amount, currency, frontendEndPoint } = req.body;
+                const amountNum = Number(amount);
+                const min = CRYPTO_TOPUP_MIN();
+                if (Number.isNaN(amountNum) || amountNum < min) {
+                        return res.status(400).json({ success: false, message: `Minimum crypto top-up amount is $${min}.` });
+                }
+                const cur = String(currency || "").toUpperCase().trim();
+                if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
+                // Validate against the merchant's live configured coins from DynoPay
+                // (optionally narrowed by the CRYPTO_TOPUP_COINS env allow-list).
+                try {
+                        const supported = await getSupportedCurrencies();
+                        const live = (supported?.data?.currencies || supported?.data?.all_supported || []).map((c) => String(c).toUpperCase());
+                        const allow = getConfiguredCoins();
+                        const effective = allow.length ? live.filter((c) => allow.includes(c)) : live;
+                        if (effective.length && !effective.includes(cur)) {
+                                return res.status(400).json({ success: false, message: `${cur} is not available. Please choose one of: ${effective.join(", ")}.`, supported: effective });
+                        }
+                } catch (e) { /* non-fatal: proceed if the currency list is unavailable */ }
 
-		const userDetails = await User.findById(userId);
-		if (!userDetails) return res.status(404).json({ success: false, message: "User not found" });
+                const userDetails = await User.findById(userId);
+                if (!userDetails) return res.status(404).json({ success: false, message: "User not found" });
 
-		let walletToken = null;
-		try { walletToken = await ensureWallet(userId); } catch (e) { console.warn("[crypto-topup] ensureWallet skipped:", e?.message || e); }
+                let walletToken = null;
+                try { walletToken = await ensureWallet(userId); } catch (e) { console.warn("[crypto-topup] ensureWallet skipped:", e?.message || e); }
 
-		const fe = frontendEndPoint || "wallet";
-		const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
-		const meta_data = { user_id: String(userId), userId: String(userId), amount: amountNum, product: "wallet_topup", frontendEndPoint: fe };
+                const fe = frontendEndPoint || "wallet";
+                const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+                const meta_data = { user_id: String(userId), userId: String(userId), amount: amountNum, product: "wallet_topup", frontendEndPoint: fe };
 
-		const resp = await createCryptoPayment({ amount: amountNum, currency: cur, redirect_uri: `${frontendBase}/${fe}`, meta_data, walletToken });
-		const d = resp?.data || {};
-		if (!d.address || !d.transaction_id) {
-			return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });
-		}
+                const resp = await createCryptoPayment({ amount: amountNum, currency: cur, redirect_uri: `${frontendBase}/${fe}`, meta_data, walletToken });
+                const d = resp?.data || {};
+                if (!d.address || !d.transaction_id) {
+                        return res.status(502).json({ success: false, message: "Could not generate a crypto payment address. Please try again.", providerPayload: d });
+                }
 
-		await CryptoTopup.create({
-			userId, paymentId: d.transaction_id, currency: d.currency || cur,
-			cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum,
-			address: d.address, destinationTag: (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null) == null ? null : String(d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo), qrCode: d.qr_code || null, status: "pending", expireAt: new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000), meta: meta_data,
-		});
+                await CryptoTopup.create({
+                        userId, paymentId: d.transaction_id, currency: d.currency || cur,
+                        cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum,
+                        address: d.address, destinationTag: (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null) == null ? null : String(d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo), qrCode: d.qr_code || null, status: "pending", expireAt: new Date(Date.now() + Math.max(1, Number(process.env.CRYPTO_TOPUP_EXPIRE_HOURS) || 3) * 3600 * 1000), meta: meta_data,
+                });
 
-		return res.status(201).json({
-			success: true,
-			message: "Crypto payment address generated. Send the exact amount to complete your top-up.",
-			data: {
-				paymentId: d.transaction_id, address: d.address, currency: d.currency || cur,
-				cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum, qrCode: d.qr_code || null,
-				destinationTag: (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null) == null ? null : String(d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo),
-			},
-		});
-	} catch (error) {
-		const status = error?.response?.status || 500;
-		return res.status(status === 401 ? 502 : status).json({
-			success: false,
-			message: error?.response?.data?.message || error?.message || "Failed to create crypto top-up.",
-		});
-	}
+                return res.status(201).json({
+                        success: true,
+                        message: "Crypto payment address generated. Send the exact amount to complete your top-up.",
+                        data: {
+                                paymentId: d.transaction_id, address: d.address, currency: d.currency || cur,
+                                cryptoAmount: Number(d.amount) || null, amountUsd: Number(d.base_amount) || amountNum, qrCode: d.qr_code || null,
+                                destinationTag: (d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo ?? null) == null ? null : String(d.destination_tag ?? d.payment?.crypto?.destination_tag ?? d.memo),
+                        },
+                });
+        } catch (error) {
+                const status = error?.response?.status || 500;
+                return res.status(status === 401 ? 502 : status).json({
+                        success: false,
+                        message: error?.response?.data?.message || error?.message || "Failed to create crypto top-up.",
+                });
+        }
 };
 
 // Reconcile one crypto top-up against the provider: credits the wallet if the
@@ -969,179 +969,208 @@ const createCryptoTopup = async (req, res) => {
 // Shared by the status endpoint and the lifecycle job (so a user who paid but
 // closed the tab is still credited). Mutates + saves the passed record.
 const reconcileCryptoTopup = async (record) => {
-	if (!record || record.status === "credited") return { status: record?.status, credited: false };
-	let statusData = null;
-	try {
-		const ps = await getPaymentStatus(record.paymentId);
-		statusData = ps?.data || null;
-	} catch (e) {
-		statusData = null;
-	}
-	if (statusData) {
-		const rawStatus = String(statusData.payment_status || statusData.status || "").toLowerCase();
-		const isPaid = statusData.is_paid === true || ["paid", "confirmed", "settled", "successful", "success", "completed"].includes(rawStatus);
-		const txHash = statusData.incoming_tx_hash || null;
-		if (isPaid) {
-			const result = await creditWalletTopup({ userId: record.userId, amountUsd: record.amountUsd, paymentId: record.paymentId, transactionReference: txHash || record.paymentId, paymentMode: "crypto" });
-			record.status = "credited";
-			record.txHash = txHash;
-			if (result.transactionId) record.creditTransactionId = result.transactionId;
-			await record.save();
-			return { status: "credited", credited: true, txHash };
-		}
-		let friendly = record.status;
-		if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
-		else if (rawStatus === "expired") friendly = "expired";
-		else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
-		if (friendly !== record.status) { record.status = friendly; await record.save(); }
-	}
-	if (["pending", "confirming"].includes(record.status) && record.expireAt && new Date(record.expireAt) <= new Date()) {
-		record.status = "expired";
-		await record.save();
-	}
-	return { status: record.status, credited: false };
+        if (!record || record.status === "credited") return { status: record?.status, credited: false };
+        let statusData = null;
+        try {
+                const ps = await getPaymentStatus(record.paymentId);
+                statusData = ps?.data || null;
+        } catch (e) {
+                statusData = null;
+        }
+        if (statusData) {
+                const rawStatus = String(statusData.payment_status || statusData.status || "").toLowerCase();
+                const isPaid = statusData.is_paid === true || ["paid", "confirmed", "settled", "successful", "success", "completed"].includes(rawStatus);
+                const txHash = statusData.incoming_tx_hash || null;
+                if (isPaid) {
+                        const result = await creditWalletTopup({ userId: record.userId, amountUsd: record.amountUsd, paymentId: record.paymentId, transactionReference: txHash || record.paymentId, paymentMode: "crypto" });
+                        record.status = "credited";
+                        record.txHash = txHash;
+                        if (result.transactionId) record.creditTransactionId = result.transactionId;
+                        await record.save();
+                        return { status: "credited", credited: true, txHash };
+                }
+                let friendly = record.status;
+                if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
+                else if (rawStatus === "expired") friendly = "expired";
+                else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
+                if (friendly !== record.status) { record.status = friendly; await record.save(); }
+        }
+        if (["pending", "confirming"].includes(record.status) && record.expireAt && new Date(record.expireAt) <= new Date()) {
+                record.status = "expired";
+                await record.save();
+        }
+        return { status: record.status, credited: false };
 };
 
 // GET /api/v1/wallet/crypto-topup/:paymentId/status  — polls DynoPay and credits on confirmation
 const getCryptoTopupStatus = async (req, res) => {
-	try {
-		const userId = req.user.id;
-		const { paymentId } = req.params;
-		const record = await CryptoTopup.findOne({ paymentId, userId });
-		if (!record) return res.status(404).json({ success: false, message: "Top-up not found." });
+        try {
+                const userId = req.user.id;
+                const { paymentId } = req.params;
+                const record = await CryptoTopup.findOne({ paymentId, userId });
+                if (!record) return res.status(404).json({ success: false, message: "Top-up not found." });
 
-		const walletNow = await Wallet.findOne({ userId });
-		const currentBalance = walletNow ? Number(walletNow.balance.get("USD") || 0) : 0;
+                const walletNow = await Wallet.findOne({ userId });
+                const currentBalance = walletNow ? Number(walletNow.balance.get("USD") || 0) : 0;
 
-		if (record.status === "credited") {
-			return res.status(200).json({ success: true, data: { paymentId, status: "credited", credited: true, walletBalanceUsd: currentBalance, txHash: record.txHash, amountUsd: record.amountUsd } });
-		}
+                if (record.status === "credited") {
+                        return res.status(200).json({ success: true, data: { paymentId, status: "credited", credited: true, walletBalanceUsd: currentBalance, txHash: record.txHash, amountUsd: record.amountUsd } });
+                }
 
-		let statusData = null;
-		try {
-			const ps = await getPaymentStatus(paymentId);
-			statusData = ps?.data || null;
-		} catch (e) {
-			return res.status(200).json({ success: true, data: { paymentId, status: record.status, credited: false, walletBalanceUsd: currentBalance, note: "status_unavailable" } });
-		}
+                let statusData = null;
+                try {
+                        const ps = await getPaymentStatus(paymentId);
+                        statusData = ps?.data || null;
+                } catch (e) {
+                        return res.status(200).json({ success: true, data: { paymentId, status: record.status, credited: false, walletBalanceUsd: currentBalance, note: "status_unavailable" } });
+                }
 
-		const rawStatus = String(statusData?.payment_status || statusData?.status || "").toLowerCase();
-		const isPaid = statusData?.is_paid === true || ["paid", "confirmed", "settled", "successful", "success", "completed"].includes(rawStatus);
-		const txHash = statusData?.incoming_tx_hash || null;
+                const rawStatus = String(statusData?.payment_status || statusData?.status || "").toLowerCase();
+                const isPaid = statusData?.is_paid === true || ["paid", "confirmed", "settled", "successful", "success", "completed"].includes(rawStatus);
+                const txHash = statusData?.incoming_tx_hash || null;
 
-		if (isPaid) {
-			const result = await creditWalletTopup({ userId, amountUsd: record.amountUsd, paymentId, transactionReference: txHash || paymentId, paymentMode: "crypto" });
-			record.status = "credited";
-			record.txHash = txHash;
-			if (result.transactionId) record.creditTransactionId = result.transactionId;
-			await record.save();
-			const w2 = await Wallet.findOne({ userId });
-			return res.status(200).json({
-				success: true,
-				data: { paymentId, status: "credited", credited: true, alreadyCredited: result.alreadyCredited === true, walletBalanceUsd: w2 ? Number(w2.balance.get("USD") || 0) : currentBalance, txHash, amountUsd: record.amountUsd },
-			});
-		}
+                if (isPaid) {
+                        const result = await creditWalletTopup({ userId, amountUsd: record.amountUsd, paymentId, transactionReference: txHash || paymentId, paymentMode: "crypto" });
+                        record.status = "credited";
+                        record.txHash = txHash;
+                        if (result.transactionId) record.creditTransactionId = result.transactionId;
+                        await record.save();
+                        const w2 = await Wallet.findOne({ userId });
+                        return res.status(200).json({
+                                success: true,
+                                data: { paymentId, status: "credited", credited: true, alreadyCredited: result.alreadyCredited === true, walletBalanceUsd: w2 ? Number(w2.balance.get("USD") || 0) : currentBalance, txHash, amountUsd: record.amountUsd },
+                        });
+                }
 
-		let friendly = "pending";
-		if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
-		else if (["expired"].includes(rawStatus)) friendly = "expired";
-		else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
-		if (["confirming", "expired", "failed"].includes(friendly) && record.status !== friendly) { record.status = friendly; await record.save(); }
+                let friendly = "pending";
+                if (["confirming", "processing", "detected"].includes(rawStatus)) friendly = "confirming";
+                else if (["expired"].includes(rawStatus)) friendly = "expired";
+                else if (["failed", "cancelled", "canceled"].includes(rawStatus)) friendly = "failed";
+                if (["confirming", "expired", "failed"].includes(friendly) && record.status !== friendly) { record.status = friendly; await record.save(); }
 
-		return res.status(200).json({
-			success: true,
-			data: { paymentId, status: friendly, credited: false, walletBalanceUsd: currentBalance, confirmations: statusData?.confirmations, requiredConfirmations: statusData?.required_confirmations, txHash },
-		});
-	} catch (error) {
-		return res.status(500).json({ success: false, message: error?.message || "Failed to check top-up status." });
-	}
+                return res.status(200).json({
+                        success: true,
+                        data: { paymentId, status: friendly, credited: false, walletBalanceUsd: currentBalance, confirmations: statusData?.confirmations, requiredConfirmations: statusData?.required_confirmations, txHash },
+                });
+        } catch (error) {
+                return res.status(500).json({ success: false, message: error?.message || "Failed to check top-up status." });
+        }
 };
 
 // GET /api/v1/wallet/crypto-topups/pending — unfinished crypto top-ups the user can resume
 const listPendingCryptoTopups = async (req, res) => {
-	try {
-		const userId = req.user.id;
-		const now = new Date();
-		const rows = await CryptoTopup.find({
-			userId,
-			status: { $in: ["pending", "confirming"] },
-			expireAt: { $gt: now },
-		}).sort({ createdAt: -1 }).limit(10);
-		const data = rows.map((r) => ({
-			paymentId: r.paymentId,
-			address: r.address,
-			currency: r.currency,
-			cryptoAmount: r.cryptoAmount,
-			amountUsd: r.amountUsd,
-			qrCode: r.qrCode || null,
-			destinationTag: r.destinationTag || null,
-			status: r.status,
-			createdAt: r.createdAt,
-			expireAt: r.expireAt,
-		}));
-		return res.status(200).json({ success: true, data });
-	} catch (error) {
-		return res.status(500).json({ success: false, message: error?.message || "Failed to load pending top-ups." });
-	}
+        try {
+                const userId = req.user.id;
+                const now = new Date();
+                const rows = await CryptoTopup.find({
+                        userId,
+                        status: { $in: ["pending", "confirming"] },
+                        expireAt: { $gt: now },
+                }).sort({ createdAt: -1 }).limit(10);
+                const data = rows.map((r) => ({
+                        paymentId: r.paymentId,
+                        address: r.address,
+                        currency: r.currency,
+                        cryptoAmount: r.cryptoAmount,
+                        amountUsd: r.amountUsd,
+                        qrCode: r.qrCode || null,
+                        destinationTag: r.destinationTag || null,
+                        status: r.status,
+                        createdAt: r.createdAt,
+                        expireAt: r.expireAt,
+                }));
+                return res.status(200).json({ success: true, data });
+        } catch (error) {
+                return res.status(500).json({ success: false, message: error?.message || "Failed to load pending top-ups." });
+        }
 };
 
 // POST /api/v1/wallet/crypto-topup/:paymentId/cancel — dismiss an unfinished top-up
 const cancelCryptoTopup = async (req, res) => {
-	try {
-		const userId = req.user.id;
-		const { paymentId } = req.params;
-		const record = await CryptoTopup.findOne({ paymentId, userId });
-		if (!record) return res.status(404).json({ success: false, message: "Top-up not found." });
-		if (record.status === "credited") {
-			return res.status(409).json({ success: false, message: "This payment was already credited." });
-		}
-		if (["pending", "confirming"].includes(record.status)) {
-			record.status = "failed";
-			await record.save();
-		}
-		return res.status(200).json({ success: true, data: { paymentId, status: record.status } });
-	} catch (error) {
-		return res.status(500).json({ success: false, message: error?.message || "Failed to cancel top-up." });
-	}
+        try {
+                const userId = req.user.id;
+                const { paymentId } = req.params;
+                const record = await CryptoTopup.findOne({ paymentId, userId });
+                if (!record) return res.status(404).json({ success: false, message: "Top-up not found." });
+                if (record.status === "credited") {
+                        return res.status(409).json({ success: false, message: "This payment was already credited." });
+                }
+                if (["pending", "confirming"].includes(record.status)) {
+                        record.status = "failed";
+                        await record.save();
+                }
+                return res.status(200).json({ success: true, data: { paymentId, status: record.status } });
+        } catch (error) {
+                return res.status(500).json({ success: false, message: error?.message || "Failed to cancel top-up." });
+        }
 };
 
 // GET /api/v1/wallet/crypto-topups — recent crypto top-ups (any status) for the
 // wallet "Recent top-ups" history list (pending, confirming, credited, expired, failed).
 const listCryptoTopups = async (req, res) => {
-	try {
-		const userId = req.user.id;
-		const rows = await CryptoTopup.find({ userId })
-			.sort({ createdAt: -1 })
-			.limit(15);
-		const data = rows.map((r) => ({
-			paymentId: r.paymentId,
-			currency: r.currency,
-			cryptoAmount: r.cryptoAmount,
-			amountUsd: r.amountUsd,
-			status: r.status,
-			txHash: r.txHash || null,
-			createdAt: r.createdAt,
-			expireAt: r.expireAt,
-		}));
-		return res.status(200).json({ success: true, data });
-	} catch (error) {
-		return res.status(500).json({ success: false, message: error?.message || "Failed to load top-up history." });
-	}
+        try {
+                const userId = req.user.id;
+                const rows = await CryptoTopup.find({ userId })
+                        .sort({ createdAt: -1 })
+                        .limit(15);
+                const data = rows.map((r) => ({
+                        paymentId: r.paymentId,
+                        currency: r.currency,
+                        cryptoAmount: r.cryptoAmount,
+                        amountUsd: r.amountUsd,
+                        status: r.status,
+                        txHash: r.txHash || null,
+                        createdAt: r.createdAt,
+                        expireAt: r.expireAt,
+                }));
+                return res.status(200).json({ success: true, data });
+        } catch (error) {
+                return res.status(500).json({ success: false, message: error?.message || "Failed to load top-up history." });
+        }
 };
 
+// GET /api/v1/wallet/reward-points — reward-point ledger (earned/redeemed history)
+const listRewardPointLogs = async (req, res) => {
+        try {
+                const userId = req.user.id;
+                const rows = await RewardPointLog.find({ userId })
+                        .sort({ createdAt: -1 })
+                        .limit(30)
+                        .lean();
+                const toNum = (v) => {
+                        const n = Number(v?.toString ? v.toString() : v);
+                        return Number.isFinite(n) ? n : 0;
+                };
+                let balance = 0;
+                try { const u = await User.findById(userId); balance = u ? Number(await u.rewardPoints()) : 0; } catch { /* non-fatal */ }
+                const data = rows.map((r) => ({
+                        id: String(r._id),
+                        points: toNum(r.rewardPoints),
+                        operationType: r.operationType,
+                        expiryDate: r.expiryDate || null,
+                        createdAt: r.createdAt,
+                }));
+                return res.status(200).json({ success: true, data, balance });
+        } catch (error) {
+                return res.status(500).json({ success: false, message: error?.message || "Failed to load reward-point history." });
+        }
+};
+
+
 module.exports = {
-	createWallet,
-	getWallet,
-	fundWallet,
-	processPayment,
-	getDynocheckoutUrl,
-	handleDynoPaymentWebhook,
-	getHostbayWalletTransactions,
-	createCryptoTopup,
-	getCryptoTopupStatus,
-	creditWalletTopup,
-	reconcileCryptoTopup,
-	listPendingCryptoTopups,
-	listCryptoTopups,
-	cancelCryptoTopup,
+        createWallet,
+        getWallet,
+        fundWallet,
+        processPayment,
+        getDynocheckoutUrl,
+        handleDynoPaymentWebhook,
+        getHostbayWalletTransactions,
+        createCryptoTopup,
+        getCryptoTopupStatus,
+        creditWalletTopup,
+        reconcileCryptoTopup,
+        listPendingCryptoTopups,
+        listCryptoTopups,
+        cancelCryptoTopup,
+        listRewardPointLogs,
 };

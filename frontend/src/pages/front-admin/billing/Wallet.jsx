@@ -7,6 +7,7 @@ import WalletModal from '../../../components/modals/wallet-modal';
 import { useAlert } from '../../../context/AlertContext';
 import Loader from '../../../components/common/Loader';
 import TopupHistory from '../../../components/front-admin/billing/TopupHistory';
+import RewardHistory from '../../../components/front-admin/billing/RewardHistory';
 import { useQueryParams } from '../../../hooks/useQueryParams';
 import { useAuth } from '../../../hooks/useAuth';
 import { useLanguage } from '../../../hooks/useLanguage';
@@ -107,7 +108,7 @@ const Wallet = () => {
                             {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} />}
                         </div>
                     </div>
-                    <div className='action-card p-7 min-h-36 flex w-full items-center'>
+                    <div className='action-card p-7 min-h-36 flex w-full items-center' id="rewards">
                         <div className='flex items-center justify-between w-full'>
                             <div>
                                 <p className='text-lg font-medium text-primary dark:text-gray-400 flex gap-2 items-center'>
@@ -156,6 +157,9 @@ const Wallet = () => {
 
                 {/* Recent crypto top-ups */}
                 <TopupHistory />
+
+                {/* Reward points history */}
+                <RewardHistory />
             </div>
             {walletLoading && <Loader />}
         </>

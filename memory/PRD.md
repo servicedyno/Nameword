@@ -177,6 +177,13 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Reward points history on the Wallet page (2026-06) — DONE, verified (backend + frontend)
+- **Problem (user)**: the wallet showed the reward-points *balance* but no *history* of how points were earned/spent, even though a `RewardPointLog` ledger already existed in the DB (credit on wallet top-up + on order spend; debit on checkout redemption).
+- **Backend**: new `GET /api/v1/wallet/reward-points` (`WalletController.listRewardPointLogs`) → last 30 `RewardPointLog` entries `{id, points, operationType, expiryDate, createdAt}` + current `balance` (Decimal128 safely coerced to Number). Route added in `routes/api/wallet.js` (behind `sessionOrApiKey`).
+- **Frontend**: new `components/front-admin/billing/RewardHistory.jsx` (mirrors TopupHistory) — each row: gift icon + "Earned" (green +N pts) for credits / up-arrow + "Redeemed" (amber −N pts) for debits, with date; empty state; refreshes on the `wallet:updated` event. `walletAPI.getRewardPointLogs()` + `ENDPOINTS.WALLET.REWARD_POINTS`. Rendered on `Wallet.jsx` under the crypto top-up history. Also added `id="rewards"` to the Reward Points card so the top-bar/rail `/wallet#rewards` link scrolls to it. i18n `admin.rewardHistory` in EN/ES/FR.
+- VERIFIED: `GET /wallet/reward-points` returns 27 entries + balance 2187.2 for buyer; UI shows 27 rows with correct green "+39 pts"/"+0.20 pts" deltas, dates, gift icons. Backend restarted + PROD frontend rebuilt. NOTE: the test account has only credits, so the amber "Redeemed" (debit) row style is verified by render logic, not a live debit.
+
+
 ### Cart drawer — "We accept" coin trust strip (2026-06) — DONE, verified (desktop + mobile)
 - **New `components/cart/AcceptedCoins.jsx`**: a compact "We accept" strip that fetches the LIVE DynoPay supported-coin list (`walletAPI.getSupportedCurrencies()` → `data.currencies`), dedupes by base ticker (USDT-TRC20/ERC20 → one USDT), and renders up to 7 brand-coloured coin icons + "+N more". Module-level cache so it fetches once/session; falls back to the known 13-coin set (and works for guests where the wallet call 401s). Reuses the same icon mapping style as `wallet-modal.jsx` (FaBitcoin/FaEthereum/SiTether/SiLitecoin/SiDogecoin/SiBitcoincash/SiSolana/SiPolygon/SiRipple + LuCoins fallback for TRX/USDC).
 - **Wired into `MiniCartDrawer.jsx`** footer (below the pay buttons + "Open full cart" link, hairline divider above), so both signed-in and guest users see accepted coins before paying.
