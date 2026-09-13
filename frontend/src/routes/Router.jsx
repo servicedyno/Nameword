@@ -19,6 +19,7 @@ import Hosting from "../pages/HostingNomadly";
 import VPS from "../pages/VPS";
 import RDP from "../pages/RDP";
 import Api from "../pages/Api";
+import ApiDocs from "../pages/ApiDocs";
 import Pricing from "../pages/Pricing";
 import DomainsNomadly from "../pages/DomainsNomadly";
 import DnsManagerNomadly from "../pages/DnsManagerNomadly";
@@ -115,6 +116,7 @@ function Router() {
       <Route path="/vps" element={<VPS />} />
       <Route path="/rdp" element={<RDP />} />
       <Route path="/api" element={<Api />} />
+      <Route path="/api-docs" element={<ApiDocs />} />
       <Route path="/pricing" element={<Pricing />} />
 
       {/* Hostinger-style checkout funnel: search -> hosting -> account -> cart -> receipt */}

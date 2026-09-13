@@ -1,4 +1,5 @@
 const NotAuthorizedError = require("../errors/NotAuthorizedError");
+const mongoose = require("mongoose");
 const { hmacHash, sessionizeUser } = require("../utils/common");
 const User = require("../models/User");
 const ForbiddenError = require("../errors/ForbiddenError");
@@ -16,7 +17,7 @@ const validateAPIKey = async (req, res, next) => {
 	}
 
 	let [userId, apiKey] = token.split("|");
-	if (!userId || !apiKey) {
+	if (!userId || !apiKey || !mongoose.Types.ObjectId.isValid(userId)) {
 		return res.status(400).json({
 			success: false,
 			message: "Invalid API key format. Please create an API key first and try again.",

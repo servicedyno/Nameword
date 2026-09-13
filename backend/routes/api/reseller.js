@@ -1,13 +1,12 @@
 const router = require("express").Router();
 const c = require("../../app/controllers/reseller/resellerController");
-const currentUser = require("../../app/middlewares/current-user");
-const requireAuth = require("../../app/middlewares/require-auth");
 
 // Nomadly Reseller API proxy. The reseller API key lives server-side (env), so the
 // browser never sees it. Mode (dry_run vs live) is controlled by the provider.
 // Catalog/search endpoints are public; anything that lists, creates or manages
-// resources requires a signed-in user.
-const auth = [currentUser, requireAuth];
+// resources requires auth — accepted either as a signed-in session/JWT OR an
+// x-api-key (so a user's personal API key works across every service we provide).
+const auth = require("../../app/middlewares/session-or-apikey");
 
 // ---------- Meta ----------
 router.get("/health", c.getHealth);
