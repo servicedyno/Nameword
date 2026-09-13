@@ -455,18 +455,18 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
           )}
         </div>
 
-        {/* Powered by DynoPay */}
+        {/* Powered by Dynopay */}
         <a
           href="https://dynopay.com"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-1.5 border-t border-stokecolor px-5 py-3 text-[11px] text-secondary transition-colors hover:text-primary dark:border-gray-700 dark:hover:text-white"
           data-testid="powered-by-dynopay"
-          title="Crypto payments powered by DynoPay"
+          title="Crypto payments powered by Dynopay"
         >
           <span>Powered by</span>
-          <img src="/dynopay-icon.svg" alt="DynoPay" className="h-3.5 w-3.5" />
-          <span className="font-semibold">DynoPay</span>
+          <img src="/dynopay-icon.svg" alt="Dynopay" className="h-3.5 w-3.5" />
+          <span className="font-semibold">Dynopay</span>
         </a>
       </div>
     </div>
