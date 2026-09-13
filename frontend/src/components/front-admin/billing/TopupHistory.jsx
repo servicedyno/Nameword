@@ -1,16 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaBitcoin, FaEthereum } from "react-icons/fa6";
-import { SiTether } from "react-icons/si";
+import { SiTether, SiLitecoin, SiDogecoin, SiBitcoincash, SiSolana, SiPolygon, SiRipple } from "react-icons/si";
 import { LuCoins } from "react-icons/lu";
 import { walletAPI } from "../../../api/walletApi";
 import { useLanguage } from "../../../hooks/useLanguage";
 
+const COIN_ICONS = {
+  BTC: { Icon: FaBitcoin, color: "#f7931a" },
+  ETH: { Icon: FaEthereum, color: "#627eea" },
+  LTC: { Icon: SiLitecoin, color: "#345d9d" },
+  DOGE: { Icon: SiDogecoin, color: "#c2a633" },
+  BCH: { Icon: SiBitcoincash, color: "#0ac18e" },
+  SOL: { Icon: SiSolana, color: "#9945ff" },
+  POLYGON: { Icon: SiPolygon, color: "#8247e5" },
+  MATIC: { Icon: SiPolygon, color: "#8247e5" },
+  XRP: { Icon: SiRipple, color: "#00aae4" },
+  TRX: { Icon: LuCoins, color: "#eb0029" },
+  USDT: { Icon: SiTether, color: "#26a17b" },
+  USDC: { Icon: LuCoins, color: "#2775ca" },
+};
 const coinMeta = (code) => {
   const c = String(code || "").toUpperCase();
-  if (c === "BTC") return { Icon: FaBitcoin, color: "#f7931a", label: "BTC" };
-  if (c === "ETH") return { Icon: FaEthereum, color: "#627eea", label: "ETH" };
-  if (c.startsWith("USDT")) return { Icon: SiTether, color: "#26a17b", label: "USDT" };
-  return { Icon: LuCoins, color: "#6366f1", label: c };
+  const base = c.includes("-") ? c.split("-")[0] : c;
+  const m = COIN_ICONS[base] || { Icon: LuCoins, color: "#6366f1" };
+  return { Icon: m.Icon, color: m.color, label: base };
 };
 
 const STATUS = {

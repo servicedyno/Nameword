@@ -7,7 +7,10 @@ const VPSDisk = require('../../models/VPSDisk');
 const { fetchVPSPlansWithCosts } = require('../../helpers/computeEngineHelper');
 require('dotenv').config();
 
-const { ensureWallet, getConfiguredCoins } = require('../../helpers/dynoPayHelper');
+const { ensureWallet, getConfiguredCoins, getSupportedCurrencies } = require('../../helpers/dynoPayHelper');
+
+// Safety net if the provider list is briefly unavailable.
+const FALLBACK_TOPUP_COINS = ["BTC", "ETH", "USDT-TRC20"];
 
 const baseUrl = (process.env.DYNO_PAY_BASE_URL || 'https://dynopay.com/api').trim().replace(/\/+$/, '');
 // Build DynoPay headers. Pass a per-user walletToken for endpoints that need the customer Bearer.
@@ -18,11 +21,22 @@ const apiHeaders = (walletToken) => {
 };
 const headers = apiHeaders();
 
-// To fetch supported currencies — return ONLY the coins Nameword has configured
-// wallets for (env CRYPTO_TOPUP_COINS). DynoPay's global list includes coins we
-// can't actually receive (e.g. XRP), so we never expose the raw provider list.
+// To fetch supported currencies — return the coins the Nameword merchant has
+// CONFIGURED in DynoPay (getSupportedCurrency -> data.currencies). An optional
+// CRYPTO_TOPUP_COINS env allow-list can narrow this further; by default we show
+// every configured coin. We never expose DynoPay's raw global `all_supported`.
 const fetchSupportedCryptoCurrency = async (req, res) => {
-    return res.status(200).json({ success: true, data: { currencies: getConfiguredCoins() } });
+    try {
+        const provider = await getSupportedCurrencies();
+        let coins = (provider?.data?.currencies || provider?.data?.all_supported || []).map((c) => String(c).toUpperCase());
+        const allow = getConfiguredCoins();
+        if (allow.length) coins = coins.filter((c) => allow.includes(c));
+        if (!coins.length) coins = allow.length ? allow : FALLBACK_TOPUP_COINS;
+        return res.status(200).json({ success: true, data: { currencies: coins } });
+    } catch (error) {
+        const allow = getConfiguredCoins();
+        return res.status(200).json({ success: true, data: { currencies: allow.length ? allow : FALLBACK_TOPUP_COINS } });
+    }
 };
 
 // const getVPSCryptoAddress = async (req, res) => {

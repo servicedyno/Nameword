@@ -2,7 +2,7 @@ import { IoArrowBack, IoCardOutline, IoClose, IoCopyOutline } from "react-icons/
 import { PiWarningBold } from "react-icons/pi";
 import { FiCheckCircle, FiLoader } from "react-icons/fi";
 import { FaBitcoin, FaEthereum } from "react-icons/fa6";
-import { SiTether } from "react-icons/si";
+import { SiTether, SiLitecoin, SiDogecoin, SiBitcoincash, SiSolana, SiPolygon, SiRipple } from "react-icons/si";
 import { LuCoins } from "react-icons/lu";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { walletAPI } from "../../api/walletApi";
@@ -30,13 +30,27 @@ const NETWORK_HINT = {
   POLYGON: "Polygon",
 };
 
-// Coin icon + brand colour + short ticker for the picker.
+// Coin icon + brand colour + short ticker for the picker. Keyed by the base
+// ticker (before any "-CHAIN" suffix), so USDT-TRC20 / USDT-ERC20 share the USDT icon.
+const COIN_ICONS = {
+  BTC: { icon: FaBitcoin, color: "#f7931a" },
+  ETH: { icon: FaEthereum, color: "#627eea" },
+  LTC: { icon: SiLitecoin, color: "#345d9d" },
+  DOGE: { icon: SiDogecoin, color: "#c2a633" },
+  BCH: { icon: SiBitcoincash, color: "#0ac18e" },
+  SOL: { icon: SiSolana, color: "#9945ff" },
+  POLYGON: { icon: SiPolygon, color: "#8247e5" },
+  MATIC: { icon: SiPolygon, color: "#8247e5" },
+  XRP: { icon: SiRipple, color: "#00aae4" },
+  TRX: { icon: LuCoins, color: "#eb0029" },
+  USDT: { icon: SiTether, color: "#26a17b" },
+  USDC: { icon: LuCoins, color: "#2775ca" },
+};
 const coinMeta = (code) => {
   const c = String(code || "").toUpperCase();
-  if (c === "BTC") return { icon: FaBitcoin, color: "#f7931a", label: "BTC" };
-  if (c === "ETH") return { icon: FaEthereum, color: "#627eea", label: "ETH" };
-  if (c.startsWith("USDT")) return { icon: SiTether, color: "#26a17b", label: "USDT" };
-  return { icon: LuCoins, color: "#6366f1", label: c };
+  const base = c.includes("-") ? c.split("-")[0] : c;
+  const m = COIN_ICONS[base] || { icon: LuCoins, color: "#6366f1" };
+  return { icon: m.icon, color: m.color, label: base };
 };
 
 const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
@@ -52,6 +66,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
       : ""
   );
   const [submitting, setSubmitting] = useState(false);
+  const [topupError, setTopupError] = useState("");
   const [pay, setPay] = useState(resumePayment || null); // { paymentId, address, currency, cryptoAmount, amountUsd, qrCode }
   const [status, setStatus] = useState(resumePayment?.status === "confirming" ? "confirming" : "waiting"); // waiting | confirming | credited | expired | failed
   const [credited, setCredited] = useState(false);
@@ -154,6 +169,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
       return;
     }
     setSubmitting(true);
+    setTopupError("");
     try {
       const res = await walletAPI.createCryptoTopup({
         amount: amountNum,
@@ -166,7 +182,9 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
         setStatus("waiting");
         setStep("pay");
       } else {
-        showAlert(res?.message || "Could not generate a payment address. Please try again.", { type: "error", duration: 3000 });
+        const m = res?.message || "Could not generate a payment address. Please try again.";
+        setTopupError(m);
+        showAlert(m, { type: "error", duration: 3500 });
       }
     } catch (err) {
       const msg =
@@ -174,7 +192,8 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
         err?.response?.data?.errors?.[0]?.message ||
         err.message ||
         "Failed to start the crypto top-up.";
-      showAlert(msg, { type: "error", duration: 3000 });
+      setTopupError(msg);
+      showAlert(msg, { type: "error", duration: 3500 });
     } finally {
       setSubmitting(false);
     }
@@ -224,7 +243,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                     min={MIN_TOPUP}
                     inputMode="decimal"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => { setAmount(e.target.value); setTopupError(""); }}
                     className="input-field peer w-full admin-form"
                     placeholder={`e.g. ${MIN_TOPUP}`}
                     data-testid="topup-amount-input"
@@ -242,7 +261,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                   {currencies.length === 0 ? (
                     <p className="text-sm text-secondary py-2" data-testid="topup-coins-loading">Loading coins…</p>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2" data-testid="topup-currency-group">
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" data-testid="topup-currency-group">
                       {currencies.map((c) => {
                         const meta = coinMeta(c);
                         const Icon = meta.icon;
@@ -251,7 +270,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                           <button
                             key={c}
                             type="button"
-                            onClick={() => setCurrency(c)}
+                            onClick={() => { setCurrency(c); setTopupError(""); }}
                             aria-pressed={selected}
                             data-testid={`topup-coin-${c}`}
                             className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 transition-colors ${
@@ -290,6 +309,15 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                   <span>{submitting ? "Generating…" : `Get address for $${amountValid ? amountNum : 0}`}</span>
                 </button>
               </div>
+              {topupError && (
+                <p
+                  className="mt-3 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+                  role="alert"
+                  data-testid="topup-error"
+                >
+                  {topupError}
+                </p>
+              )}
               {submitting && <Loader />}
             </>
           )}

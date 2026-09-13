@@ -177,6 +177,15 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Wallet top-up: show ALL configured coins (13) + inline error surface (2026-06) — DONE, tested (frontend 100%)
+- **Bug**: the modal offered only BTC/ETH/USDT because I'd hardcoded a 3-coin allow-list; the merchant actually has 13 coins configured in DynoPay.
+- **Fix**: `paymentController.fetchSupportedCryptoCurrency` now returns DynoPay's LIVE configured list (`getSupportedCurrency -> data.currencies`) = BCH, BTC, DOGE, ETH, LTC, POLYGON, SOL, TRX, USDC-ERC20, USDT-ERC20, USDT-POLYGON, USDT-TRC20, XRP (13). `getConfiguredCoins()` now returns [] when `CRYPTO_TOPUP_COINS` is unset (no restriction; env is now an OPTIONAL narrowing allow-list, left empty). `createCryptoTopup` validates against the live list. `WalletController` uses the live list; fallback to BTC/ETH/USDT if the provider call fails.
+- **Icons**: added real coin icons for all 13 (`SiLitecoin/SiDogecoin/SiBitcoincash/SiSolana/SiPolygon/SiRipple` + existing BTC/ETH/USDT; LuCoins fallback for TRX/USDC) in both `wallet-modal.jsx` and `TopupHistory.jsx`; picker grid is now `grid-cols-3 sm:grid-cols-4`.
+- **Inline error**: the modal now shows a persistent inline error (`data-testid='topup-error'`) when address generation fails (previously the toast could render behind the modal), cleared when the user changes coin/amount.
+- VERIFIED (iteration_10): all 13 coin buttons render with icons; LTC generated a real DynoPay address end-to-end; top-up history regression passed.
+- KNOWN (DynoPay merchant-side, NOT our code): XRP currently returns 500 "XRP_MASTER wallet record not found in DB" — the DynoPay account is missing an XRP master wallet for tag-based addresses. Options: configure XRP in DynoPay, or hide it via `CRYPTO_TOPUP_COINS` (e.g. the other 12). The inline error now shows this reason to the user.
+
+
 ### Wallet top-up: "Change coin or amount" back button (2026-06) — DONE, tested 100% (frontend)
 - **Bug**: once on the pay screen (after "Get address"), the only actions were "check now" and "Done" (which closed the modal) — a user who picked ETH couldn't switch to BTC without abandoning the modal.
 - **Fix**: added `goBack()` + a `data-testid='topup-change-coin'` "Change coin or amount" button on the pay screen (shown pre-credit) in `wallet-modal.jsx`. It stops the status poll, resets pay/status/credited, and returns to step "amount" while preserving the entered amount and selected coin, so the user can choose a different coin and regenerate an address.

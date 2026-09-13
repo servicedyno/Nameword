@@ -912,11 +912,17 @@ const createCryptoTopup = async (req, res) => {
 		}
 		const cur = String(currency || "").toUpperCase().trim();
 		if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
-		// Only allow coins Nameword has configured wallets for (BTC, ETH, USDT-TRC20).
-		const allowedCoins = getConfiguredCoins();
-		if (allowedCoins.length && !allowedCoins.includes(cur)) {
-			return res.status(400).json({ success: false, message: `${cur} is not available. Please choose ${allowedCoins.join(", ")}.`, supported: allowedCoins });
-		}
+		// Validate against the merchant's live configured coins from DynoPay
+		// (optionally narrowed by the CRYPTO_TOPUP_COINS env allow-list).
+		try {
+			const supported = await getSupportedCurrencies();
+			const live = (supported?.data?.currencies || supported?.data?.all_supported || []).map((c) => String(c).toUpperCase());
+			const allow = getConfiguredCoins();
+			const effective = allow.length ? live.filter((c) => allow.includes(c)) : live;
+			if (effective.length && !effective.includes(cur)) {
+				return res.status(400).json({ success: false, message: `${cur} is not available. Please choose one of: ${effective.join(", ")}.`, supported: effective });
+			}
+		} catch (e) { /* non-fatal: proceed if the currency list is unavailable */ }
 
 		const userDetails = await User.findById(userId);
 		if (!userDetails) return res.status(404).json({ success: false, message: "User not found" });
