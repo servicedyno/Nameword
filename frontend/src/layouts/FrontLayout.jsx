@@ -91,13 +91,13 @@ const FrontLayout = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-surface-2 dark:bg-gray-950">
       {/* Desktop icon rail */}
-      <div className="hidden xl:flex shrink-0">
+      <div className="hidden lg:flex shrink-0">
         <AppRail collapsed={collapsed} onToggle={toggleCollapsed} />
       </div>
 
       {/* Desktop contextual panel */}
       {!collapsed && (
-        <div className="hidden xl:block w-[280px] shrink-0 overflow-y-auto border-r border-line bg-white px-6 py-7 dark:border-white/[0.06] dark:bg-gray-900">
+        <div className="hidden lg:block w-[280px] shrink-0 overflow-y-auto border-r border-line bg-white px-6 py-7 dark:border-white/[0.06] dark:bg-gray-900">
           <Sidebar setIsEnlarge={setMobileOpen} />
         </div>
       )}
@@ -107,10 +107,10 @@ const FrontLayout = () => {
         {/* Top bar */}
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-white/85 px-4 backdrop-blur-md dark:border-white/[0.06] dark:bg-gray-950/85 lg:px-6">
           {/* mobile menu + brand */}
-          <button className="xl:hidden text-primary dark:text-white" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
+          <button className="lg:hidden text-primary dark:text-white" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
             <CgMenu size={22} />
           </button>
-          <NavLink to="/" className="xl:hidden"><img src={favicon} alt="Nameword" className="h-8 w-8" /></NavLink>
+          <NavLink to="/dashboard" className="lg:hidden"><img src={favicon} alt="Nameword" className="h-8 w-8" /></NavLink>
 
           {/* global search / command palette trigger */}
           <button
@@ -149,7 +149,7 @@ const FrontLayout = () => {
             </div>
 
             {/* help (desktop) */}
-            <NavLink to="/help-support" className="hidden xl:inline-flex header-icon-btn" title={t.nav.helpSupport} aria-label="Help">
+            <NavLink to="/help-support" className="hidden lg:inline-flex header-icon-btn" title={t.nav.helpSupport} aria-label="Help">
               <img src={Help} alt="" className="h-5 w-5 dark-mode" />
             </NavLink>
 
@@ -179,11 +179,11 @@ const FrontLayout = () => {
         </header>
 
         {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto pb-24 xl:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <div className="main-content">
             <Outlet />
           </div>
-          <div className="mt-8 flex flex-col gap-3 px-4 pb-6 text-13 font-medium text-ink-soft xl:px-10">
+          <div className="mt-8 flex flex-col gap-3 px-4 pb-6 text-13 font-medium text-ink-soft lg:px-10">
             <div className="flex gap-4">
               <NavLink to="/terms-and-conditions" className="nw-link">{t.footer.termsAndConditions}</NavLink>
               <NavLink to="/privacy-policy" className="nw-link">{t.footer.privacyPolicy}</NavLink>
@@ -195,7 +195,7 @@ const FrontLayout = () => {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 xl:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-0 top-0 flex h-full w-[86%] max-w-xs bg-white shadow-2xl dark:bg-gray-950 dark:border-r dark:border-white/[0.06]">
             <AppRail collapsed={false} onToggle={null} />
@@ -210,7 +210,7 @@ const FrontLayout = () => {
       )}
 
       {/* Mobile bottom tab bar */}
-      <nav className="fixed bottom-0 left-0 z-30 flex w-full items-center justify-around border-t border-line bg-white/95 px-2 py-1.5 backdrop-blur xl:hidden dark:border-white/[0.06] dark:bg-gray-950/95" data-testid="bottom-tabs">
+      <nav className="fixed bottom-0 left-0 z-30 flex w-full items-center justify-around border-t border-line bg-white/95 px-2 py-1.5 backdrop-blur lg:hidden dark:border-white/[0.06] dark:bg-gray-950/95" data-testid="bottom-tabs">
         {BOTTOM_TABS.map((tab) => {
           const active = pathname === tab.to || pathname.startsWith(tab.to);
           return (

@@ -14,6 +14,8 @@ export const siteEs = {
     faq: "Preguntas",
     signIn: "Iniciar sesión",
     createAccount: "Crear cuenta",
+    dashboard: "Panel",
+    viewPublicSite: "Ver sitio público",
     openMenu: "Abrir menú",
     closeMenu: "Cerrar menú",
     items: {

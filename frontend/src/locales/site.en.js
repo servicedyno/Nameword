@@ -17,6 +17,8 @@ export const siteEn = {
     faq: "FAQ",
     signIn: "Sign in",
     createAccount: "Create account",
+    dashboard: "Dashboard",
+    viewPublicSite: "View public site",
     openMenu: "Open menu",
     closeMenu: "Close menu",
     items: {

@@ -534,6 +534,8 @@ export const en = {
       accountActivity: "Account Activity",
       notificationSettings: "Notifications settings",
       apiKeys: "API Keys",
+      manageAccount: "Manage account",
+      viewPublicSite: "View public site",
       logout: "Logout",
       logoutSuccess: "Logged out successfully"
     },

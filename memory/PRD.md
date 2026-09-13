@@ -177,6 +177,17 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Changelog / Session Log (latest first)
 
+### Navigation bridge for signed-in users (Option 1) (2026-06) — DONE, tested 100% (frontend, 3 viewports)
+- **Problem**: signed-in users got stranded on storefront/product pages (only a name dropdown with no app links), the logo always went to the public landing page, and the sidebar vanished on laptop widths (1024–1279px).
+- **Account menu**: `UserDropdownMenu.jsx` rewritten into a full "Manage account" menu — quick links to Dashboard, Domains, Wallet, Rewards, Orders, My services, Subscriptions, Payment history, Help + existing settings links + "View public site" (→ `/`) + Logout. Used on both the storefront navbar and the in-app top bar.
+- **Storefront Dashboard button**: `Navbar.jsx` now shows a `nav-dashboard-btn` (desktop) and `nav-dashboard-btn-mobile` (drawer) for signed-in users, so getting into the app is one click from any product/landing page.
+- **Context-aware logo**: `Navbar.jsx` brand → `/dashboard` when signed in (else `/`); AppRail + sidebar + FrontLayout mobile brand logos → `/dashboard`. A "View public site" link in the account menu returns to `/`.
+- **Sidebar on laptops**: FrontLayout + AppRail + sidebar breakpoints shifted `xl:`→`lg:` (icon rail, contextual panel, mobile menu/brand, mobile drawer, bottom tabs) and `closeSidebar` uses `innerWidth<1024`, so the sidebar shows from ~1024px. Phones keep the drawer + bottom-bar.
+- Locale keys added (EN/ES/FR): `site.nav.dashboard`, `site.nav.viewPublicSite`, `common.userMenu.manageAccount`, `common.userMenu.viewPublicSite`.
+- Signed-out experience unchanged (Sign in + Create account, logo → `/`).
+- VERIFIED (iteration_11, 100%): all flows pass at 1440x900, 1024x768 and 390x844; no console errors.
+
+
 ### Wallet top-up: show ALL configured coins (13) + inline error surface (2026-06) — DONE, tested (frontend 100%)
 - **Bug**: the modal offered only BTC/ETH/USDT because I'd hardcoded a 3-coin allow-list; the merchant actually has 13 coins configured in DynoPay.
 - **Fix**: `paymentController.fetchSupportedCryptoCurrency` now returns DynoPay's LIVE configured list (`getSupportedCurrency -> data.currencies`) = BCH, BTC, DOGE, ETH, LTC, POLYGON, SOL, TRX, USDC-ERC20, USDT-ERC20, USDT-POLYGON, USDT-TRC20, XRP (13). `getConfiguredCoins()` now returns [] when `CRYPTO_TOPUP_COINS` is unset (no restriction; env is now an OPTIONAL narrowing allow-list, left empty). `createCryptoTopup` validates against the live list. `WalletController` uses the live list; fallback to BTC/ETH/USDT if the provider call fails.

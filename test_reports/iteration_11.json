@@ -1,0 +1,20 @@
+{
+  "summary": "Full frontend regression for Option 1 (navigation bridge) — all 5 scenarios pass at 1440x900, 1024x768 and 390x844 viewports. Account menu shows all 9 quick links + View public site + Logout; storefront navbar shows nav-dashboard-btn + user-menu-button on /, /domains and /hosting; logo is context-aware (signed-in → /dashboard, signed-out → /); signed-out UI unchanged (Sign in + Create account, no menu); sidebar rail visible at both laptop (1024) and desktop (1440), bottom-tabs hidden; on mobile 390 rail hidden and bottom-tabs visible.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 11 verified the Option 1 navigation-bridge fix. UserDropdownMenu, storefront Navbar, FrontLayout breakpoints (lg: instead of xl:), AppRail and sidebar all behave as designed. Data-testids in place: user-menu-button, user-menu-dropdown, user-menu-{dashboard|domains|wallet|rewards|orders|services|subscriptions|payment-history|help|public-site|logout}, nav-dashboard-btn, brand-logo, rail-overview, bottom-tabs. No console errors captured during flows. Frontend served via vite preview on :3000.",
+  "rca of the issue": "n/a — verification only"
+}

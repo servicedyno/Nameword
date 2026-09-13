@@ -534,6 +534,8 @@ export const fr = {
       accountActivity: "Activité du Compte",
       notificationSettings: "Paramètres de Notifications",
       apiKeys: "Clés API",
+      manageAccount: "Gérer le compte",
+      viewPublicSite: "Voir le site public",
       logout: "Déconnexion",
       logoutSuccess: "Déconnexion réussie"
     },

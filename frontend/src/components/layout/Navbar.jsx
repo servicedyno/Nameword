@@ -55,7 +55,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-40 w-full border-b border-line/80 bg-white/85 backdrop-blur-md dark:border-white/[0.06] dark:bg-gray-950/80">
       <div className="nw-container flex h-16 lg:h-[4.5rem] items-center justify-between gap-4">
         {/* Brand */}
-        <NavLink to="/" className="flex items-center gap-2 shrink-0" aria-label="Nameword home">
+        <NavLink to={user ? "/dashboard" : "/"} className="flex items-center gap-2 shrink-0" aria-label="Nameword home">
           <BrandLogo markClassName="h-8 w-8" />
         </NavLink>
 
@@ -126,7 +126,10 @@ const Navbar = () => {
           <ThemeToggleButton />
           <CartNavButton />
           {user ? (
-            <UserDropdownMenu classAdd={true} />
+            <>
+              <NavLink to="/dashboard" className="nw-btn-primary nw-btn-sm" data-testid="nav-dashboard-btn">{s.nav.dashboard}</NavLink>
+              <UserDropdownMenu classAdd={true} />
+            </>
           ) : (
             <>
               <NavLink to="/sign-in" className="nw-btn-ghost nw-btn-sm">{s.nav.signIn}</NavLink>
@@ -192,7 +195,10 @@ const Navbar = () => {
 
             <div className="mt-auto">
               {user ? (
-                <UserDropdownMenu classAdd={true} />
+                <div className="flex flex-col gap-3">
+                  <NavLink to="/dashboard" onClick={() => setMobileOpen(false)} className="nw-btn-primary w-full" data-testid="nav-dashboard-btn-mobile">{s.nav.dashboard}</NavLink>
+                  <UserDropdownMenu classAdd={true} />
+                </div>
               ) : (
                 <div className="flex flex-col gap-2">
                   <NavLink to="/sign-in" onClick={() => setMobileOpen(false)} className="nw-btn-secondary w-full">{s.nav.signIn}</NavLink>

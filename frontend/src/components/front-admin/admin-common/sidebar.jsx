@@ -427,7 +427,7 @@ export default function Sidebar({ setIsEnlarge }) {
     }));
   };
   const closeSidebar = () => {
-    if (window.innerWidth < 1280 && setIsEnlarge) {
+    if (window.innerWidth < 1024 && setIsEnlarge) {
       setIsEnlarge(false);
     }
   };
@@ -497,11 +497,11 @@ export default function Sidebar({ setIsEnlarge }) {
       <div className="flex flex-col justify-between h-full">
         <div>
           <div className="mb-8">
-            <NavLink to={"/"}>
+            <NavLink to={"/dashboard"}>
               <img
                 src={favicon}
                 alt="Hosting"
-                className="w-8 h-8 xl:block hidden"
+                className="w-8 h-8 lg:block hidden"
               />
             </NavLink>
           </div>
@@ -829,7 +829,7 @@ export default function Sidebar({ setIsEnlarge }) {
             </div>
           )}
         </div>
-        <div className="space-y-5 text-13 font-medium xl:block hidden pt-20">
+        <div className="space-y-5 text-13 font-medium lg:block hidden pt-20">
           <p className="text-lightgray-500 ">
             {new Date().getFullYear()} © {t.admin.allRightsReserved}
           </p>
@@ -840,7 +840,7 @@ export default function Sidebar({ setIsEnlarge }) {
             <NavLink to={"/privacy-policy"}>{t.admin.privacyPolicy}</NavLink>
           </div>
         </div>
-        <div className="text-13 font-medium xl:hidden flex items-center justify-between">
+        <div className="text-13 font-medium lg:hidden flex items-center justify-between">
           <NavLink to={"/help-support"} className="auth-navlink">
             <img
               src={Help}

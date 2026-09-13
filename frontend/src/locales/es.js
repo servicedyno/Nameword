@@ -534,6 +534,8 @@ export const es = {
       accountActivity: "Actividad de la Cuenta",
       notificationSettings: "Configuración de Notificaciones",
       apiKeys: "Claves API",
+      manageAccount: "Gestionar cuenta",
+      viewPublicSite: "Ver sitio público",
       logout: "Cerrar Sesión",
       logoutSuccess: "Sesión cerrada exitosamente"
     },

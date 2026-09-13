@@ -14,6 +14,8 @@ export const siteFr = {
     faq: "FAQ",
     signIn: "Se connecter",
     createAccount: "Créer un compte",
+    dashboard: "Tableau de bord",
+    viewPublicSite: "Voir le site public",
     openMenu: "Ouvrir le menu",
     closeMenu: "Fermer le menu",
     items: {

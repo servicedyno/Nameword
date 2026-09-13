@@ -1,87 +1,101 @@
-# Landing Page Cleanup + Privacy-First Repositioning — Plan
+# Plan: Fix navigation for signed-in users ("lost sidebar / no clear way to manage the app")
+
+## The problem today
+
+The app currently has two completely different navigation frames, and a signed-in
+user gets dropped between them with no reliable way back:
+
+1. **The "manage my account" frame** (with the left sidebar / icon rail) only appears
+   on these pages: Dashboard, Wallet, Orders, My services, Subscriptions, Payment
+   history, and Account settings.
+
+2. **The "storefront" frame** (a simple top navbar) appears on the Home/landing page
+   and on all the product pages: Domains, DNS, Hosting, VPS, RDP, API, Pricing, and
+   Help. These pages have **no sidebar at all**.
+
+Concrete consequences a signed-in user hits:
+
+- On the landing page or any product page, the only personal control is a small
+  name dropdown. That dropdown links to Account-settings sub-pages and Logout — it
+  has **no link to the Dashboard, Wallet, Orders, or anything else**. So from the
+  landing page there is effectively **no visible way to get into the app**; the user
+  has to know a URL.
+- Clicking the logo anywhere always goes to the public landing page, which throws a
+  signed-in user out of the app frame (and then, per the point above, they're stuck).
+- Even inside the app, on a normal laptop screen width (roughly 1024–1279px) the
+  sidebar and icon rail are hidden; navigation collapses to a hamburger menu and a
+  small bottom bar. On those screens it looks like the sidebar "disappeared."
+- Because product pages use the storefront frame, moving between "Dashboard" and
+  "Domains/Hosting" makes the whole left navigation appear and disappear, which reads
+  as losing the menu.
 
 ## Goal
-The public landing page feels busy and cluttered. Make it **cleaner and calmer**, and
-**reposition it around privacy and freedom** as the core message (offshore,
-DMCA-ignored, no takedown/compliance tone). Every real capability stays (domain
-search, product catalog, pricing, rewards, sign-up). Pricing, accounts, checkout, and
-backend behavior are untouched — this is the logged-out landing page only.
 
-## Why it feels busy today
-The page is **9 stacked sections**, with clear repetition and heavy visuals:
+A signed-in user always has a clear, consistent way to reach and manage every part
+of their account (Dashboard, Domains, DNS, Hosting, VPS, RDP, Wallet, Rewards,
+Orders, Services, Subscriptions, Billing, Settings, Help) — no matter which page
+they're on, and on any screen size.
 
-1. Hero (headline + domain search + a large dark image showcase)
-2. Trust strip (4 items: location, privacy, wallet, API)
-3. Products (6 cards, each a photo tile)
-4. Why Nameword (a world-map image + 5 numbered "pillars")
-5. How it works (3 steps)
-6. Pricing teaser (8 TLD price cards)
-7. Security band (full-screen dark photo + privacy checklist)
-8. Rewards band (wallet/rewards photo + 4 perks)
-9. Final CTA (full-screen dark photo + the domain search **again**)
+## What will change (proposed)
 
-Main sources of clutter:
-- **Domain search shows up twice** (hero and final CTA).
-- **Privacy is told three times** (trust strip → a pillar → the whole Security band).
-- **Wallet/rewards is told twice** (trust strip → a pillar → the whole Rewards band).
-- **Dense grids**: 8 pricing cards, 6 product cards, 5 pillars.
-- **Four full-bleed dark photo bands** plus grid-pattern backgrounds, glow blobs, and
-  gradient overlays layered on nearly every block.
+1. **Turn the name dropdown into a real account menu.** When signed in, the menu
+   (shown on both the storefront navbar and the in-app top bar) gains quick links to:
+   Dashboard, Domains, Wallet, Rewards, Orders, My services, Subscriptions, Payment
+   history — in addition to the existing Account settings items and Logout.
 
-## Positioning & copy (privacy-first) — CONFIRMED
-- **Rewrite the landing headlines and section copy to lead with privacy and freedom**:
-  offshore jurisdiction, private WHOIS, no logs, "we don't take your content down",
-  DMCA-ignored. Privacy becomes the hero message, not a side feature.
-- **Remove any "anti-abuse / compliance / takedown" tone.** Anything that reads as
-  restrictive or corporate is replaced with privacy/freedom framing.
-- **Footer: add a visible "DMCA Ignored" line/badge** on the landing footer, alongside
-  the offshore/privacy points.
-- Existing photography/imagery is reused (no new photo shoots); only wording and layout
-  change. Claims stay truthful to what the product already does.
+2. **Add a visible "Dashboard" entry to the storefront navbar for signed-in users.**
+   Instead of only "Sign in / Create account," a signed-in user sees a clear
+   "Dashboard" button (in both the desktop navbar and the mobile menu), so getting
+   back into the app is one obvious click from the landing page or any product page.
 
-## Proposed cleaner version
-Consolidate to about **6 focused sections**, remove the duplicates, calm the
-decoration, and thread the privacy-first message through. All existing links/actions
-are preserved — just fewer, clearer moments.
+3. **Make the logo context-aware.** For a signed-in user the logo leads to the
+   Dashboard (the app), not the public landing page. A separate, clearly labelled
+   link (e.g. "View public site") remains available for anyone who wants the
+   marketing site.
 
-1. **Hero** — one clear focal point: a privacy-first headline + the domain search (the
-   primary action). Trim decorative layers (fewer glows/overlays) and quiet the side
-   image so it doesn't compete. Fold the 4 trust points into a single slim row here
-   instead of a separate boxed section.
-2. **Products** — keep all products, presented as a lighter, calmer grid (less heavy
-   photo/gradient treatment). Keeps the "from $X" price and links.
-3. **Why + How (privacy-led)** — one combined section on why us / how it works. Trim
-   pillars from 5 to the 3–4 strongest, keep the 3 steps compact, and **fold the
-   privacy points in here** so the separate dark Security band goes away. This is where
-   offshore / no-logs / DMCA-ignored / freedom is spelled out.
-4. **Pricing teaser** — the most popular TLDs only (see decision D), no background
-   pattern, one clear link to the full pricing table.
-5. **Rewards** — one calm band for the prepaid wallet + rewards, single call to action.
-6. **Final CTA** — one closing prompt (sign up / start), **without repeating the
-   domain search** from the hero.
+4. **Keep the sidebar visible on laptop screens.** The persistent sidebar / icon rail
+   will appear starting at standard laptop width (~1024px) rather than only on large
+   desktops (~1280px), so laptop users stop losing the menu. Phones keep the current
+   drawer + bottom-bar behaviour.
 
-Across all of it: fewer full-bleed dark photo bands (target ~2 instead of 4),
-consistent spacing, and lighter/less-layered backgrounds — clean and privacy-focused,
-still polished, not stripped bare.
+5. **Consistent management access on product pages.** So the menu never vanishes
+   while a signed-in user is browsing Domains/DNS/Hosting/VPS/RDP/Pricing, those pages
+   will keep an always-available way into account management (see the decision below
+   for how far this goes).
 
-## Decisions to confirm (recommended defaults will be used unless you change them)
-- **A. How far to go.** Consolidate to ~6 sections and remove duplicates (recommended)
-  vs. light-touch declutter of all 9 vs. very minimal ~4 sections.
-- **B. Duplicate domain search.** Keep it only in the hero and make the final CTA a
-  simple sign-up prompt (recommended), or keep the search in both places.
-- **C. Security section.** Fold privacy into the "Why" pillars and drop the separate
-  dark Security band (recommended), or keep Security as its own section.
-- **D. Pricing cards.** Show ~5–6 popular TLDs instead of 8 (recommended:
-  .com/.net/.org/.io/.co/.xyz), or keep all 8.
-- **E. Visual direction.** Reduce dark photo bands and heavy gradients for a cleaner,
-  lighter feel (recommended), or keep the image-heavy look and only cut section count.
+## Decisions to confirm
 
-## Decided (from the conversation)
-- Privacy-first: **yes** — rewrite headlines/section copy to lead with privacy & freedom.
-- Tone: **remove** anti-abuse/compliance/takedown framing; lean into privacy & freedom.
-- Footer: add a visible **"DMCA Ignored"** line/badge on the landing footer.
+**A. How far to unify the product pages (the main choice).**
+   - **Option 1 — Bridge only (recommended, lighter):** product/storefront pages keep
+     their current storefront look, but signed-in users always get the "Dashboard"
+     button + full account menu (items 1–3 above). Fastest, lowest risk, keeps the
+     marketing look of product pages.
+   - **Option 2 — Full wrap (more thorough, bigger change):** when signed in, the
+     product pages (Domains, DNS, Hosting, VPS, RDP, Pricing) are shown *inside* the
+     app frame with the same left sidebar as the Dashboard, so the sidebar literally
+     never disappears. This is the most seamless result but changes how those pages
+     look for logged-in users and is a larger change.
+   - Default if you don't say otherwise: **Option 1**.
+
+**B. Logo destination for signed-in users.** Default: logo → Dashboard, with a
+   separate "View public site" link. Say if you'd rather the logo always go to the
+   public landing page.
+
+**C. Help visibility.** Help is currently reachable in most places; the account menu
+   will also include it. Confirm that's fine (no reason to expect otherwise).
 
 ## Out of scope
-- Pricing, accounts, checkout, or any backend behavior.
-- New photography (existing imagery is reused).
-- The signed-in app — this is the logged-out landing page (and its footer) only.
+
+- No change to what the pages themselves do (search, checkout, DNS management, etc.).
+- No change to sign-in / sign-up, permissions, or which pages require login.
+- No new sections or features beyond navigation/menus.
+- No visual redesign of the pages other than the navigation/menu changes above.
+
+## Assumptions
+
+- The set of destinations that matter for "managing the app" is the list already
+  present in the in-app sidebar/rail (Dashboard, Domains, DNS, Hosting, VPS, RDP,
+  Wallet, Rewards, Orders, Services, Subscriptions, Payment history, Settings, Help).
+- Signed-out visitors see no change; this only affects the signed-in experience.
+- Wording of new menu items reuses existing labels and is available in English,
+  Spanish, and French.
