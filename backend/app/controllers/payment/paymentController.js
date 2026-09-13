@@ -13,7 +13,7 @@ const { ensureWallet, getConfiguredCoins, getSupportedCurrencies } = require('..
 const FALLBACK_TOPUP_COINS = ["BTC", "ETH", "USDT-TRC20"];
 
 const baseUrl = (process.env.DYNO_PAY_BASE_URL || 'https://dynopay.com/api').trim().replace(/\/+$/, '');
-// Build DynoPay headers. Pass a per-user walletToken for endpoints that need the customer Bearer.
+// Build Dynopay headers. Pass a per-user walletToken for endpoints that need the customer Bearer.
 const apiHeaders = (walletToken) => {
   const h = { accept: 'application/json', 'content-type': 'application/json', 'x-api-key': process.env.DYNO_PAY_API_KEY };
   if (walletToken) h['Authorization'] = `Bearer ${walletToken}`;
@@ -22,9 +22,9 @@ const apiHeaders = (walletToken) => {
 const headers = apiHeaders();
 
 // To fetch supported currencies — return the coins the Nameword merchant has
-// CONFIGURED in DynoPay (getSupportedCurrency -> data.currencies). An optional
+// CONFIGURED in Dynopay (getSupportedCurrency -> data.currencies). An optional
 // CRYPTO_TOPUP_COINS env allow-list can narrow this further; by default we show
-// every configured coin. We never expose DynoPay's raw global `all_supported`.
+// every configured coin. We never expose Dynopay's raw global `all_supported`.
 const fetchSupportedCryptoCurrency = async (req, res) => {
     try {
         const provider = await getSupportedCurrencies();
@@ -118,7 +118,7 @@ const getVPSCryptoAddress = async (req, res) => {
       const cPanelPrice = cPanelPlan.price || 0;
       const totalPrice = parseFloat(selectedBillingCycle.finalPrice) + osPrice + cPanelPrice;
       
-      // Request Crypto Payment Address from DynoPay
+      // Request Crypto Payment Address from Dynopay
       const options = {
           method: 'POST',
           url: `${baseUrl}/user/cryptoPayment`,

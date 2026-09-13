@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
-// Tracks a native (raw-address) crypto wallet top-up created via DynoPay /user/cryptoPayment.
+// Tracks a native (raw-address) crypto wallet top-up created via Dynopay /user/cryptoPayment.
 // Crediting is driven by polling GET /wallet/crypto-topup/:paymentId/status (webhook fallback).
 const cryptoTopupSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     provider: { type: String, default: "dynopay" },
-    paymentId: { type: String, required: true, unique: true }, // DynoPay transaction_id
+    paymentId: { type: String, required: true, unique: true }, // Dynopay transaction_id
     currency: { type: String, required: true }, // e.g. ETH, BTC, USDT-ERC20
     cryptoAmount: { type: Number, default: null }, // amount payable in crypto
     amountUsd: { type: Number, required: true }, // USD value credited on confirmation

@@ -1,30 +1,18 @@
 [
   {
-    "content": "App setup: env files, yarn install, supervisor, live verification",
+    "content": "Order Success Confetti: add the paid celebration/confetti to the order-success page on mount",
     "status": "completed"
   },
   {
-    "content": "Feature 2: Create reusable animated PaymentSuccessCelebration component + CSS keyframes",
+    "content": "Cart Badge Pulse: gently pulse the header cart icon the first time an item is added (once per browser)",
     "status": "completed"
   },
   {
-    "content": "Feature 2: Wire celebration + auto-close into CryptoCheckoutModal (direct crypto order paid)",
+    "content": "Dynopay Brand Sweep: change leftover 'DynoPay' in code comments -> 'Dynopay' (comments only, not identifiers/env)",
     "status": "completed"
   },
   {
-    "content": "Feature 2: Upgrade WalletModal credited screen to animated celebration (keep auto-close)",
-    "status": "completed"
-  },
-  {
-    "content": "Feature 1: Add persistent sticky cart bar to VPS/RDP ServersPage (opens mini-cart/crypto flow)",
-    "status": "completed"
-  },
-  {
-    "content": "Rebuild frontend prod bundle + restart, screenshot verify both features",
-    "status": "completed"
-  },
-  {
-    "content": "Run testing agent on checkout entry + crypto celebration flows",
+    "content": "Rebuild prod bundle + restart, screenshot verify order-success celebration + cart pulse",
     "status": "completed"
   }
 ]

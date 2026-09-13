@@ -1144,7 +1144,7 @@ class CheckoutController {
     }
   }
 
-  // GET /checkout/orders/:id/crypto-status — poll DynoPay; on confirmation, earn
+  // GET /checkout/orders/:id/crypto-status — poll Dynopay; on confirmation, earn
   // points on the crypto paid then provision. Refund held points if it expires.
   static async getCryptoOrderStatus(req, res) {
     try {
@@ -1215,7 +1215,7 @@ class CheckoutController {
       const requiredConfirmations = statusData?.required_confirmations != null ? Number(statusData.required_confirmations) : null;
       const partial = recvCrypto > 0 && remCrypto != null && remCrypto > 0;
 
-      // Map DynoPay's raw status onto a granular lifecycle the UI renders as a timeline:
+      // Map Dynopay's raw status onto a granular lifecycle the UI renders as a timeline:
       // awaiting_payment -> detected -> confirming -> (confirmed) ; plus underpaid/failed.
       let friendly = "awaiting_payment";
       if (["underpaid", "under_paid", "partial", "partially_paid"].includes(rawStatus) || partial) {
@@ -1272,7 +1272,7 @@ class CheckoutController {
 
   // POST /checkout/orders/:id/crypto/switch — finish an unpaid/underpaid crypto order
   // with a DIFFERENT coin. Credits whatever was already received, then bills the
-  // remaining USD as a fresh DynoPay payment in the newly chosen coin. The order is
+  // remaining USD as a fresh Dynopay payment in the newly chosen coin. The order is
   // marked paid once that new payment confirms (received-so-far + new = order total).
   static async switchCryptoCurrency(req, res) {
     try {

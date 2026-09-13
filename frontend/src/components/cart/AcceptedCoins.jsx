@@ -24,7 +24,7 @@ const baseTicker = (code) => {
   return c.includes("-") ? c.split("-")[0] : c;
 };
 
-// Shown if the live fetch fails / for guests (the coins configured on DynoPay).
+// Shown if the live fetch fails / for guests (the coins configured on Dynopay).
 const FALLBACK = ["BTC", "ETH", "USDT-TRC20", "USDC-ERC20", "LTC", "SOL", "BCH", "DOGE", "POLYGON", "TRX", "XRP"];
 
 let cache = null; // module-level cache so we fetch the live list only once per session

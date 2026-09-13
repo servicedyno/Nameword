@@ -1,5 +1,5 @@
 // Crypto top-up lifecycle. Every few minutes this:
-//  1) reconciles unfinished top-ups with DynoPay and credits the wallet if the user
+//  1) reconciles unfinished top-ups with Dynopay and credits the wallet if the user
 //     paid but never polled (covers people who closed the tab / have no webhook),
 //  2) sends a ONE-TIME "finish your top-up" reminder once it's been unpaid a while,
 //  3) expires a stale address after its window so the dashboard stops offering resume.

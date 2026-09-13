@@ -1,10 +1,12 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
-## ✅ THIS SESSION (2026-09) — Re-setup + 2 checkout features
-- Re-setup after pod reconcile: wrote `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs); rewrote supervisor (backend `bash start.sh` node bin/www :8001, frontend `bash start.sh` prod build :3000). App LIVE: Mongo connected, Nomadly domain search real ($39), VPS/RDP/hosting plans real, Google OAuth 302 with pod redirect URI. NEW real creds now wired: Google client id/secret, Brevo API key, DYNO_PAY_API_KEY. Pod URL = https://nameword-preview-1.preview.emergentagent.com (user's pasted 5c680fc7 URL is stale — used only in CORS).
-- FEATURE 1 "Checkout Entry": added a persistent sticky cart bar to VPS/RDP (`components/servers/ServersPage.jsx`, data-testid=server-cart-bar) that opens the mini-cart (crypto flow) — mirrors the domains page. Domain + VPS/RDP add-to-cart buttons already clear; verified reachable end-to-end.
-- FEATURE 2 "Paid Celebration": new `components/cart/PaymentSuccessCelebration.jsx` (animated checkmark + confetti burst, reduced-motion aware; CSS keyframes appended to `index.css`). Wired into `CryptoCheckoutModal.jsx` (on status 'paid' / fully_covered → celebrate ~2.1s then onSuccess/navigate) and `wallet-modal.jsx` credited screen (keeps 2.5s auto-close). Celebration only fires on REAL payment confirmation (verified visually via temp preview; temp code removed).
-- Verified: `testing_agent` iteration_16.json = 100% (26 checks, 0 bugs, 0 console errors) across VPS/RDP/Domains add-to-cart + sticky bars, crypto modal + wallet top-up modal reach pay screen, wallet-pay button enabled. Frontend PROD rebuilt + restarted.
+## ✅ THIS SESSION (2026-09) — Re-setup + checkout features + brand
+- Re-setup after pod reconcile: wrote `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs); rewrote supervisor (backend `bash start.sh` node bin/www :8001, frontend `bash start.sh` prod build :3000). App LIVE: Mongo connected, Nomadly domain search real ($39), VPS/RDP/hosting plans real, Google OAuth 302 with pod redirect URI. NEW real creds wired: Google client id/secret, Brevo API key, DYNO_PAY_API_KEY. Pod URL = https://nameword-preview-1.preview.emergentagent.com (pasted 5c680fc7 URL is stale — CORS only).
+- FEATURE 1 "Checkout Entry": persistent sticky cart bar on VPS/RDP (`components/servers/ServersPage.jsx`, data-testid=server-cart-bar) opens mini-cart (crypto flow).
+- FEATURE 2 "Paid Celebration": `components/cart/PaymentSuccessCelebration.jsx` (animated checkmark + confetti, reduced-motion aware; keyframes in `index.css`). Wired into `CryptoCheckoutModal.jsx` + `wallet-modal.jsx`.
+- BRAND: user-facing "DynoPay" → "Dynopay" in modals + locale VALUES. Comment/log brand sweep via `\bDynoPay\b(?!-Webhook)` (kept identifiers `verifyDynoPaySignature`/`handleDynoPaymentWebhook`, locale KEYS, `DYNO_PAY_*`, and `X-DynoPay-Webhook-Id`).
+- CONFETTI on order-success (`pages/checkout/OrderSuccess.jsx` via reusable `ConfettiBurst`, non-failed only, ~2.8s). CART PULSE: header `CartNavButton.jsx` gently pulses once on first-ever add (localStorage `nw_cart_pulsed`).
+- Verified: testing_agent iteration_16 = 100%; screenshots confirm order confetti (30 pieces) + cart pulse (flag None→1) + "Powered by Dynopay".
 
 
 ## ✅ APP RE-SETUP (2026-09) — LIVE on this pod

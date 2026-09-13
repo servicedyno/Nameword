@@ -247,7 +247,7 @@ class HostingPlansController {
 			try {
 				await ensureDynoWallet(user);
 			} catch (walletErr) {
-				console.warn("DynoPay wallet setup skipped (payment link will still work):", walletErr?.message || walletErr);
+				console.warn("Dynopay wallet setup skipped (payment link will still work):", walletErr?.message || walletErr);
 			}
 
 			// Step 2: Verify cart items exist and are hosting items
@@ -290,7 +290,7 @@ class HostingPlansController {
 					webhookUrl
 				);
 			} catch (dynoError) {
-				console.error("DynoPay generatePaymentLink error:", dynoError);
+				console.error("Dynopay generatePaymentLink error:", dynoError);
 				return res.status(500).json({
 					success: false,
 					message: dynoError?.message || "Failed to generate payment link.",
@@ -373,7 +373,7 @@ class HostingPlansController {
 			try {
 				await ensureDynoWallet(user);
 			} catch (walletErr) {
-				console.warn("DynoPay wallet setup skipped (payment link will still work):", walletErr?.message || walletErr);
+				console.warn("Dynopay wallet setup skipped (payment link will still work):", walletErr?.message || walletErr);
 			}
 
 			// Step 2: Verify cart items exist
@@ -437,7 +437,7 @@ class HostingPlansController {
 					webhookUrl
 				);
 			} catch (dynoError) {
-				console.error("DynoPay generatePaymentLink error:", dynoError);
+				console.error("Dynopay generatePaymentLink error:", dynoError);
 				return res.status(500).json({
 					success: false,
 					message: dynoError?.message || "Failed to generate payment link.",
@@ -446,7 +446,7 @@ class HostingPlansController {
 			}
 
 			const payload = dynoResponse?.data?.data || dynoResponse?.data || dynoResponse;
-			// Prefer payment_link (DynoPay checkout page); redirect_url in response is often our webhook URL
+			// Prefer payment_link (Dynopay checkout page); redirect_url in response is often our webhook URL
 			const checkoutUrl =
 				payload?.payment_link ||
 				payload?.redirect_url ||
@@ -1515,7 +1515,7 @@ class HostingPlansController {
 			}
 
 			const lookupId = transaction_id || payment_id;
-			console.log('Fetching transaction details from DynoPay for id:', lookupId);
+			console.log('Fetching transaction details from Dynopay for id:', lookupId);
 			let transactionResponse;
 			if (user.walletToken && lookupId) {
 				try {
@@ -1524,7 +1524,7 @@ class HostingPlansController {
 						lookupId
 					);
 				} catch (fetchError) {
-					console.error('❌ Failed to fetch transaction details from DynoPay:', fetchError);
+					console.error('❌ Failed to fetch transaction details from Dynopay:', fetchError);
 					console.log('⚠️ Continuing with query params as fallback');
 				}
 			}
@@ -1532,14 +1532,14 @@ class HostingPlansController {
 			const responseData = transactionResponse?.data || transactionResponse;
 			let verifiedStatus = status;
 			if (responseData && responseData.data) {
-				console.log('✅ Transaction details received from DynoPay');
-				console.log('DynoPay Transaction Status:', responseData.data.status);
-				console.log('DynoPay Transaction Amount:', responseData.data.base_amount);
-				console.log('DynoPay Payment Mode:', responseData.data?.payment_mode);
+				console.log('✅ Transaction details received from Dynopay');
+				console.log('Dynopay Transaction Status:', responseData.data.status);
+				console.log('Dynopay Transaction Amount:', responseData.data.base_amount);
+				console.log('Dynopay Payment Mode:', responseData.data?.payment_mode);
 
 				verifiedStatus = responseData.data.status || status;
 			} else {
-				console.warn('⚠️ Transaction data not found from DynoPay, using query params');
+				console.warn('⚠️ Transaction data not found from Dynopay, using query params');
 			}
 
 			const isPaymentSuccessful =
@@ -3616,7 +3616,7 @@ class HostingPlansController {
 		}
 	}
 
-	// Get DynoPay checkout URL for hosting renewal
+	// Get Dynopay checkout URL for hosting renewal
 	async getHostingRenewalDynoCheckoutUrl(req, res) {
 		try {
 			const { subscriptionId, period, amount, plan, walletAmount = 0, autoRenew = true } = req.body;
@@ -3655,7 +3655,7 @@ class HostingPlansController {
 			try {
 				await ensureDynoWallet(user);
 			} catch (walletErr) {
-				console.warn("DynoPay wallet setup skipped (payment link will still work):", walletErr?.message || walletErr);
+				console.warn("Dynopay wallet setup skipped (payment link will still work):", walletErr?.message || walletErr);
 			}
 
 			const reference = `hosting_renewal_dynocheckout_${Date.now()}`;
@@ -3685,7 +3685,7 @@ class HostingPlansController {
 					webhookUrl
 				);
 			} catch (dynoError) {
-				console.error("DynoPay generatePaymentLink error:", dynoError);
+				console.error("Dynopay generatePaymentLink error:", dynoError);
 				return res.status(500).json({
 					success: false,
 					message: dynoError?.message || "Failed to generate payment link.",
@@ -3694,7 +3694,7 @@ class HostingPlansController {
 			}
 
 			const payload = dynoResponse?.data?.data || dynoResponse?.data || dynoResponse;
-			// Prefer payment_link (DynoPay checkout page); redirect_url in response is often our webhook URL
+			// Prefer payment_link (Dynopay checkout page); redirect_url in response is often our webhook URL
 			const checkoutUrl =
 				payload?.payment_link ||
 				payload?.redirect_url ||
@@ -3702,10 +3702,10 @@ class HostingPlansController {
 				payload?.checkout_url;
 
 			if (!checkoutUrl) {
-				console.error("DynoPay response structure:", JSON.stringify(dynoResponse, null, 2));
+				console.error("Dynopay response structure:", JSON.stringify(dynoResponse, null, 2));
 				return res.status(500).json({
 					success: false,
-					message: "Failed to get checkout URL from DynoPay response.",
+					message: "Failed to get checkout URL from Dynopay response.",
 				});
 			}
 
@@ -3727,7 +3727,7 @@ class HostingPlansController {
 			});
 			await transaction.save();
 
-			console.log("[HostingController] Renewal DynoPay checkout URL generated", {
+			console.log("[HostingController] Renewal Dynopay checkout URL generated", {
 				userId,
 				reference,
 				checkoutUrl,
@@ -3747,7 +3747,7 @@ class HostingPlansController {
 		}
 	}
 
-	// Handle DynoPay webhook for hosting renewal
+	// Handle Dynopay webhook for hosting renewal
 	async handleHostingRenewalDynoPaymentWebhook(req, res) {
 		const webhookId = req.headers["x-dynopay-webhook-id"];
 		if (webhookId && hasProcessed(webhookId)) {
@@ -3814,7 +3814,7 @@ class HostingPlansController {
 			}
 
 			const lookupId = transaction_id || payment_id;
-			console.log('Fetching transaction details from DynoPay for id:', lookupId);
+			console.log('Fetching transaction details from Dynopay for id:', lookupId);
 			let transactionResponse;
 			if (user.walletToken && lookupId) {
 				try {
@@ -3823,7 +3823,7 @@ class HostingPlansController {
 						lookupId
 					);
 				} catch (fetchError) {
-					console.error('❌ Failed to fetch transaction details from DynoPay:', fetchError);
+					console.error('❌ Failed to fetch transaction details from Dynopay:', fetchError);
 					console.log('⚠️ Continuing with query params as fallback');
 				}
 			}
@@ -3831,11 +3831,11 @@ class HostingPlansController {
 			const responseData = transactionResponse?.data || transactionResponse;
 			let verifiedStatus = status;
 			if (responseData && responseData.data) {
-				console.log('✅ Transaction details received from DynoPay');
-				console.log('DynoPay Transaction Status:', responseData.data.status);
+				console.log('✅ Transaction details received from Dynopay');
+				console.log('Dynopay Transaction Status:', responseData.data.status);
 				verifiedStatus = responseData.data.status || status;
 			} else {
-				console.warn('⚠️ Transaction data not found from DynoPay, using query params');
+				console.warn('⚠️ Transaction data not found from Dynopay, using query params');
 			}
 
 			const isPaymentSuccessful =

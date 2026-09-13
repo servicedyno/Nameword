@@ -4,19 +4,13 @@ import { useMemo } from "react";
 const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ec4899", "#06b6d4", "#a855f7"];
 
 /**
- * PaymentSuccessCelebration
- * A self-contained, dependency-free "paid!" celebration: an animated checkmark
- * badge with an expanding ring and a short confetti burst. Purely presentational
- * — the caller decides when to render it and when to auto-close/navigate.
- * Honours prefers-reduced-motion (handled in index.css).
+ * ConfettiBurst
+ * A dependency-free, one-shot confetti layer. Render it inside a positioned
+ * parent (e.g. `absolute inset-0`) or as a fixed full-screen overlay. It is
+ * purely decorative and non-interactive. Honours prefers-reduced-motion
+ * (handled in index.css — the pieces are hidden).
  */
-export default function PaymentSuccessCelebration({
-  title = "Payment confirmed!",
-  subtitle = "",
-  amountLabel = null,
-  pieces = 20,
-  testId = "payment-success-celebration",
-}) {
+export function ConfettiBurst({ pieces = 20, className = "" }) {
   const confetti = useMemo(
     () =>
       Array.from({ length: pieces }).map((_, i) => {
@@ -33,6 +27,41 @@ export default function PaymentSuccessCelebration({
   );
 
   return (
+    <div className={`pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
+      {confetti.map((c) => (
+        <span
+          key={c.id}
+          className="nw-confetti-piece"
+          style={{
+            left: `${c.left}%`,
+            width: `${c.size}px`,
+            height: `${c.size}px`,
+            background: c.color,
+            animationDelay: `${c.delay}s`,
+            animationDuration: `${c.duration}s`,
+            "--nw-drift": `${c.drift}px`,
+            "--nw-rot": `${c.rotate}deg`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * PaymentSuccessCelebration
+ * A self-contained "paid!" celebration: an animated checkmark badge with an
+ * expanding ring and a short confetti burst. Purely presentational — the caller
+ * decides when to render it and when to auto-close/navigate.
+ */
+export default function PaymentSuccessCelebration({
+  title = "Payment confirmed!",
+  subtitle = "",
+  amountLabel = null,
+  pieces = 20,
+  testId = "payment-success-celebration",
+}) {
+  return (
     <div
       className="relative flex flex-col items-center justify-center py-10 text-center"
       data-testid={testId}
@@ -40,24 +69,7 @@ export default function PaymentSuccessCelebration({
       aria-live="polite"
     >
       {/* Confetti burst layer */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        {confetti.map((c) => (
-          <span
-            key={c.id}
-            className="nw-confetti-piece"
-            style={{
-              left: `${c.left}%`,
-              width: `${c.size}px`,
-              height: `${c.size}px`,
-              background: c.color,
-              animationDelay: `${c.delay}s`,
-              animationDuration: `${c.duration}s`,
-              "--nw-drift": `${c.drift}px`,
-              "--nw-rot": `${c.rotate}deg`,
-            }}
-          />
-        ))}
-      </div>
+      <ConfettiBurst pieces={pieces} className="absolute inset-0" />
 
       {/* Animated checkmark badge */}
       <div className="nw-cele-circle relative flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30">

@@ -1,7 +1,7 @@
 const { default: axios } = require("axios");
 const User = require("../models/User");
 
-// DynoPay REST API (new): every merchant endpoint authenticates with a single
+// Dynopay REST API (new): every merchant endpoint authenticates with a single
 // `x-api-key` header — no JWT Bearer and no company_id. Docs:
 // https://dynopay.com/documentation  (base: https://dynopay.com/api/user)
 const { DYNO_PAY_BASE_URL, DYNO_PAY_API_KEY } = process.env;
@@ -53,7 +53,7 @@ const createPaymentLink = async (opts) => {
     const response = await axios.post(url, buildPaymentBody(opts), { headers: authHeaders() });
     return response.data;
   } catch (err) {
-    console.error("[DynoPay createPayment] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
+    console.error("[Dynopay createPayment] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
     throw err;
   }
 };
@@ -66,12 +66,12 @@ const createEmbeddedSession = async (opts) => {
     const response = await axios.post(url, buildPaymentBody(opts), { headers: authHeaders() });
     return response.data;
   } catch (err) {
-    console.error("[DynoPay embed/session] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
+    console.error("[Dynopay embed/session] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
     throw err;
   }
 };
 
-// Create a DynoPay customer — POST /user/createUser -> { data: { token, customer_id } }
+// Create a Dynopay customer — POST /user/createUser -> { data: { token, customer_id } }
 const registerUserForPayment = async (email, name, mobile) => {
   const payload = { email, name };
   if (mobile) payload.mobile = mobile;
@@ -88,8 +88,8 @@ const generatePaymentLink = async (args = {}) => {
 /**
  * Wallet top-up now uses EMBEDDED checkout (mounted in an iframe by the SPA).
  * @param {number} amount
- * @param {string} redirect_url - where DynoPay sends the browser after payment
- * @param {string} webhook_url  - backend URL DynoPay POSTs on status changes
+ * @param {string} redirect_url - where Dynopay sends the browser after payment
+ * @param {string} webhook_url  - backend URL Dynopay POSTs on status changes
  * @returns {{ data: object }} the raw embed/session response ({ success, message, data:{...} })
  */
 const generateAddFundsLink = async (amount, redirect_url, webhook_url, meta_data, customer_name, customer_email, description) => {
@@ -137,7 +137,7 @@ const createCryptoPayment = async ({ amount, currency, redirect_uri, meta_data, 
   if (walletToken) headers.Authorization = `Bearer ${walletToken}`;
   const body = { amount: Number(amount), currency };
   if (redirect_uri) body.redirect_uri = redirect_uri;
-  // Always forward the buyer's email so DynoPay can send receipts / tie the payment to them.
+  // Always forward the buyer's email so Dynopay can send receipts / tie the payment to them.
   if (customer_email) body.customer_email = customer_email;
   if (customer_name) body.customer_name = customer_name;
   if (meta_data && typeof meta_data === "object" && Object.keys(meta_data).length > 0) body.meta_data = meta_data;
@@ -145,7 +145,7 @@ const createCryptoPayment = async ({ amount, currency, redirect_uri, meta_data, 
     const response = await axios.post(url, body, { headers });
     return response.data;
   } catch (err) {
-    console.error("[DynoPay cryptoPayment] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
+    console.error("[Dynopay cryptoPayment] failed:", err?.response?.status, JSON.stringify(err?.response?.data)?.slice(0, 300));
     throw err;
   }
 };
@@ -157,7 +157,7 @@ const getSupportedCurrencies = async () => {
   return response.data;
 };
 
-// Coins Nameword accepts come from DynoPay's live "configured currencies" list
+// Coins Nameword accepts come from Dynopay's live "configured currencies" list
 // (getSupportedCurrency -> data.currencies). The env var CRYPTO_TOPUP_COINS is an
 // OPTIONAL allow-list to narrow that further; when unset (default) we offer every
 // coin the merchant has configured.
@@ -170,7 +170,7 @@ const getConfiguredCoins = () => {
     .filter(Boolean);
 };
 
-// Ensure the user has a DynoPay customer/wallet token (optional for userless checkout).
+// Ensure the user has a Dynopay customer/wallet token (optional for userless checkout).
 const ensureWallet = async (userID) => {
   const user = await User.findById({ _id: userID });
   if (!user) {

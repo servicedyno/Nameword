@@ -14,13 +14,13 @@ export const hostingAPI = {
     return response.data;
   },
 
-  // Generate DynoPay checkout URL for hosting
+  // Generate Dynopay checkout URL for hosting
   getDynoCheckoutUrl: async (payload) => {
     const response = await apiClient.post(ENDPOINTS.HOSTING_PLANS.DYNO_CHECKOUT, payload);
     return response.data;
   },
 
-  // Generate DynoPay checkout URL for bundle (domain + hosting)
+  // Generate Dynopay checkout URL for bundle (domain + hosting)
   getBundleDynoCheckoutUrl: async (payload) => {
     const response = await apiClient.post(ENDPOINTS.HOSTING_PLANS.BUNDLE_DYNO_CHECKOUT, payload);
     return response.data;
@@ -132,7 +132,7 @@ export const hostingAPI = {
     return response.data;
   },
 
-  // Get DynoPay checkout URL for hosting renewal
+  // Get Dynopay checkout URL for hosting renewal
   getRenewalDynoCheckoutUrl: async (payload) => {
     const response = await apiClient.post(ENDPOINTS.HOSTING_PLANS.RENEWAL_DYNO_CHECKOUT, payload);
     return response.data;

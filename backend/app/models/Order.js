@@ -59,7 +59,7 @@ const orderCryptoSchema = new mongoose.Schema(
     qrCode: { type: String, default: null },
     status: { type: String, default: "pending" },
     txHash: { type: String, default: null },
-    // Live underpayment tracking (from DynoPay getPaymentStatus).
+    // Live underpayment tracking (from Dynopay getPaymentStatus).
     amountReceived: { type: Number, default: null },   // received so far, in the coin
     amountRemaining: { type: Number, default: null },  // still owed, in the coin
     confirmations: { type: Number, default: null },

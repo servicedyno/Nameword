@@ -450,7 +450,7 @@ const getDynocheckoutUrl = async (req, res) => {
                         return res.status(404).json({ message: "User not found" });
                 }
 
-                // Embedded checkout is userless; a DynoPay customer is optional.
+                // Embedded checkout is userless; a Dynopay customer is optional.
                 // Don't let a customer-registration hiccup block the top-up.
                 let walletToken = null;
                 try {
@@ -469,7 +469,7 @@ const getDynocheckoutUrl = async (req, res) => {
                 const fe = frontendEndPoint || "wallet";
                 const frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
                 const redirect_url = `${frontendBase}/${fe}`;
-                // Use APP_URL when set so DynoPay can reach webhook (GET); fallback to request host
+                // Use APP_URL when set so Dynopay can reach webhook (GET); fallback to request host
                 const backendBase = (process.env.APP_URL || "").trim().replace(/\/$/, "") || `${req.protocol}://${req.get("host")}`;
                 const webhook_url = `${backendBase}/api/v1/wallet/dynocheckout-webhook?uid=${encodeURIComponent(userId)}&amt=${amountNum}&fe=${encodeURIComponent(fe)}`;
 
@@ -549,7 +549,7 @@ const handleDynoPaymentWebhook = async (req, res) => {
                 }
         }
 
-        // DynoPay may send GET (query) or POST (body: form-urlencoded or JSON). Merge both.
+        // Dynopay may send GET (query) or POST (body: form-urlencoded or JSON). Merge both.
         const source = { ...req.query, ...(req.body && typeof req.body === "object" ? req.body : {}) };
         const eventType = req.headers["x-dynopay-event"] || source.event;
         console.log("[Payment] flow=wallet_add_funds | webhook hit | method:", req.method, "event:", eventType, "query:", JSON.stringify(req.query), "body:", req.body ? JSON.stringify(req.body) : "none");
@@ -844,7 +844,7 @@ const getHostbayWalletTransactions = async (req, res) => {
         }
 };
 
-// ---- Native crypto wallet top-up (raw address via DynoPay /user/cryptoPayment) ----
+// ---- Native crypto wallet top-up (raw address via Dynopay /user/cryptoPayment) ----
 const CRYPTO_TOPUP_MIN = () => Math.max(1, Number(process.env.CRYPTO_TOPUP_MIN_AMOUNT) || 10);
 
 // Reusable, idempotent wallet top-up credit (mirrors the webhook success branch).
@@ -912,7 +912,7 @@ const createCryptoTopup = async (req, res) => {
                 }
                 const cur = String(currency || "").toUpperCase().trim();
                 if (!cur) return res.status(400).json({ success: false, message: "Please choose a cryptocurrency." });
-                // Validate against the merchant's live configured coins from DynoPay
+                // Validate against the merchant's live configured coins from Dynopay
                 // (optionally narrowed by the CRYPTO_TOPUP_COINS env allow-list).
                 try {
                         const supported = await getSupportedCurrencies();
@@ -1002,7 +1002,7 @@ const reconcileCryptoTopup = async (record) => {
         return { status: record.status, credited: false };
 };
 
-// GET /api/v1/wallet/crypto-topup/:paymentId/status  — polls DynoPay and credits on confirmation
+// GET /api/v1/wallet/crypto-topup/:paymentId/status  — polls Dynopay and credits on confirmation
 const getCryptoTopupStatus = async (req, res) => {
         try {
                 const userId = req.user.id;

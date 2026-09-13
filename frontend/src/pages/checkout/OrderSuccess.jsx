@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { FiAlertTriangle, FiArrowRight, FiCheckCircle, FiGlobe, FiServer, FiSettings, FiXCircle, FiGift } from "react-icons/fi";
 import checkoutAPI from "../../api/checkout";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 import Loader from "../../components/common/Loader";
+import { ConfettiBurst } from "../../components/cart/PaymentSuccessCelebration";
 
 const STATUS = {
   active: { label: "Active", cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
@@ -19,6 +20,19 @@ export default function OrderSuccess() {
   const { state } = useLocation();
   const [order, setOrder] = useState(state?.order && state.order._id === id ? state.order : null);
   const [error, setError] = useState(null);
+  // One-time confetti "matching moment" when the receipt loads for a successful
+  // order — mirrors the crypto paid celebration for buyers who paid from wallet.
+  const [showConfetti, setShowConfetti] = useState(false);
+  const celebratedRef = useRef(false);
+
+  useEffect(() => {
+    if (order && order.status !== "failed" && !celebratedRef.current) {
+      celebratedRef.current = true;
+      setShowConfetti(true);
+      const t = setTimeout(() => setShowConfetti(false), 2800);
+      return () => clearTimeout(t);
+    }
+  }, [order]);
 
   useEffect(() => {
     let alive = true;
@@ -50,6 +64,7 @@ export default function OrderSuccess() {
 
   return (
     <div className="mx-auto max-w-3xl" data-testid="order-success-page">
+      {showConfetti && <ConfettiBurst pieces={30} className="fixed inset-0 z-[70]" />}
       <div className="text-center">
         <Icon className={`mx-auto mb-4 ${iconCls}`} size={48} />
         <span className="nw-eyebrow mb-3">Order {order.orderNumber}</span>

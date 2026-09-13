@@ -1217,10 +1217,19 @@ input[type="checkbox"]:checked {
   animation-fill-mode: both;
 }
 
+/* Gentle one-time header cart pulse (first add nudge for new buyers) */
+@keyframes nw-cart-pulse-kf {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.45); }
+  50% { transform: scale(1.14); box-shadow: 0 0 0 7px rgba(99, 102, 241, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+.nw-cart-pulse { animation: nw-cart-pulse-kf 1s ease-out 3; }
+
 @media (prefers-reduced-motion: reduce) {
   .nw-cele-circle { animation: none !important; transform: none; opacity: 1; }
   .nw-cele-ring { animation: none !important; opacity: 0; }
   .nw-cele-text { animation: none !important; opacity: 1; transform: none; }
   .nw-cele-check-path { animation: none !important; stroke-dashoffset: 0; }
   .nw-confetti-piece { display: none !important; }
+  .nw-cart-pulse { animation: none !important; }
 }

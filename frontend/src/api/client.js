@@ -49,7 +49,7 @@ export const setupAxiosInterceptors = (logout, redirectAPIKey) => {
       return response;
     },
     (error) => {
-      // Handle unauthorized access (only logout when it's our auth, not third-party e.g. DynoPay)
+      // Handle unauthorized access (only logout when it's our auth, not third-party e.g. Dynopay)
       if (error.response && error.response.status === 401) {
         const data = error.response?.data;
         const msg = typeof data?.message === 'string' ? data.message : '';
