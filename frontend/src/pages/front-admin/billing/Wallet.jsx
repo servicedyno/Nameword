@@ -17,6 +17,7 @@ const Wallet = () => {
     const [walletLoading, setWalletLoading] = useState(false);
 
     const [isModal, setIsModal] = useState(false);
+    const [resumePayment, setResumePayment] = useState(null);
 
     const { showAlert } = useAlert();
     const { user } = useAuth();
@@ -70,11 +71,28 @@ const Wallet = () => {
     }, [fetchWalletBalance]);
 
     const handleModalOpen = () => {
+        setResumePayment(null);
+        setIsModal(true);
+    }
+
+    // Reopen a still-pending crypto top-up straight into its address/QR panel.
+    const handleResumeTopup = (row) => {
+        setResumePayment({
+            paymentId: row.paymentId,
+            address: row.address,
+            currency: row.currency,
+            cryptoAmount: row.cryptoAmount,
+            amountUsd: row.amountUsd,
+            qrCode: row.qrCode || null,
+            destinationTag: row.destinationTag || null,
+            status: row.status,
+        });
         setIsModal(true);
     }
 
     const handleModalClose = () => {
         setIsModal(false);
+        setResumePayment(null);
         fetchWalletBalance();
         // Refresh the top-bar chip + the top-up history (a new pending row may exist).
         window.dispatchEvent(new Event("wallet:updated"));
@@ -121,7 +139,7 @@ const Wallet = () => {
                             <button type='button' className='add-to-cart' onClick={handleModalOpen} >
                                 {t.admin?.walletTopUp || "Top Up"}
                             </button>
-                            {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} />}
+                            {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} resumePayment={resumePayment} />}
                         </div>
                     </div>
                     <div className='action-card p-7 min-h-36 flex w-full items-center' id="rewards">
@@ -172,7 +190,7 @@ const Wallet = () => {
                 </div>
 
                 {/* Recent crypto top-ups */}
-                <TopupHistory />
+                <TopupHistory onResume={handleResumeTopup} />
 
                 {/* Reward points history */}
                 <RewardHistory />

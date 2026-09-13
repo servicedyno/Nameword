@@ -52,7 +52,7 @@ const isLivePending = (r) =>
   (r.status === "pending" || r.status === "confirming") &&
   (!r.expireAt || new Date(r.expireAt).getTime() > Date.now());
 
-const TopupHistory = () => {
+const TopupHistory = ({ onResume }) => {
   const [rows, setRows] = useState(null);
   const { t } = useLanguage();
   const labels = t.admin?.topupHistory || {};
@@ -128,11 +128,27 @@ const TopupHistory = () => {
           <ul className="divide-y divide-stokecolor dark:divide-gray-700">
             {rows.map((r) => {
               const { Icon, color, label } = coinMeta(r.currency);
+              const resumable = isLivePending(r) && typeof onResume === "function" && r.address;
+              const handleResume = resumable ? () => onResume(r) : undefined;
               return (
                 <li
                   key={r.paymentId}
-                  className="flex items-center justify-between gap-4 px-5 py-4"
+                  className={`flex items-center justify-between gap-4 px-5 py-4 ${
+                    resumable
+                      ? "cursor-pointer transition-colors hover:bg-surface-2 dark:hover:bg-white/[0.04]"
+                      : ""
+                  }`}
                   data-testid={`topup-row-${r.paymentId}`}
+                  {...(resumable
+                    ? {
+                        role: "button",
+                        tabIndex: 0,
+                        onClick: handleResume,
+                        onKeyDown: (e) => {
+                          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleResume(); }
+                        },
+                      }
+                    : {})}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 dark:bg-gray-800">
@@ -149,12 +165,19 @@ const TopupHistory = () => {
                       </p>
                     </div>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS[r.status] || STATUS.pending}`}
-                    data-testid={`topup-status-${r.paymentId}`}
-                  >
-                    {statusLabels[r.status] || r.status}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-3">
+                    {resumable && (
+                      <span className="hidden sm:inline text-xs font-semibold text-brand-600 dark:text-brand-400" data-testid={`topup-resume-${r.paymentId}`}>
+                        Resume →
+                      </span>
+                    )}
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS[r.status] || STATUS.pending}`}
+                      data-testid={`topup-status-${r.paymentId}`}
+                    >
+                      {statusLabels[r.status] || r.status}
+                    </span>
+                  </div>
                 </li>
               );
             })}

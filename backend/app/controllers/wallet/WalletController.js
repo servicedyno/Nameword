@@ -1120,6 +1120,9 @@ const listCryptoTopups = async (req, res) => {
                         amountUsd: r.amountUsd,
                         status: r.status,
                         txHash: r.txHash || null,
+                        address: r.address,
+                        qrCode: r.qrCode || null,
+                        destinationTag: r.destinationTag || null,
                         createdAt: r.createdAt,
                         expireAt: r.expireAt,
                 }));
