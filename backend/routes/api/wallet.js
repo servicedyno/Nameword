@@ -10,6 +10,7 @@ const {
 	createCryptoTopup,
 	getCryptoTopupStatus,
 	listPendingCryptoTopups,
+	listCryptoTopups,
 	cancelCryptoTopup,
 } = require("../../app/controllers/wallet/WalletController");
 const {
@@ -47,6 +48,7 @@ router.post(
 );
 router.post("/crypto-topup", cryptoTopupRules, validateRequest, createCryptoTopup);
 router.get("/crypto-topups/pending", listPendingCryptoTopups);
+router.get("/crypto-topups", listCryptoTopups);
 router.get("/crypto-topup/:paymentId/status", getCryptoTopupStatus);
 router.post("/crypto-topup/:paymentId/cancel", cancelCryptoTopup);
 // Payment history - new implementation

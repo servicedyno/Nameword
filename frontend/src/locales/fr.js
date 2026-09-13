@@ -620,6 +620,12 @@ export const fr = {
     rewardPoints: "Points de récompense",
     walletSeePaymentHistory: "Voir l'historique des paiements",
     walletManageSubscriptions: "Gérer les abonnements",
+    topupHistory: {
+      title: "Recharges récentes",
+      loading: "Chargement…",
+      empty: "Aucune recharge en crypto pour le moment. Utilisez « Recharger » ci-dessus pour ajouter des fonds.",
+      status: { pending: "En attente", confirming: "Confirmation", credited: "Crédité", expired: "Expiré", failed: "Échoué" },
+    },
     back: "Retour",
     noHostingDomainsFound: "Aucun domaine d'hébergement trouvé",
     noDomainsFound: "Aucun domaine trouvé",

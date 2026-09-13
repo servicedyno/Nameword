@@ -620,6 +620,12 @@ export const en = {
     rewardPoints: "Reward Points",
     walletSeePaymentHistory: "See payment history",
     walletManageSubscriptions: "Manage subscriptions",
+    topupHistory: {
+      title: "Recent top-ups",
+      loading: "Loading…",
+      empty: "No crypto top-ups yet. Use “Top Up” above to add funds.",
+      status: { pending: "Pending", confirming: "Confirming", credited: "Credited", expired: "Expired", failed: "Failed" },
+    },
     back: "Back",
     noHostingDomainsFound: "No hosting domains found",
     noDomainsFound: "No domains found",

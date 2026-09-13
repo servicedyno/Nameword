@@ -6,6 +6,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router';
 import WalletModal from '../../../components/modals/wallet-modal';
 import { useAlert } from '../../../context/AlertContext';
 import Loader from '../../../components/common/Loader';
+import TopupHistory from '../../../components/front-admin/billing/TopupHistory';
 import { useQueryParams } from '../../../hooks/useQueryParams';
 import { useAuth } from '../../../hooks/useAuth';
 import { useLanguage } from '../../../hooks/useLanguage';
@@ -58,6 +59,8 @@ const Wallet = () => {
     const handleModalClose = () => {
         setIsModal(false);
         fetchWalletBalance();
+        // Refresh the top-bar chip + the top-up history (a new pending row may exist).
+        window.dispatchEvent(new Event("wallet:updated"));
     }
 
     useEffect(() => {
@@ -150,6 +153,9 @@ const Wallet = () => {
                         </NavLink>
                     </div>
                 </div>
+
+                {/* Recent crypto top-ups */}
+                <TopupHistory />
             </div>
             {walletLoading && <Loader />}
         </>

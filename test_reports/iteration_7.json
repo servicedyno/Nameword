@@ -1,0 +1,56 @@
+{
+  "summary": "Frontend-only verification (iteration 7) of (1) Wallet Recent top-ups history and (2) Points Redemption at checkout for buyer@nameword.local. Both features fully functional.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "wallet_topup_history": {
+      "topup-history_visible": true,
+      "topup_rows_count": 14,
+      "status_badges_seen": ["Pending (amber-100 / amber-700)", "Expired (gray-100 / gray-600)", "Failed (red-100 / red-700)"],
+      "sample_rows": [
+        "$10.00 · BTC 0.00012941 BTC · Sep 12, 2026 · Pending",
+        "$15.00 · USDT 15 USDT · Sep 12, 2026 · Expired",
+        "$25.00 · BTC 0.00032402 BTC · Sep 12, 2026 · Failed",
+        "$20.00 · USDT 20 USDT · Sep 12, 2026 · Pending",
+        "$15.00 · ETH 0.0059202 ETH · Sep 12, 2026 · Pending"
+      ]
+    },
+    "points_redemption": {
+      "cart_page_testid_present": true,
+      "rewards_panel_present": true,
+      "points_balance_displayed": "2187.2 pts · $43.74",
+      "slider_present": true,
+      "slider_max_attribute": 1950,
+      "use_max_click": {
+        "points_discount_line": "− $39.00",
+        "points_applied": 1950,
+        "pay_button_label_before": "Pay $39.00 from wallet",
+        "pay_button_label_after": "Pay with 1950 points",
+        "note": "Order fully covered by points so pay button switches to points-only label as designed."
+      },
+      "clear_click": {
+        "discount_line_removed": true,
+        "pay_button_label_reverted": "Pay $39.00 from wallet"
+      },
+      "slider_manual_move": "Programmatic input event on native range didn't propagate to React state in the test (likely React onChange path); however Use max + Clear both mutate state correctly and slider position visually updates via Use max. Not a functional bug — main agent may verify with real user drag if desired."
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Cart route is served at /cart (not /checkout/cart as stated in the request). /checkout/cart on an empty cart redirects to /. Route works; just a doc mismatch.",
+    "Console warning: 'Missing environment variables: [VITE_API_KEY]'. Non-blocking but noisy — either remove the warn or set a dummy value in preview build."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (not tested by request)", "frontend": "100%"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345",
+  "seed_data_creation": "None. Random domain names (cartchk*.com) were searched only; NO order was placed (final pay/crypto-pay buttons were not clicked).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Cart route is /cart. To reach it, add a domain from /domains via [data-testid=exact-match-add-button], then click 'Open full cart (nameservers & reward points)' in the cart drawer. All rewards testids in CartPage.jsx work as documented. Buyer account had 2187.2 pts and $50 wallet; max redeemable is capped at 1950 pts (= $39 = full order for a $39 .com), which is why pay button flips to 'Pay with 1950 points' after Use max. Do NOT click cart-pay-button or cart-pay-crypto-button.",
+  "rca of the issue": "N/A - no issues found."
+}

@@ -1097,6 +1097,30 @@ const cancelCryptoTopup = async (req, res) => {
 	}
 };
 
+// GET /api/v1/wallet/crypto-topups — recent crypto top-ups (any status) for the
+// wallet "Recent top-ups" history list (pending, confirming, credited, expired, failed).
+const listCryptoTopups = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const rows = await CryptoTopup.find({ userId })
+			.sort({ createdAt: -1 })
+			.limit(15);
+		const data = rows.map((r) => ({
+			paymentId: r.paymentId,
+			currency: r.currency,
+			cryptoAmount: r.cryptoAmount,
+			amountUsd: r.amountUsd,
+			status: r.status,
+			txHash: r.txHash || null,
+			createdAt: r.createdAt,
+			expireAt: r.expireAt,
+		}));
+		return res.status(200).json({ success: true, data });
+	} catch (error) {
+		return res.status(500).json({ success: false, message: error?.message || "Failed to load top-up history." });
+	}
+};
+
 module.exports = {
 	createWallet,
 	getWallet,
@@ -1110,5 +1134,6 @@ module.exports = {
 	creditWalletTopup,
 	reconcileCryptoTopup,
 	listPendingCryptoTopups,
+	listCryptoTopups,
 	cancelCryptoTopup,
 };

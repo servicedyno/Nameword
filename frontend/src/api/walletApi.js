@@ -49,6 +49,11 @@ export const walletAPI = {
         return response.data;
     },
 
+    getCryptoTopups: async () => {
+        const response = await apiClient.get(ENDPOINTS.WALLET.CRYPTO_TOPUPS);
+        return response.data;
+    },
+
     cancelCryptoTopup: async (paymentId) => {
         const response = await apiClient.post(ENDPOINTS.WALLET.CRYPTO_TOPUP_CANCEL(paymentId));
         return response.data;
