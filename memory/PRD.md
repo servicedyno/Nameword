@@ -224,6 +224,7 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 - **Inline error**: the modal now shows a persistent inline error (`data-testid='topup-error'`) when address generation fails (previously the toast could render behind the modal), cleared when the user changes coin/amount.
 - VERIFIED (iteration_10): all 13 coin buttons render with icons; LTC generated a real DynoPay address end-to-end; top-up history regression passed.
 - KNOWN (DynoPay merchant-side, NOT our code): XRP currently returns 500 "XRP_MASTER wallet record not found in DB" — the DynoPay account is missing an XRP master wallet for tag-based addresses. Options: configure XRP in DynoPay, or hide it via `CRYPTO_TOPUP_COINS` (e.g. the other 12). The inline error now shows this reason to the user.
+- ✅ RESOLVED (2026-06): XRP now works. DynoPay fixed the merchant-side XRP wallet — `POST /wallet/crypto-topup {currency:"XRP",amount:20}` returns `success:true` with a valid XRP address (`r...`), `cryptoAmount` (e.g. 14.92 XRP for $20) and a QR. Verified end-to-end in the wallet modal UI (QR + "Send exactly 14.92 XRP · Network: XRP Ledger" + address, no inline error). Address is a dedicated deposit address (no destination tag needed). No code change required.
 
 
 ### Wallet top-up: "Change coin or amount" back button (2026-06) — DONE, tested 100% (frontend)
