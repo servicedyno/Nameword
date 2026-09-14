@@ -25,7 +25,7 @@ function OrderCard({ order }) {
   const items = Array.isArray(order.items) ? order.items : [];
 
   return (
-    <div className="nw-card !p-0 overflow-hidden" data-testid={`order-card-${order.orderNumber}`}>
+    <div className="nw-card nw-stat-glow relative !p-0 overflow-hidden" data-testid={`order-card-${order.orderNumber}`}>
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-line px-5 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
@@ -39,7 +39,7 @@ function OrderCard({ order }) {
         <div className="flex items-center justify-between gap-4 sm:justify-end">
           <div className="text-right">
             <p className="text-xs text-ink-soft dark:text-gray-400">Charged</p>
-            <p className="font-semibold text-primary dark:text-white nw-mono">{money(order.charged_usd)}</p>
+            <p className="text-lg font-extrabold nw-grad-text nw-mono">{money(order.charged_usd)}</p>
           </div>
           <Link
             to={`/checkout/success/${order._id}`}

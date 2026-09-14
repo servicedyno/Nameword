@@ -1463,3 +1463,18 @@ html.dark .nw-app-bg {
     radial-gradient(58% 50% at 106% -6%, rgba(217, 70, 239, 0.16), transparent 58%),
     radial-gradient(62% 55% at 52% 118%, rgba(245, 158, 11, 0.07), transparent 60%);
 }
+
+/* Richer coloured glow on every marketing/product hero (Domains, DNS, VPS, RDP, Pricing, SSL) */
+html.dark .nw-hero {
+  background-color: #09080d;
+  background-image:
+    radial-gradient(60% 92% at 88% -22%, rgba(124, 58, 237, 0.24), transparent 60%),
+    radial-gradient(48% 82% at -6% -4%, rgba(99, 102, 241, 0.17), transparent 60%),
+    radial-gradient(42% 72% at 62% 122%, rgba(245, 158, 11, 0.07), transparent 62%);
+}
+html.dark .nw-hero-glow {
+  background-color: rgba(124, 58, 237, 0.18);
+}
+html:not(.dark) .nw-hero-glow {
+  background-color: rgba(165, 180, 252, 0.55);
+}

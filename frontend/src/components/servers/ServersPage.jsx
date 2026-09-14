@@ -245,9 +245,9 @@ export default function ServersPage({ product = "vps" }) {
             </div>
             <div className="flex items-center gap-3">
               {isAuthenticated && balance != null && (
-                <Link to="/wallet" className="nw-card !px-4 !py-3 text-right hover:border-brand/40" data-testid="user-wallet-chip">
+                <Link to="/wallet" className="nw-card nw-stat-glow relative overflow-hidden !px-4 !py-3 text-right hover:border-brand/40" data-testid="user-wallet-chip">
                   <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft dark:text-gray-400">{t.site.servers.wallet}</p>
-                  <p className="font-mono text-lg font-bold text-primary dark:text-white">{money(balance)}</p>
+                  <p className="font-mono text-lg font-bold nw-grad-text">{money(balance)}</p>
                 </Link>
               )}
               <div>

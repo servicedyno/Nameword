@@ -18,7 +18,7 @@ export default function CartSummary({ items, title = "Order summary", footer, ch
   const subtotal = Math.round(items.reduce((s, i) => s + (Number(i.price_usd) || 0), 0) * 100) / 100;
   const grandTotal = total != null ? total : subtotal;
   return (
-    <aside className="nw-card lg:sticky lg:top-28 !p-0 overflow-hidden" data-testid="cart-summary">
+    <aside className="nw-card nw-stat-glow relative lg:sticky lg:top-28 !p-0 overflow-hidden" data-testid="cart-summary">
       <div className="flex items-center justify-between px-5 py-4 border-b border-line dark:border-gray-800">
         <h3 className="font-semibold text-primary dark:text-white">{title}</h3>
         <Link to={editHref} className="text-sm font-medium text-brand-700 dark:text-brand-300 hover:underline" data-testid="cart-summary-edit-link">
@@ -59,7 +59,7 @@ export default function CartSummary({ items, title = "Order summary", footer, ch
         )}
         <div className="flex items-center justify-between pt-2 border-t border-dashed border-line dark:border-gray-800">
           <span className="font-semibold text-primary dark:text-white">Total</span>
-          <span className="text-xl font-bold text-primary dark:text-white nw-mono" data-testid="cart-summary-total">{money(grandTotal)}</span>
+          <span className="text-2xl font-extrabold nw-grad-text nw-mono" data-testid="cart-summary-total">{money(grandTotal)}</span>
         </div>
         {children}
       </div>

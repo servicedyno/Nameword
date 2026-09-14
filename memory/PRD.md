@@ -8,7 +8,12 @@
   - New utilities: `.nw-glass`, `.nw-stat`/`.nw-stat-glow`/`.nw-stat-glow-warm`, `.nw-grad-brand`/`.nw-grad-warm`, `.nw-grad-text`/`.nw-grad-text-warm`, `.nw-stat-chip`. Gradient+glow on primary buttons (`.nw-btn-primary`/`.btn-blue`/`.add-to-cart`/`.btn-sky`) in dark. Table row-hover + dark scrollbars. `.admin-card` hover lift+glow.
   - FLAGSHIP components upgraded: Wallet.jsx balance + reward-points cards → glowing gradient stat cards (indigo vs warm), gradient headline numbers; dashboard.jsx greeting name → gradient text, register panel → glow bloom.
   - VERIFIED live (screenshots) in DARK: dashboard, wallet, payment-history, account-setting, hosting, sign-in; LIGHT: wallet — all cohesive, no light-on-light regressions. Frontend is PROD build → `sudo supervisorctl restart frontend` to rebuild (~20s).
-- PENDING polish (optional next): per-page hero treatments for domains/DNS/VPS/RDP/orders, auth split-screen art, light-mode hero parity everywhere, subtle count-up/reveal motion, full mobile QA.
+- PENDING polish (optional next): auth split-screen art, subtle count-up/reveal motion, deeper light-mode hero parity on secondary pages.
+
+## ✅ THIS SESSION (2026-09) — Rollout complete + mobile pass (tested 100%)
+- Rolled the glowing hero-card treatment across: Cart (CartSummary → `nw-stat-glow` + gradient Total; page title gradient), Orders (each order card → glow bloom + gradient "Charged"), VPS/RDP wallet chip → glow + gradient balance, and boosted shared `.nw-hero`/`.nw-hero-glow` in CSS so Domains/DNS/VPS/RDP/Pricing/SSL heroes all get a rich indigo→fuchsia→warm glow at once.
+- Mobile pass: verified 390px — /dashboard + /wallet have NO horizontal scroll (scrollWidth==clientWidth==390); bottom tab bar intact; hero cards stack cleanly. (Domains hero shows a decorative `nw-hero-glow` box beyond the edge but it's inside an `overflow-hidden` hero + body `overflow-x:hidden` → no scrollbar.)
+- auto_frontend_testing_agent: 100% PASS across /dashboard, /wallet, /payment-history, /orders, /domains, /dns-manager, /vps, /rdp, /account-setting in dark+light (desktop) and dark (mobile). No white screens, no JS errors, text legible, controls work, gradient text + 7 glowing hero cards present, dark body rgb(9,8,13).
 
 
 

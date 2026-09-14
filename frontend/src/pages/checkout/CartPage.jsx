@@ -259,7 +259,7 @@ export default function CartPage() {
     <div data-testid="cart-page">
       <span className="nw-eyebrow mb-4">Step 4 · Cart & pay</span>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white">Your cart</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white">Your <span className="nw-grad-text">cart</span></h1>
         <Link to="/domains" className="nw-btn-ghost nw-btn-sm" data-testid="cart-add-domain-link"><FiPlus size={15} /> Add another domain</Link>
       </div>
 
