@@ -148,7 +148,7 @@ const PaymentHistoryTable = () => {
         enableSearch={transactions.length > 5}
         emptyIcon={LuReceipt}
         emptyTitle={t.admin.noPaymentsYet}
-        emptyDescription="Wallet top-ups, domain and server payments will appear here with downloadable invoices."
+        emptyDescription={t.admin.paymentHistoryEmptyDescription}
         emptyPrimaryTo="/wallet"
         emptyPrimaryLabel={t.admin?.walletTopUp || "Top up wallet"}
       />

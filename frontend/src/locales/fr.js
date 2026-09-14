@@ -1474,12 +1474,27 @@ export const fr = {
       }
     },
     // Domain List Page
+    paymentHistoryEmptyDescription: "Les recharges de portefeuille et les paiements de domaines et de serveurs apparaîtront ici avec des factures téléchargeables.",
     domainList: {
       title: "Liste des domaines",
+      heading: "Vos domaines",
       searchPlaceholder: "Rechercher des domaines",
+      manageDns: "Gérer le DNS",
+      viewReceipt: "Voir le reçu",
+      refresh: "Actualiser",
+      emptyTitle: "Aucun domaine pour le moment",
+      emptyDescription: "Enregistrez votre premier domaine privé — la confidentialité WHOIS est incluse sur tous les noms éligibles.",
+      emptyPrimaryLabel: "Rechercher un domaine",
+      nsLabels: {
+        cloudflare: "DNS Cloudflare",
+        registrar: "Par défaut du registraire",
+        custom: "Serveurs de noms personnalisés"
+      },
       columns: {
         domainName: "Nom de domaine",
         status: "Statut",
+        nameservers: "Serveurs de noms",
+        registered: "Enregistré",
         expires: "Expire",
         autoRenewal: "Renouvellement automatique",
         actions: "Actions"

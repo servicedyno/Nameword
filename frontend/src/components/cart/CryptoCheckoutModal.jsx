@@ -38,7 +38,7 @@ const coinLabel = (c) => {
 };
 const coinNetwork = (c) => COIN_META[prettyCoin(c)]?.network || prettyCoin(c);
 
-export default function CryptoCheckoutModal({ orderPayload, payable, onClose, onSuccess }) {
+export default function CryptoCheckoutModal({ orderPayload, payable, summary, onClose, onSuccess }) {
   const [coins, setCoins] = useState([]);
   const [loadingCoins, setLoadingCoins] = useState(true);
   const [currency, setCurrency] = useState("");
@@ -205,6 +205,45 @@ export default function CryptoCheckoutModal({ orderPayload, payable, onClose, on
             />
           ) : !pay ? (
             <>
+              {summary && Array.isArray(summary.lines) && summary.lines.length > 0 && (
+                <div className="mb-4 rounded-xl border border-line bg-surface-2/60 p-4 dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-order-summary">
+                  <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-soft dark:text-gray-400">Order summary</p>
+                  <div className="space-y-2">
+                    {summary.lines.map((l) => (
+                      <div key={l.key} className="flex items-start justify-between gap-3 text-sm">
+                        <div className="min-w-0">
+                          <p className="font-medium text-primary dark:text-white break-all">{l.label}</p>
+                          {l.sub && <p className="text-xs text-ink-soft dark:text-gray-400">{l.sub}</p>}
+                        </div>
+                        <span className="shrink-0 font-mono text-primary dark:text-white">{money(l.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {summary.pointsDiscount > 0 && (
+                    <div className="mt-2 flex items-center justify-between border-t border-line pt-2 text-sm dark:border-white/[0.06]">
+                      <span className="text-brand-700 dark:text-brand-300">Points discount</span>
+                      <span className="font-mono text-brand-700 dark:text-brand-300">− {money(summary.pointsDiscount)}</span>
+                    </div>
+                  )}
+                  <div className="mt-2 flex items-center justify-between border-t border-line pt-2 dark:border-white/[0.06]">
+                    <span className="text-sm font-semibold text-primary dark:text-white">Total due</span>
+                    <span className="font-mono text-base font-bold text-primary dark:text-white" data-testid="crypto-order-total">{money(summary.total)}</span>
+                  </div>
+                  {summary.walletBalance != null && (
+                    <div className="mt-3 rounded-lg bg-white/70 p-2.5 dark:bg-white/[0.03]">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-ink-soft dark:text-gray-400">Your wallet balance</span>
+                        <span className="font-mono font-medium text-primary dark:text-white" data-testid="crypto-wallet-balance">{money(summary.walletBalance)}</span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-xs">
+                        <span className="text-ink-soft dark:text-gray-400">Wallet after payment</span>
+                        <span className="font-mono font-medium text-primary dark:text-white" data-testid="crypto-wallet-after">{money(summary.walletBalance)}</span>
+                      </div>
+                      <p className="mt-1.5 text-[11px] text-ink-soft dark:text-gray-400">Paying with crypto won&apos;t touch your wallet — your balance stays the same.</p>
+                    </div>
+                  )}
+                </div>
+              )}
               <p className="text-sm text-ink-soft dark:text-gray-400">
                 Paying <span className="font-semibold text-primary dark:text-white nw-mono">{money(payable)}</span> directly with crypto — no wallet needed. You&apos;ll earn reward points on this payment.
               </p>

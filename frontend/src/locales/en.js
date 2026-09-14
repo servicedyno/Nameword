@@ -1483,12 +1483,27 @@ export const en = {
       }
     },
     // Domain List Page
+    paymentHistoryEmptyDescription: "Wallet top-ups, domain and server payments will appear here with downloadable invoices.",
     domainList: {
       title: "Domain List",
+      heading: "Your domains",
       searchPlaceholder: "Search domains",
+      manageDns: "Manage DNS",
+      viewReceipt: "View receipt",
+      refresh: "Refresh",
+      emptyTitle: "No domains yet",
+      emptyDescription: "Register your first private domain — WHOIS privacy is included on every eligible name.",
+      emptyPrimaryLabel: "Search a domain",
+      nsLabels: {
+        cloudflare: "Cloudflare DNS",
+        registrar: "Registrar default",
+        custom: "Custom nameservers"
+      },
       columns: {
         domainName: "Domain Name",
         status: "Status",
+        nameservers: "Nameservers",
+        registered: "Registered",
         expires: "Expires",
         autoRenewal: "Auto-renewal",
         actions: "Actions"

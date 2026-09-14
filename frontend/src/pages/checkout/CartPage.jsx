@@ -197,6 +197,20 @@ export default function CartPage() {
   );
   const canPay = !!quote && !quoting && !paying && !hasProblems && !customNsIncomplete && shortfall <= 0 && cart.count > 0;
 
+  // Order summary passed into the crypto (Dyno Pay) checkout modal so buyers see
+  // exactly what they're paying for, their wallet balance, and what remains.
+  const cryptoSummary = {
+    lines: cart.items.map((it) => {
+      if (it.type === "domain") return { key: it.id, label: it.domain, sub: "Domain · 1 year", amount: Number(it.price_usd) || 0 };
+      if (it.type === "hosting") return { key: it.id, label: it.plan_name || "Hosting", sub: `Hosting · ${it.domain || ""}`.trim(), amount: Number(it.price_usd) || 0 };
+      return { key: it.id, label: it.plan_name || it.plan_id || "Server", sub: `${it.type === "rdp" ? "RDP" : "VPS"} · monthly`, amount: Number(it.price_usd) || 0 };
+    }),
+    subtotal,
+    pointsDiscount,
+    total: payable,
+    walletBalance,
+  };
+
   const pay = async () => {
     setPaying(true);
     setPayError(null);
@@ -374,6 +388,7 @@ export default function CartPage() {
         <CryptoCheckoutModal
           orderPayload={orderPayload}
           payable={payable}
+          summary={cryptoSummary}
           onClose={() => setShowCrypto(false)}
           onSuccess={onCryptoSuccess}
         />
