@@ -159,6 +159,13 @@ html.dark {
   --color-gray-700: #2f2942;   /* stronger border / hover */
   --color-gray-600: #3a3450;
 
+  /* Muted TEXT / number colour, LIFTED for dark-mode legibility.
+     gray-500 is used almost exclusively as a text/icon colour (not as a
+     surface or border), so raising it here makes dim numbers, amounts and
+     secondary labels clearly readable across the whole app in dark mode —
+     without affecting light mode (this override is scoped to html.dark). */
+  --color-gray-500: #9aa1b6;
+
   /* Surfaces + lines (also catch stray non-dark-variant utilities) */
   --color-surface: #14121c;
   --color-surface-2: #1b1826;
@@ -173,7 +180,7 @@ html.dark {
   --color-ink: #eceef6;
   --color-ink-soft: #b7bccb;
   --color-secondary: #9aa0b5;
-  --color-ink-muted: #7e8398;
+  --color-ink-muted: #8f95aa;
 
   /* Stray light-tint blocks -> dark tints (legacy aliases recolour in one shot) */
   --color-brand-50: #191331;
@@ -194,8 +201,35 @@ html.dark {
   --color-save-badge: #221a44;
   --color-progressbar: #2f2942;
 
+  /* Legacy muted-text tokens that were left at their dark light-mode values
+     (dim/invisible on dark). These are used only as TEXT (never as surfaces),
+     so lift them to a legible muted tone for dark mode. */
+  --color-lightgray-500: #9aa1b6;
+  --color-lightgray-600: #9aa1b6;
+  --color-teallight-500: #9aa1b6;
+
   /* Elevation + signature brand glow */
   --shadow-glow: 0 0 0 1px rgba(124, 58, 237, 0.28), 0 22px 70px -22px rgba(124, 58, 237, 0.55);
+}
+
+/* Dark-mode legibility safety net: any `hover:text-black` (e.g. modal close
+   buttons) would turn invisible on a dark panel — keep it light instead. */
+html.dark .hover\:text-black:hover {
+  color: #e6e8f2;
+}
+
+/* Floating form labels use gray-600 for their active / focused state, which is
+   near-invisible on dark panels (gray-600 = #3a3450 in dark). Lift ONLY the
+   TEXT colour here — `.bg-gray-600` / `.border-gray-600` surfaces (modal
+   overlays, borders) are separate utilities and stay untouched. */
+html.dark .text-gray-600,
+html.dark .peer:focus ~ .peer-focus\:text-gray-600 {
+  color: #aab1c6;
+}
+
+/* `golder` is used as a surface in one place, so lift only its TEXT usage. */
+html.dark .text-golder {
+  color: #aab1c6;
 }
 
 body {
