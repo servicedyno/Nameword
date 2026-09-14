@@ -66,10 +66,27 @@ export default function OrderSuccess() {
   return (
     <div className="mx-auto max-w-3xl" data-testid="order-success-page">
       {showConfetti && <ConfettiBurst pieces={30} className="fixed inset-0 z-[70]" />}
-      <div className="text-center">
-        <Icon className={`mx-auto mb-4 ${iconCls}`} size={48} />
+      <div className="relative text-center">
+        {order.status !== "failed" && (
+          <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 -z-10 h-44 w-44 -translate-x-1/2 rounded-full bg-emerald-400/20 blur-3xl dark:bg-emerald-500/20" />
+        )}
+        <div className="mx-auto mb-4 nw-floaty relative flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-line bg-white shadow-lg dark:border-white/[0.1] dark:bg-gray-900">
+          <div
+            aria-hidden="true"
+            className={`absolute -inset-2 -z-10 rounded-[1.9rem] opacity-70 blur-2xl bg-gradient-to-tr ${
+              order.status === "failed"
+                ? "from-red-300 to-red-500 dark:from-red-500/30 dark:to-red-600/20"
+                : order.status === "partial"
+                ? "from-amber-300 to-amber-500 dark:from-amber-500/30 dark:to-amber-600/20"
+                : "from-emerald-300 to-emerald-500 dark:from-emerald-500/30 dark:to-emerald-600/20"
+            }`}
+          />
+          <Icon className={`relative ${iconCls}`} size={40} />
+        </div>
         <span className="nw-eyebrow mb-3">Order {order.orderNumber}</span>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white" data-testid="order-headline">{headline}</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white" data-testid="order-headline">
+          {order.status === "failed" || order.status === "partial" ? headline : <span className="nw-grad-text">{headline}</span>}
+        </h1>
         <p className="mt-3 nw-lead">
           {order.status === "failed"
             ? "Every item failed to provision, so the full amount was refunded to your wallet."

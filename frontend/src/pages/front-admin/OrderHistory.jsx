@@ -15,6 +15,7 @@ import { useLanguage } from "../../hooks/useLanguage";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 import { fmtDateTime } from "../../utils/formatDate";
 import Loader from "../../components/common/Loader";
+import EmptyState from "../../components/common/EmptyState";
 import StatusBadge from "../../components/common/StatusBadge";
 
 // "failed" means the item/order was refunded to the wallet.
@@ -162,15 +163,14 @@ export default function OrderHistory() {
       )}
 
       {!loading && !error && orders && orders.length === 0 && (
-        <div className="nw-card flex flex-col items-center py-14 text-center" data-testid="orders-empty">
-          <span className="nw-icon h-12 w-12"><FiShoppingBag size={22} /></span>
-          <p className="mt-4 text-lg font-semibold text-primary dark:text-white">No orders yet</p>
-          <p className="mt-1 nw-lead max-w-sm">
-            When you register a domain or buy hosting, your receipts will show up here.
-          </p>
-          <Link to="/domains" className="nw-btn-primary mt-6" data-testid="orders-empty-cta">
-            Find a domain <FiArrowRight size={16} />
-          </Link>
+        <div className="nw-card !p-0" data-testid="orders-empty">
+          <EmptyState
+            icon={FiShoppingBag}
+            title="No orders yet"
+            description="When you register a domain or buy hosting, your receipts will show up here."
+            primaryTo="/domains"
+            primaryLabel="Find a domain"
+          />
         </div>
       )}
 

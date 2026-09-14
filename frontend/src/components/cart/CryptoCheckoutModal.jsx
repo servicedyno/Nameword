@@ -195,8 +195,8 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                 <IoArrowBack size={18} />
               </button>
             )}
-            <div className="inline-flex items-center gap-2 text-lg font-bold text-primary dark:text-white">
-              <FaBitcoin className="text-[#f7931a]" /> {tr("title", "Pay with crypto")}
+            <div className="inline-flex items-center gap-2 text-lg font-bold">
+              <FaBitcoin className="text-[#f7931a]" /> <span className="nw-grad-text">{tr("title", "Pay with crypto")}</span>
             </div>
           </div>
           <button type="button" onClick={onClose} aria-label={tr("close", "Close")} className="header-icon-btn h-9 w-9" data-testid="crypto-modal-close">
@@ -214,7 +214,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
           ) : !pay ? (
             <>
               {summary && Array.isArray(summary.lines) && summary.lines.length > 0 && (
-                <div className="mb-4 rounded-xl border border-line bg-surface-2/60 p-4 dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-order-summary">
+                <div className="mb-4 rounded-xl border border-line bg-surface-2/60 p-4 shadow-[0_12px_34px_-20px_rgba(124,58,237,0.45)] dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-order-summary">
                   <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-soft dark:text-gray-400">{tr("orderSummary", "Order summary")}</p>
                   <div className="space-y-2">
                     {summary.lines.map((l) => (
@@ -235,7 +235,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                   )}
                   <div className="mt-2 flex items-center justify-between border-t border-line pt-2 dark:border-white/[0.06]">
                     <span className="text-sm font-semibold text-primary dark:text-white">{tr("totalDue", "Total due")}</span>
-                    <span className="font-mono text-base font-bold text-primary dark:text-white" data-testid="crypto-order-total">{money(summary.total)}</span>
+                    <span className="nw-grad-text font-mono text-lg font-extrabold" data-testid="crypto-order-total">{money(summary.total)}</span>
                   </div>
                   {summary.walletBalance != null && (
                     <div className="mt-3 rounded-lg bg-white/70 p-2.5 dark:bg-white/[0.03]">

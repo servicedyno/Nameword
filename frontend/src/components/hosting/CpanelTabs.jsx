@@ -609,7 +609,7 @@ export default function CpanelTabs({ user, domain }) {
             data-testid={`cpanel-tabbtn-${t.id}`}
             className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
               active === t.id
-                ? "bg-brand-600 text-white dark:bg-brand-500"
+                ? "nw-grad-brand text-white shadow-[0_8px_20px_-8px_rgba(124,58,237,0.75)]"
                 : "text-secondary dark:text-gray-400 hover:bg-lightgray dark:hover:bg-gray-800"
             }`}
           >

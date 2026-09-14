@@ -38,20 +38,30 @@ export default function EmptyState({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center text-center ${compact ? "py-10" : "py-16"} px-6 ${className}`}
+      className={`relative isolate flex flex-col items-center justify-center overflow-hidden text-center ${compact ? "py-10" : "py-16"} px-6 nw-rise ${className}`}
       data-testid="empty-state"
     >
-      <div className="relative mb-5">
+      {/* Ambient illustration: soft glow + a few gently pulsing colour orbs */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute left-1/2 top-4 h-52 w-52 -translate-x-1/2 rounded-full bg-brand-300/25 blur-3xl dark:bg-brand/15" />
+        <span className="absolute left-[18%] top-10 h-2.5 w-2.5 rounded-full bg-brand-400/60 blur-[1px] animate-pulse" style={{ animationDuration: "3.5s" }} />
+        <span className="absolute right-[20%] top-16 h-2 w-2 rounded-full bg-fuchsia-400/60 blur-[1px] animate-pulse" style={{ animationDuration: "4.2s", animationDelay: "0.4s" }} />
+        <span className="absolute left-[30%] bottom-12 h-1.5 w-1.5 rounded-full bg-amber-400/70 blur-[1px] animate-pulse" style={{ animationDuration: "5s", animationDelay: "0.8s" }} />
+        <span className="absolute right-[26%] bottom-16 h-2 w-2 rounded-full bg-brand-300/60 blur-[1px] animate-pulse" style={{ animationDuration: "4.6s", animationDelay: "0.2s" }} />
+      </div>
+
+      <div className="relative mb-6 nw-floaty">
         <div
-          className={`absolute inset-0 -z-10 rounded-full bg-gradient-to-tr ${badgeGlow} opacity-70 blur-2xl`}
+          className={`absolute -inset-3 -z-10 rounded-[2rem] bg-gradient-to-tr ${badgeGlow} opacity-70 blur-2xl`}
           aria-hidden="true"
         />
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-line bg-white shadow-sm dark:border-white/[0.08] dark:bg-gray-900">
-          {Icon ? <Icon className={`h-9 w-9 ${iconColor}`} aria-hidden="true" /> : null}
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-[1.6rem] border border-line bg-white shadow-[0_18px_40px_-20px_rgba(79,70,229,0.5)] dark:border-white/[0.1] dark:bg-gray-900 dark:shadow-[0_24px_60px_-24px_rgba(124,58,237,0.7)]">
+          <div className="absolute inset-[3px] rounded-[1.35rem] bg-gradient-to-br from-brand-50 to-white dark:from-white/[0.06] dark:to-transparent" aria-hidden="true" />
+          {Icon ? <Icon className={`relative h-10 w-10 ${iconColor}`} aria-hidden="true" /> : null}
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold text-primary dark:text-white">{title}</h3>
+      <h3 className="text-xl font-bold tracking-tight text-primary dark:text-white">{title}</h3>
       {description ? (
         <p className="mt-2 max-w-md text-15 text-ink-soft dark:text-gray-400">{description}</p>
       ) : null}

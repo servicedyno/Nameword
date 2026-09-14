@@ -1066,15 +1066,54 @@ frontend:
         agent: "testing"
         comment: "✅ DARK MODE TEXT CONTRAST FIX VERIFIED - ALL TESTS PASSED (100% success rate). Comprehensive testing of dark mode legibility across 8 surfaces plus light mode regression check. DARK MODE RESULTS (desktop 1920x800): (1) /wallet: Wallet balance rgb(165,180,252) PASS, Reward points rgb(241,245,249) PASS, Top-up amounts rgb(165,180,252) & rgb(241,245,249) PASS, Top-up dates (secondary text) rgb(148,163,184) PASS - all well above 120 threshold. (2) /payment-history: Amount column values rgb(165,180,252) PASS, Transaction IDs (N_...) rgb(148,163,184) PASS, Refund history tab accessible. (3) /orders: Charged amounts rgb(241,245,249) & rgb(255,255,255) & rgb(148,163,184) PASS. (4) /pricing (PUBLIC): Register/Renew prices rgb(241,245,249) & rgb(255,255,255) & rgb(203,213,225) PASS, all clearly legible. (5) /domains: Domain search functional, register modal accessible. (6) /dns-manager: DNS records page accessible. (7) /account-setting (CRITICAL FLOATING LABEL TEST): ALL floating labels render at EXACTLY rgb(170,177,198) when focused/active - PERFECT MATCH to expected value from CSS fix (#aab1c6). Tested Name, Username, Mobile number, Email, Password labels - all PASS with matches_expected=true. This was the key fix for near-invisible labels. (8) LIGHT MODE REGRESSION CHECK: /wallet, /payment-history, /pricing, /dashboard all render correctly with white background rgb(255,255,255), html class does NOT contain 'dark', proper contrast maintained, NO light-on-light issues, NO regressions. CONSOLE ERRORS: Only benign Cloudflare CDN ERR_ABORTED errors (expected), NO uncaught JavaScript errors, NO critical errors. CRITICAL VERIFICATION: (1) Dark mode active: html class='dark', body background rgb(9,8,13) ✓. (2) ALL numeric/amount/label elements have RGB values above 120 threshold (most 148+ or 165+) ✓. (3) Floating labels EXACTLY match expected rgb(170,177,198) from CSS fix ✓. (4) NO dark-on-dark text found anywhere ✓. (5) Light mode unchanged with proper contrast ✓. (6) Fix is scoped to html.dark only - light mode CSS untouched ✓. DETAILED COLOR ANALYSIS: Muted text (gray-500) now renders as rgb(148,163,184) instead of previous dim #64748b, secondary labels rgb(203,213,225), prominent amounts rgb(241,245,249) or rgb(255,255,255), floating labels rgb(170,177,198). All values well above legibility threshold. Screenshots captured: dark_wallet.png, dark_payment_history.png, dark_orders.png, dark_pricing.png, dark_domains.png, dark_dns_manager.png, dark_account_settings.png, light_wallet.png, light_payment_history.png, light_pricing.png, light_dashboard.png. NO ISSUES FOUND. Dark mode text contrast fix is FULLY WORKING and production-ready. User-reported bug (dim/invisible numbers, amounts, labels in dark mode) is RESOLVED."
 
+  - task: "Phase 6 — Light-mode premium polish (soft tints + hero glow + gradient CTAs)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/index.css"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added a scoped `html:not(.dark)` block at the end of index.css so LIGHT mode feels as premium as dark (dark untouched): richer ambient app-shell + public body radial wash (indigo/violet/warm), colourful soft bloom on `.nw-hero`, gradient-tinted `.nw-stat` hero cards with soft brand-tinted elevation + softened corner blooms, gradient + soft glow on primary CTAs (`.nw-btn-primary/.btn-blue/.add-to-cart/.btn-sky`), and a brand glow on `.nw-card-hover`. VERIFIED (screenshot) /wallet in LIGHT: stat cards show lilac gradient tint + corner bloom, gradient balance/points numbers, gradient glowing Top Up button. NEEDS TESTING: confirm light mode across /dashboard, /wallet, /pricing, /domains, /vps heroes looks premium and NOT washed-out/low-contrast, and DARK mode is unchanged."
+
+  - task: "Empty-State charm — illustrated empty states for cart, orders and domains"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/common/EmptyState.jsx, /app/frontend/src/pages/checkout/CartPage.jsx, /app/frontend/src/pages/front-admin/OrderHistory.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Upgraded the shared EmptyState.jsx into a delightful illustrated block: glowing gradient icon tile (rounded, inner gradient, gentle `nw-floaty` bob + `nw-rise` entrance), ambient radial glow + 4 softly pulsing colour orbs behind, bigger bold title. Routed Cart empty (was inline) and Orders empty (was inline) through EmptyState; Domains list already uses it via DataTable. data-testids preserved: cart-empty-state, orders-empty, empty-state, empty-primary-cta. VERIFIED (screenshot) /cart empty in DARK: glowing globe tile, floating dots, gradient 'Search domains' CTA, 'Popular right now' suggestions below. NEEDS TESTING: /cart (empty), /orders (empty — needs an account with no orders, e.g. a fresh user), /domains empty list; both dark + light; no console errors."
+
+  - task: "Phase 7 — deep-detail glow/gradient (OrderSuccess, crypto modal, cPanel tabs, table headers)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/checkout/OrderSuccess.jsx, /app/frontend/src/components/cart/CryptoCheckoutModal.jsx, /app/frontend/src/components/hosting/CpanelTabs.jsx, /app/frontend/src/index.css"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "OrderSuccess: status icon now sits in a floating glowing gradient tile (emerald bloom for success, amber for partial, red for failed) + success headline uses `nw-grad-text`; confetti kept. Crypto checkout modal: 'Pay with crypto' title → gradient text, order-summary card → soft brand glow shadow, 'Total due' → gradient text (larger); primary buttons auto-gain gradient+glow from the new CTA rules. cPanel tabs: active tab → `nw-grad-brand` gradient + glow (was flat bg-brand). Table headers (`.table-thead tr th`, used by DNS records + all DataTables) → subtle indigo/violet gradient tint in both modes. Lint clean, prod build OK. NEEDS TESTING (mostly need data/flows): OrderSuccess page after a checkout (or via a completed order id), crypto modal (add domain to cart -> Pay with crypto), cPanel Advanced tabs (hosting Manage modal, owner account c1-owner-a@nameword.local / Owner@12345), DNS records table header — dark + light, no crashes/console errors."
+
 metadata:
   created_by: "main_agent"
-  version: "2.1"
-  test_sequence: 3
+  version: "2.2"
+  test_sequence: 4
   run_ui: true
   test_date: "2025-07"
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Phase 6 — Light-mode premium polish (soft tints + hero glow + gradient CTAs)"
+    - "Empty-State charm — illustrated empty states for cart, orders and domains"
+    - "Phase 7 — deep-detail glow/gradient (OrderSuccess, crypto modal, cPanel tabs, table headers)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
