@@ -1090,17 +1090,17 @@ frontend:
         agent: "main"
         comment: "Upgraded the shared EmptyState.jsx into a delightful illustrated block: glowing gradient icon tile (rounded, inner gradient, gentle `nw-floaty` bob + `nw-rise` entrance), ambient radial glow + 4 softly pulsing colour orbs behind, bigger bold title. Routed Cart empty (was inline) and Orders empty (was inline) through EmptyState; Domains list already uses it via DataTable. data-testids preserved: cart-empty-state, orders-empty, empty-state, empty-primary-cta. VERIFIED (screenshot) /cart empty in DARK: glowing globe tile, floating dots, gradient 'Search domains' CTA, 'Popular right now' suggestions below. NEEDS TESTING: /cart (empty), /orders (empty — needs an account with no orders, e.g. a fresh user), /domains empty list; both dark + light; no console errors."
 
-  - task: "Phase 7 — deep-detail glow/gradient (OrderSuccess, crypto modal, cPanel tabs, table headers)"
+  - task: "Phase 7 — deep-detail glow/gradient (OrderSuccess, crypto modal, cPanel tabs, table headers, notification bell)"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/pages/checkout/OrderSuccess.jsx, /app/frontend/src/components/cart/CryptoCheckoutModal.jsx, /app/frontend/src/components/hosting/CpanelTabs.jsx, /app/frontend/src/index.css"
+    file: "/app/frontend/src/pages/checkout/OrderSuccess.jsx, /app/frontend/src/components/cart/CryptoCheckoutModal.jsx, /app/frontend/src/components/hosting/CpanelTabs.jsx, /app/frontend/src/layouts/FrontLayout.jsx, /app/frontend/src/index.css"
     stuck_count: 0
     priority: "medium"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "OrderSuccess: status icon now sits in a floating glowing gradient tile (emerald bloom for success, amber for partial, red for failed) + success headline uses `nw-grad-text`; confetti kept. Crypto checkout modal: 'Pay with crypto' title → gradient text, order-summary card → soft brand glow shadow, 'Total due' → gradient text (larger); primary buttons auto-gain gradient+glow from the new CTA rules. cPanel tabs: active tab → `nw-grad-brand` gradient + glow (was flat bg-brand). Table headers (`.table-thead tr th`, used by DNS records + all DataTables) → subtle indigo/violet gradient tint in both modes. Lint clean, prod build OK. NEEDS TESTING (mostly need data/flows): OrderSuccess page after a checkout (or via a completed order id), crypto modal (add domain to cart -> Pay with crypto), cPanel Advanced tabs (hosting Manage modal, owner account c1-owner-a@nameword.local / Owner@12345), DNS records table header — dark + light, no crashes/console errors."
+        comment: "OrderSuccess: status icon now sits in a floating glowing gradient tile (emerald bloom for success, amber for partial, red for failed) + success headline uses `nw-grad-text`; confetti kept. Crypto checkout modal: 'Pay with crypto' title → gradient text, order-summary card → soft brand glow shadow, 'Total due' → gradient text (larger); primary buttons auto-gain gradient+glow from the new CTA rules. cPanel tabs: active tab → `nw-grad-brand` gradient + glow (was flat bg-brand). Table headers (`.table-thead tr th`, used by DNS records + all DataTables) → subtle indigo/violet gradient tint in both modes. NOTIFICATION BELL (FrontLayout.jsx top bar, data-testid=notifications-button): bell button gains an active brand tint when open; dropdown redesigned with a gradient header + gradient bell chip and a floating glowing green check 'all caught up' illustration (nw-rise entrance). Lint clean, prod build OK. VERIFIED (screenshot) notif dropdown in DARK looks premium. NEEDS TESTING (mostly need data/flows): OrderSuccess page after a checkout (or via a completed order id), crypto modal (add domain to cart -> Pay with crypto), cPanel Advanced tabs (hosting Manage modal, owner account c1-owner-a@nameword.local / Owner@12345), DNS records table header, notification bell dropdown — dark + light, no crashes/console errors."
 
 metadata:
   created_by: "main_agent"

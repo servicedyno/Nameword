@@ -4,7 +4,7 @@ import VerifyEmailBanner from "../components/common/VerifyEmailBanner";
 import { Outlet, NavLink, useLocation } from "react-router";
 import { useState, useEffect, useCallback } from "react";
 import { CgMenu } from "react-icons/cg";
-import { LuSearch, LuWallet, LuBell, LuGift, LuLayoutDashboard, LuGlobe, LuServer, LuUser } from "react-icons/lu";
+import { LuSearch, LuWallet, LuBell, LuCheck, LuGift, LuLayoutDashboard, LuGlobe, LuServer, LuUser } from "react-icons/lu";
 import { IoChevronDown } from "react-icons/io5";
 import { favicon, USA, ES, FR } from "../components/common/icons";
 import ThemeToggleButton from "../components/common/ThemeToggleButton";
@@ -140,11 +140,22 @@ const FrontLayout = ({ children, fluid = false }) => {
             </NavLink>
 
             <div ref={notifDropDown.ref} className="relative">
-              <button onClick={notifDropDown.toggle} className="header-icon-btn" aria-label="Notifications" data-testid="notifications-button"><LuBell className="h-5 w-5" /></button>
+              <button onClick={notifDropDown.toggle} className={`header-icon-btn transition-colors ${notifDropDown.isOpen ? "bg-brand-50 text-brand-600 dark:bg-brand/15 dark:text-brand-300" : ""}`} aria-label="Notifications" data-testid="notifications-button"><LuBell className="h-5 w-5" /></button>
               {notifDropDown.isOpen && (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-line bg-white p-4 shadow-xl dark:border-white/[0.08] dark:bg-gray-900">
-                  <p className="mb-1 text-sm font-semibold text-primary dark:text-white">{app.notifications}</p>
-                  <p className="py-6 text-center text-13 text-ink-soft dark:text-gray-400">{app.allCaughtUp}</p>
+                <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-2xl border border-line bg-white shadow-xl dark:border-white/[0.08] dark:bg-gray-900 nw-rise">
+                  <div className="flex items-center gap-2.5 border-b border-line bg-gradient-to-r from-brand-50 to-fuchsia-50/60 px-4 py-3 dark:border-white/[0.06] dark:from-brand/12 dark:to-fuchsia-500/[0.06]">
+                    <span className="nw-stat-chip nw-grad-brand h-8 w-8"><LuBell className="h-4 w-4" /></span>
+                    <p className="text-sm font-semibold text-primary dark:text-white">{app.notifications}</p>
+                  </div>
+                  <div className="flex flex-col items-center px-4 py-8 text-center">
+                    <div className="relative mb-3 nw-floaty">
+                      <div className="absolute -inset-2 -z-10 rounded-full bg-gradient-to-tr from-emerald-300 to-emerald-500 opacity-60 blur-xl dark:from-emerald-500/30 dark:to-emerald-600/20" aria-hidden="true" />
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-line bg-white shadow-sm dark:border-white/[0.1] dark:bg-gray-900">
+                        <LuCheck className="h-6 w-6 text-emerald-500" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-primary dark:text-white">{app.allCaughtUp}</p>
+                  </div>
                 </div>
               )}
             </div>
