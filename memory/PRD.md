@@ -1,5 +1,12 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ✅ THIS SESSION (2026-06) — Crypto modal i18n + Wallet Top-Up Preview & full modal translation (verified)
+- CRYPTO CHECKOUT MODAL (CryptoCheckoutModal.jsx + CryptoStatusTimeline.jsx): fully translated en/es/fr — all strings read from `t.admin.crypto` (+ `.timeline`) via a `tr()` helper with English fallbacks; complete `crypto` blocks added to all 3 locales. VERIFIED live in FR (header 'Payer en crypto', order summary 'RÉCAPITULATIF DE LA COMMANDE'/'Total à payer'/'Solde de votre portefeuille', paying intro, coin picker, network hint, 'Obtenir l'adresse de paiement', 'Propulsé par Dynopay') — no raw keys.
+- WALLET TOP-UP MODAL (wallet-modal.jsx): (a) NEW Top-Up Preview card (data-testid=topup-preview) in the amount step — rows topup-preview-amount / topup-preview-current (from new `currentBalance` prop passed by Wallet.jsx) / topup-preview-new (=current+amount); math verified ($50 preset → new $100; typed 100 → new $150). (b) ENTIRE modal fully translated en/es/fr via a new `t.admin.topup` block (~48 keys: amount step, pay step, status labels, alerts) + `tr()` helper. VERIFIED live in ES ('Recargar billetera'/'RESUMEN DE LA RECARGA') and FR ('Recharger le portefeuille'/'Payer avec') — no raw keys.
+- Locale files: added `admin.topup` block to en/es/fr (right after `admin.crypto`). Frontend is a Vite PROD build — ran `yarn build` + `sudo supervisorctl restart frontend`.
+- Testing: testing_agent iteration_18 did a static locale review only (context limits) → confirmed no missing keys; main agent self-verified both modals in ES+FR via scripted browser + screenshots.
+
+
 ## ✅ THIS SESSION (2025-07) — Re-setup on fresh pod (Node backend + prod frontend)
 - Fresh pod: both `.env` files missing, backend `node_modules` missing, supervisor reset to the default `uvicorn server:app` template (kept failing — this is a NODE app, not FastAPI).
 - Actions: recreated `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs, frontend node_modules already present); edited `/etc/supervisor/conf.d/supervisord.conf` backend cmd → `/bin/bash /app/backend/start.sh` (node bin/www :8001) and frontend cmd → `/bin/bash /app/frontend/start.sh`; created `/app/frontend/.prod` so the frontend serves a Vite **production build** (immune to Cloudflare 429 on preview).

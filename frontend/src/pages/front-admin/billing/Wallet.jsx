@@ -118,7 +118,7 @@ const Wallet = () => {
                         <button type='button' className='nw-btn-primary shrink-0' onClick={handleModalOpen} data-testid="wallet-topup-button">
                             <LuPlus className="h-4 w-4" /> {t.admin?.walletTopUp || "Top up"}
                         </button>
-                        {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} resumePayment={resumePayment} />}
+                        {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} resumePayment={resumePayment} currentBalance={walletBalance} />}
                     </div>
 
                     <div className='nw-card flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between' id="rewards" data-testid="wallet-rewards-card">

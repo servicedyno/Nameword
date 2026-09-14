@@ -7,6 +7,7 @@ import { walletAPI } from "../../api/walletApi";
 import { money } from "../../utils/checkoutFormat";
 import CryptoStatusTimeline from "./CryptoStatusTimeline";
 import PaymentSuccessCelebration from "./PaymentSuccessCelebration";
+import { useLanguage } from "../../hooks/useLanguage";
 
 const newClientOrderId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -39,6 +40,13 @@ const coinLabel = (c) => {
 const coinNetwork = (c) => COIN_META[prettyCoin(c)]?.network || prettyCoin(c);
 
 export default function CryptoCheckoutModal({ orderPayload, payable, summary, onClose, onSuccess }) {
+  const { t } = useLanguage();
+  const ct = t.admin?.crypto || {};
+  const tr = (key, fb, vars) => {
+    let s = ct[key] != null ? ct[key] : fb;
+    if (vars) for (const k of Object.keys(vars)) s = String(s).split(`{${k}}`).join(String(vars[k]));
+    return s;
+  };
   const [coins, setCoins] = useState([]);
   const [loadingCoins, setLoadingCoins] = useState(true);
   const [currency, setCurrency] = useState("");
@@ -104,12 +112,12 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
     try {
       const res = await checkoutAPI.createCryptoOrder(orderPayload, clientOrderId.current, currency);
       if (res?.fully_covered && res?.order) { finishPaid(res.order); return; }
-      if (!res?.payment?.address) { setError("Could not generate a payment address. Please try another coin."); return; }
+      if (!res?.payment?.address) { setError(tr("errAddress", "Could not generate a payment address. Please try another coin.")); return; }
       setPay(res.payment);
       setInfo({ status: "awaiting_payment" });
       setPaidClicked(false);
     } catch (err) {
-      setError(err?.response?.data?.message || "Could not start the crypto payment. Please try again.");
+      setError(err?.response?.data?.message || tr("errStart", "Could not start the crypto payment. Please try again."));
     } finally {
       setCreating(false);
     }
@@ -128,7 +136,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
         if (data.status === "paid") { finishPaid(data.order); return; }
         if (data.status === "expired" || data.status === "failed") {
           setInfo(data);
-          setError(data.status === "expired" ? "This payment window expired. Please start again." : "Payment failed or was cancelled.");
+          setError(data.status === "expired" ? tr("errExpired", "This payment window expired. Please start again.") : tr("errFailed", "Payment failed or was cancelled."));
           return;
         }
         setInfo(data);
@@ -163,10 +171,10 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
         setShowSwitch(false);
         setInfo(data);
       } else {
-        setError("Could not switch coin. Please try again.");
+        setError(tr("errSwitch", "Could not switch coin. Please try again."));
       }
     } catch (err) {
-      setError(err?.response?.data?.message || "Could not switch coin. Please try again.");
+      setError(err?.response?.data?.message || tr("errSwitch", "Could not switch coin. Please try again."));
     } finally {
       setSwitching(false);
     }
@@ -183,15 +191,15 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-white px-5 py-4 dark:border-white/[0.06] dark:bg-gray-950">
           <div className="flex items-center gap-2">
             {pay && !celebrate && (
-              <button type="button" onClick={back} aria-label="Change coin" className="header-icon-btn h-8 w-8" data-testid="crypto-modal-back">
+              <button type="button" onClick={back} aria-label={tr("changeCoin", "Change coin")} className="header-icon-btn h-8 w-8" data-testid="crypto-modal-back">
                 <IoArrowBack size={18} />
               </button>
             )}
             <div className="inline-flex items-center gap-2 text-lg font-bold text-primary dark:text-white">
-              <FaBitcoin className="text-[#f7931a]" /> Pay with crypto
+              <FaBitcoin className="text-[#f7931a]" /> {tr("title", "Pay with crypto")}
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="header-icon-btn h-9 w-9" data-testid="crypto-modal-close">
+          <button type="button" onClick={onClose} aria-label={tr("close", "Close")} className="header-icon-btn h-9 w-9" data-testid="crypto-modal-close">
             <IoClose size={20} />
           </button>
         </div>
@@ -199,15 +207,15 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
         <div className="px-5 py-5">
           {celebrate ? (
             <PaymentSuccessCelebration
-              title="Payment confirmed!"
+              title={tr("confirmedTitle", "Payment confirmed!")}
               amountLabel={money(payable)}
-              subtitle="Your order is confirmed — setting things up now…"
+              subtitle={tr("confirmedSubtitle", "Your order is confirmed — setting things up now…")}
             />
           ) : !pay ? (
             <>
               {summary && Array.isArray(summary.lines) && summary.lines.length > 0 && (
                 <div className="mb-4 rounded-xl border border-line bg-surface-2/60 p-4 dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-order-summary">
-                  <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-soft dark:text-gray-400">Order summary</p>
+                  <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-soft dark:text-gray-400">{tr("orderSummary", "Order summary")}</p>
                   <div className="space-y-2">
                     {summary.lines.map((l) => (
                       <div key={l.key} className="flex items-start justify-between gap-3 text-sm">
@@ -221,34 +229,34 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                   </div>
                   {summary.pointsDiscount > 0 && (
                     <div className="mt-2 flex items-center justify-between border-t border-line pt-2 text-sm dark:border-white/[0.06]">
-                      <span className="text-brand-700 dark:text-brand-300">Points discount</span>
+                      <span className="text-brand-700 dark:text-brand-300">{tr("pointsDiscount", "Points discount")}</span>
                       <span className="font-mono text-brand-700 dark:text-brand-300">− {money(summary.pointsDiscount)}</span>
                     </div>
                   )}
                   <div className="mt-2 flex items-center justify-between border-t border-line pt-2 dark:border-white/[0.06]">
-                    <span className="text-sm font-semibold text-primary dark:text-white">Total due</span>
+                    <span className="text-sm font-semibold text-primary dark:text-white">{tr("totalDue", "Total due")}</span>
                     <span className="font-mono text-base font-bold text-primary dark:text-white" data-testid="crypto-order-total">{money(summary.total)}</span>
                   </div>
                   {summary.walletBalance != null && (
                     <div className="mt-3 rounded-lg bg-white/70 p-2.5 dark:bg-white/[0.03]">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-ink-soft dark:text-gray-400">Your wallet balance</span>
+                        <span className="text-ink-soft dark:text-gray-400">{tr("walletBalance", "Your wallet balance")}</span>
                         <span className="font-mono font-medium text-primary dark:text-white" data-testid="crypto-wallet-balance">{money(summary.walletBalance)}</span>
                       </div>
                       <div className="mt-1 flex items-center justify-between text-xs">
-                        <span className="text-ink-soft dark:text-gray-400">Wallet after payment</span>
+                        <span className="text-ink-soft dark:text-gray-400">{tr("walletAfter", "Wallet after payment")}</span>
                         <span className="font-mono font-medium text-primary dark:text-white" data-testid="crypto-wallet-after">{money(summary.walletBalance)}</span>
                       </div>
-                      <p className="mt-1.5 text-[11px] text-ink-soft dark:text-gray-400">Paying with crypto won&apos;t touch your wallet — your balance stays the same.</p>
+                      <p className="mt-1.5 text-[11px] text-ink-soft dark:text-gray-400">{tr("walletNote", "Paying with crypto won't touch your wallet — your balance stays the same.")}</p>
                     </div>
                   )}
                 </div>
               )}
               <p className="text-sm text-ink-soft dark:text-gray-400">
-                Paying <span className="font-semibold text-primary dark:text-white nw-mono">{money(payable)}</span> directly with crypto — no wallet needed. You&apos;ll earn reward points on this payment.
+                {tr("payingIntro", "Paying {amount} directly with crypto — no wallet needed. You'll earn reward points on this payment.", { amount: money(payable) })}
               </p>
               <label className="mt-4 block text-sm font-medium text-primary dark:text-white">
-                Choose a coin &amp; network
+                {tr("chooseCoin", "Choose a coin & network")}
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
@@ -257,9 +265,9 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                   data-testid="crypto-modal-coin-select"
                 >
                   {loadingCoins ? (
-                    <option>Loading coins…</option>
+                    <option>{tr("loadingCoins", "Loading coins…")}</option>
                   ) : coins.length === 0 ? (
-                    <option value="">No coins available</option>
+                    <option value="">{tr("noCoins", "No coins available")}</option>
                   ) : (
                     coins.map((c) => <option key={c} value={c}>{coinLabel(c)}</option>)
                   )}
@@ -267,7 +275,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
               </label>
               {currency && (
                 <p className="mt-1.5 text-xs text-ink-soft dark:text-gray-400" data-testid="crypto-modal-network-hint">
-                  Network: <span className="font-medium text-primary dark:text-white">{coinNetwork(currency)}</span> — only send {prettyCoin(currency)} on this network.
+                  {tr("networkHint", "Network: {network} — only send {coin} on this network.", { network: coinNetwork(currency), coin: prettyCoin(currency) })}
                 </p>
               )}
               {error && (
@@ -280,25 +288,26 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                 className="nw-btn-primary mt-5 w-full disabled:opacity-60 disabled:cursor-not-allowed"
                 data-testid="crypto-modal-generate"
               >
-                {creating ? "Generating address…" : `Get payment address`}
+                {creating ? tr("generating", "Generating address…") : tr("getAddress", "Get payment address")}
               </button>
             </>
           ) : showSwitch ? (
             /* ---- Switch-coin sub-view (complete underpaid order with another coin) ---- */
             <div className="space-y-4" data-testid="crypto-modal-switch-panel">
               <p className="text-sm text-ink-soft dark:text-gray-400">
-                Finish paying the remaining
-                {info.amountRemainingUsd != null && <span className="font-semibold text-primary dark:text-white"> {money(info.amountRemainingUsd)}</span>} with a different coin. We&apos;ll generate a fresh address for the balance.
+                {info.amountRemainingUsd != null
+                  ? tr("switchIntro", "Finish paying the remaining {amount} with a different coin. We'll generate a fresh address for the balance.", { amount: money(info.amountRemainingUsd) })
+                  : tr("switchIntroNoAmount", "Finish paying the remaining balance with a different coin. We'll generate a fresh address for the balance.")}
               </p>
               <label className="block text-sm font-medium text-primary dark:text-white">
-                Choose another coin &amp; network
+                {tr("chooseAnother", "Choose another coin & network")}
                 <select
                   value={switchCurrency}
                   onChange={(e) => setSwitchCurrency(e.target.value)}
                   className="nw-input mt-1.5 w-full !py-2.5"
                   data-testid="crypto-modal-switch-select"
                 >
-                  <option value="">Select a coin…</option>
+                  <option value="">{tr("selectCoin", "Select a coin…")}</option>
                   {otherCoins.map((c) => <option key={c} value={c}>{coinLabel(c)}</option>)}
                 </select>
               </label>
@@ -306,7 +315,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                 <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300" role="alert">{error}</p>
               )}
               <div className="flex gap-2">
-                <button type="button" onClick={() => { setShowSwitch(false); setError(null); }} className="btn-outline flex-1">Cancel</button>
+                <button type="button" onClick={() => { setShowSwitch(false); setError(null); }} className="btn-outline flex-1">{tr("cancel", "Cancel")}</button>
                 <button
                   type="button"
                   onClick={doSwitch}
@@ -314,23 +323,23 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                   className="nw-btn-primary flex-1 disabled:opacity-60 disabled:cursor-not-allowed"
                   data-testid="crypto-modal-switch-confirm"
                 >
-                  {switching ? "Generating…" : "Get new address"}
+                  {switching ? tr("generatingShort", "Generating…") : tr("getNewAddress", "Get new address")}
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-4" data-testid="crypto-modal-pay-panel">
               <div className="text-center">
-                <p className="text-sm text-ink-soft dark:text-gray-400">Send exactly</p>
+                <p className="text-sm text-ink-soft dark:text-gray-400">{tr("sendExactly", "Send exactly")}</p>
                 <p className="text-2xl font-bold text-primary dark:text-white nw-mono" data-testid="crypto-modal-amount">
                   {pay.cryptoAmount || ""} {pay.currency}
                 </p>
                 <p className="text-xs text-ink-soft dark:text-gray-400">
-                  ≈ {money(pay.amountUsd)} · Network: <span className="font-medium text-primary dark:text-white">{coinNetwork(pay.currency)}</span>
+                  ≈ {money(pay.amountUsd)} · {tr("network", "Network")}: <span className="font-medium text-primary dark:text-white">{coinNetwork(pay.currency)}</span>
                 </p>
                 {info.creditedUsd > 0 && (
                   <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    {money(info.creditedUsd)} already credited from your earlier payment.
+                    {tr("alreadyCredited", "{amount} already credited from your earlier payment.", { amount: money(info.creditedUsd) })}
                   </p>
                 )}
               </div>
@@ -342,11 +351,11 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
               )}
 
               <div>
-                <p className="mb-1 text-xs font-medium text-ink-soft dark:text-gray-400">To this address</p>
+                <p className="mb-1 text-xs font-medium text-ink-soft dark:text-gray-400">{tr("toThisAddress", "To this address")}</p>
                 <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-2 px-3 py-2 dark:bg-white/[0.06]">
                   <span className="break-all font-mono text-sm text-primary dark:text-white" data-testid="crypto-modal-address">{pay.address}</span>
                   <button type="button" onClick={() => copy(pay.address, "address")} className="btn-outline !py-1 !px-2 text-xs shrink-0" aria-label="Copy address" data-testid="crypto-modal-copy-address">
-                    <IoCopyOutline size={14} /> {copied === "address" ? "Copied" : "Copy"}
+                    <IoCopyOutline size={14} /> {copied === "address" ? tr("copied", "Copied") : tr("copy", "Copy")}
                   </button>
                 </div>
               </div>
@@ -355,16 +364,16 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                 <div className="rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500/50 dark:bg-amber-500/10" data-testid="crypto-modal-tag-block">
                   <div className="mb-1 flex items-center gap-1.5">
                     <PiWarningBold className="shrink-0 text-amber-600 dark:text-amber-400" size={14} />
-                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">Destination tag — required</p>
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">{tr("destinationTag", "Destination tag — required")}</p>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-sm font-bold text-primary dark:text-white break-all" data-testid="crypto-modal-tag">{pay.destinationTag}</span>
                     <button type="button" onClick={() => copy(pay.destinationTag, "tag")} className="btn-outline !py-1 !px-2 text-xs shrink-0" aria-label="Copy destination tag">
-                      <IoCopyOutline size={14} /> {copied === "tag" ? "Copied" : "Copy"}
+                      <IoCopyOutline size={14} /> {copied === "tag" ? tr("copied", "Copied") : tr("copy", "Copy")}
                     </button>
                   </div>
                   <p className="mt-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                    You must include this tag in your {pay.currency} transfer, or your payment won&apos;t be credited.
+                    {tr("destinationTagNote", "You must include this tag in your {coin} transfer, or your payment won't be credited.", { coin: pay.currency })}
                   </p>
                 </div>
               )}
@@ -376,19 +385,16 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                 <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10" data-testid="crypto-modal-underpaid">
                   <div className="mb-1 flex items-center gap-1.5">
                     <PiWarningBold className="shrink-0 text-amber-600 dark:text-amber-400" size={16} />
-                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Partial payment received</p>
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{tr("partialTitle", "Partial payment received")}</p>
                   </div>
                   <p className="text-13 text-amber-800 dark:text-amber-200">
-                    We received{" "}
-                    <span className="font-semibold">{info.amountReceived} {pay.currency}</span>
-                    {info.amountRemaining != null && (
-                      <> — send <span className="font-semibold">{info.amountRemaining} {pay.currency}</span> more
-                      {info.amountRemainingUsd != null && <> ({money(info.amountRemainingUsd)})</>} to finish.</>
-                    )}
+                    {info.amountRemaining != null
+                      ? tr("partialFull", "We received {received} {coin} — send {remaining} {coin} more{usd} to finish.", { received: info.amountReceived, coin: pay.currency, remaining: info.amountRemaining, usd: info.amountRemainingUsd != null ? ` (${money(info.amountRemainingUsd)})` : "" })
+                      : tr("partialShort", "We received {received} {coin}.", { received: info.amountReceived, coin: pay.currency })}
                   </p>
                   <div className="mt-3 flex flex-col gap-2">
                     <p className="text-[12px] text-amber-800 dark:text-amber-200">
-                      Option 1 — send the rest in <span className="font-semibold">{prettyCoin(pay.currency)}</span> to the same address above. This updates automatically.
+                      {tr("option1", "Option 1 — send the rest in {coin} to the same address above. This updates automatically.", { coin: prettyCoin(pay.currency) })}
                     </p>
                     <button
                       type="button"
@@ -396,7 +402,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                       className="btn-outline w-full text-sm"
                       data-testid="crypto-modal-switch-open"
                     >
-                      Option 2 — pay the rest with another coin
+                      {tr("option2", "Option 2 — pay the rest with another coin")}
                     </button>
                   </div>
                 </div>
@@ -404,7 +410,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                 <div className="rounded-xl border border-line bg-surface-2 p-4 dark:border-white/[0.06] dark:bg-white/[0.04]" data-testid="crypto-modal-status">
                   <CryptoStatusTimeline status={info.status} confirmations={info.confirmations} requiredConfirmations={info.requiredConfirmations} />
                   <p className="mt-3 text-[12px] text-ink-soft dark:text-gray-400">
-                    This updates automatically — keep this open until it&apos;s confirmed.
+                    {tr("autoUpdate", "This updates automatically — keep this open until it's confirmed.")}
                   </p>
                 </div>
               ) : (
@@ -414,7 +420,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
                   className="nw-btn-primary w-full"
                   data-testid="crypto-modal-ive-paid"
                 >
-                  I&apos;ve sent the payment
+                  {tr("ivePaid", "I've sent the payment")}
                 </button>
               )}
             </div>
@@ -430,7 +436,7 @@ export default function CryptoCheckoutModal({ orderPayload, payable, summary, on
           data-testid="powered-by-dynopay"
           title="Crypto payments powered by Dynopay"
         >
-          <span>Powered by</span>
+          <span>{tr("poweredBy", "Powered by")}</span>
           <img src="/dynopay-icon.svg" alt="Dynopay" className="h-3.5 w-3.5" />
           <span className="font-semibold">Dynopay</span>
         </a>

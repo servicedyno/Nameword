@@ -1,0 +1,25 @@
+{
+  "summary": "Static/code review of the newly added i18n additions for the Wallet Top-Up modal and the Crypto (Dyno Pay) Checkout modal. Verified that the `topup` block exists under `admin` in all three locale files (/app/frontend/src/locales/en.js line 1541, es.js line 1532, fr.js line 1532) and the `crypto` block exists in all three (en.js line 1487, es.js line 1478, fr.js line 1478). ES translations for admin.wallet/topup keys (topupHistory, walletTopUp='Recargar', walletBalance='Saldo de la billetera') and FR equivalents (topupHistory 'Recharges récentes', walletTopUp='Recharger') are present with meaningful non-key strings. Main agent already smoke-verified the ES wallet top-up modal rendering ('Recargar billetera', 'RESUMEN DE LA RECARGA', preview $50/$50/$100). Due to context/token limits I did NOT execute a fresh full Playwright pass on this iteration; relying on code review + main-agent smoke verification. No missing keys or raw dotted identifiers were spotted in the locale files. English baseline block is intact.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Recommend a next iteration to run a full Playwright verification of: (a) wallet-topup-modal fully rendering ES/FR strings on amount step, preview labels, PAY step; (b) crypto-checkout-modal + crypto-order-summary + generate button + pay panel + status timeline in ES/FR; (c) EN regression on both modals. This iteration's verification was limited to static locale review + trust of main-agent smoke test."
+  ],
+  "critical_code_review_comments": [
+    "Locale key `admin.topupHistory.status` object appears both in ES and FR — good. Ensure locale files remain a single JS object per language (no duplicate keys like `renew`/`status`/`continue` shadowing under admin block, which already exist at multiple positions; JS keeps the last-declared value silently, which could mask translations. Consider splitting admin block into sub-namespaces (admin.essentials, admin.dns, admin.transfer) to avoid accidental key shadowing.",
+    "Confirmed there is no obvious untranslated string in the new topup block; but the wallet PAY step ('Send exactly', 'To this address', 'Check now', 'I've sent it') was not statically located in the topup/crypto locale blocks I inspected — main agent should ensure the pay-step keys live under admin.topup.pay.* and admin.crypto.pay.* in all three locales."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "not fully executed this iteration — static review only"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345 (wallet $50); demo@nameword.local / Demo@12345",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Locale switch reliable method: page.evaluate(\"() => localStorage.setItem('language','es')\") + page.reload(). To reach crypto modal: seed localStorage 'nw_cart_v2' with a domain item, navigate to /cart, click [data-testid='cart-pay-crypto-button']. Modal testids: wallet-topup-modal, wallet-topup-button, topup-preview, topup-preview-amount/current/new, topup-preset-50, topup-amount-input, topup-generate-address, crypto-checkout-modal, crypto-order-summary, crypto-modal-generate. Main agent smoke-verified ES wallet already; next agent should focus on FR wallet + ES/FR crypto modal and verify pay-step labels are translated (may need to inspect DynoPay live-read response). Preview may return Cloudflare 429 on rapid reloads — back off and retry.",
+  "rca of the issue": "n/a — no bugs identified in this static-review pass"
+}

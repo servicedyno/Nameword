@@ -1,4 +1,5 @@
 import { IoCheckmarkCircle } from "react-icons/io5";
+import { useLanguage } from "../../hooks/useLanguage";
 
 // Shared crypto payment status timeline used by both the cart crypto modal and
 // the wallet top-up modal so the "I've sent it" experience is identical.
@@ -19,6 +20,9 @@ export const CRYPTO_STEP_INDEX = {
 };
 
 export default function CryptoStatusTimeline({ status, confirmations, requiredConfirmations }) {
+  const { t } = useLanguage();
+  const tl = t.admin?.crypto?.timeline || {};
+  const TL = { awaiting_payment: tl.awaiting, detected: tl.detected, confirming: tl.confirming, paid: tl.paid };
   const done = status === "paid" || status === "credited";
   const active = CRYPTO_STEP_INDEX[status] ?? 0;
   return (
@@ -49,7 +53,7 @@ export default function CryptoStatusTimeline({ status, confirmations, requiredCo
                   : "text-ink-soft dark:text-gray-500"
               }`}
             >
-              {s.label}
+              {TL[s.key] || s.label}
               {isCurrent && s.key === "confirming" && confirmations != null && (
                 <span className="ml-1 text-ink-soft dark:text-gray-400">
                   ({confirmations}/{requiredConfirmations ?? "?"})
