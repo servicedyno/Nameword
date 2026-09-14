@@ -104,7 +104,7 @@ const FrontLayout = ({ children, fluid = false }) => {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-2 dark:bg-gray-950">
+    <div className="nw-app-bg flex h-screen overflow-hidden">
       {/* Desktop sidebar (single smart sidebar: expanded or icon rail) */}
       <aside className={`hidden shrink-0 lg:flex transition-[width] duration-200 ${collapsed ? "w-[76px]" : "w-[248px]"}`} data-testid="desktop-sidebar">
         <AppSidebar collapsed={collapsed} onToggle={toggleCollapsed} />

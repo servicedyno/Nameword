@@ -78,7 +78,17 @@ const Dashboard = () => {
 
       {/* Dashboard title */}
       <div className="flex flex-col gap-2 title-section">
-        <h2>{t.admin.dashboardGreeting.replace("{name}", user?.name || "")}</h2>
+        {(() => {
+          const greeting = t.admin.dashboardGreeting || "Welcome back, {name}.";
+          const [before, after = ""] = greeting.split("{name}");
+          return (
+            <h2>
+              {before}
+              <span className="nw-grad-text">{user?.name || ""}</span>
+              {after}
+            </h2>
+          );
+        })()}
         <p>{t.admin.dashboardSubtitle}</p>
       </div>
 
@@ -95,7 +105,7 @@ const Dashboard = () => {
       ) : null}
 
       {/* Inline domain search — search, see prices, add to cart without leaving */}
-      <div className="nw-card relative overflow-hidden" data-testid="dashboard-register-card">
+      <div className="nw-card nw-stat-glow relative overflow-hidden" data-testid="dashboard-register-card">
         <img
           src={globeIcon}
           alt={t.admin.globeImageAlt}

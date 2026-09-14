@@ -107,10 +107,10 @@ const Wallet = () => {
                 </div>
 
                 <div className='grid gap-5 lg:grid-cols-2'>
-                    <div className='nw-card flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between' data-testid="wallet-balance-card">
+                    <div className='nw-stat nw-stat-glow flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between' data-testid="wallet-balance-card">
                         <div className="min-w-0">
-                            <p className='nw-mono flex items-center gap-2'><LuWallet className="h-3.5 w-3.5" /> {t.admin?.walletBalance || "Wallet balance"}</p>
-                            <p className="mt-2 font-display text-4xl font-bold tracking-tight text-primary dark:text-white" data-testid="wallet-balance">
+                            <p className='nw-mono flex items-center gap-2'><span className="nw-stat-chip nw-grad-brand !h-8 !w-8 !rounded-lg"><LuWallet className="h-4 w-4" /></span> {t.admin?.walletBalance || "Wallet balance"}</p>
+                            <p className="mt-3 font-display text-5xl font-extrabold tracking-tight nw-grad-text" data-testid="wallet-balance">
                                 ${Number(walletBalance || 0).toFixed(2)}
                             </p>
                             <p className="mt-1 text-13 text-ink-soft dark:text-gray-400">Prepaid USD · funded with crypto · no card stored</p>
@@ -121,10 +121,10 @@ const Wallet = () => {
                         {isModal && <WalletModal onClose={handleModalClose} onSuccess={fetchWalletBalance} resumePayment={resumePayment} currentBalance={walletBalance} />}
                     </div>
 
-                    <div className='nw-card flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between' id="rewards" data-testid="wallet-rewards-card">
+                    <div className='nw-stat nw-stat-glow nw-stat-glow-warm flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between' id="rewards" data-testid="wallet-rewards-card">
                         <div className="min-w-0">
-                            <p className='nw-mono flex items-center gap-2'><LuGift className="h-3.5 w-3.5" /> {t.admin?.rewardPoints || "Reward points"}</p>
-                            <p className="mt-2 font-display text-4xl font-bold tracking-tight text-brand-700 dark:text-brand-300" data-testid="wallet-points">
+                            <p className='nw-mono flex items-center gap-2'><span className="nw-stat-chip nw-grad-warm !h-8 !w-8 !rounded-lg"><LuGift className="h-4 w-4" /></span> {t.admin?.rewardPoints || "Reward points"}</p>
+                            <p className="mt-3 font-display text-5xl font-extrabold tracking-tight nw-grad-text-warm" data-testid="wallet-points">
                                 {points.toFixed(2)}
                             </p>
                             <p className="mt-1 text-13 text-ink-soft dark:text-gray-400">≈ ${(points * POINT_VALUE_USD).toFixed(2)} · auto-applied at checkout</p>
