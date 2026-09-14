@@ -24,76 +24,13 @@ class LoginController {
 			throw new BadRequestError("Invalid credentials");
 		}                                                                                                                                            
 
-		// Check if account is locked
-		if (user.locked) {
-			if (user.lockedUntil && user.lockedUntil > new Date()) {
-				throw new ForbiddenError(
-					"Your account is locked due to multiple failed login attempts. Please try again later or contact support."
-				);
-			} else {
-				// Lock expired, unlock the account
-				user.locked = false;
-				user.failedLoginAttempts = 0;
-				user.lockedUntil = null;
-				await user.save();
-			}
-		}
-
 		const isValid = await user.isValidPassword(password);
-		
-		if (!isValid) {
-			// Increment failed login attempts
-			user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
-			const MAX_ATTEMPTS = 5;
-			
-			if (user.failedLoginAttempts >= MAX_ATTEMPTS) {
-				// Lock account for 1 hour
-				user.locked = true;
-				user.lockedUntil = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-				
-				// Send account locked email
-				try {
-					const { shouldSendEmail } = require("../../utils/notificationHelper");
-					const canSendEmail = await shouldSendEmail(user, 'accountAndSecurity');
-					if (canSendEmail) {
-						let html = nunjucks.render('mails/account_locked.html', {
-							NAME: user.name || user.email,
-							unlockAccountLink: env.FRONTEND_URL + '/account/unlock',
-							logoUrl: env.FRONTEND_URL
-						});
-						
-						await transporter.sendMail({
-							from: env.MAIL_FROM_ADDRESS,
-							to: user.email,
-							subject: "Your Nameword account is locked",
-							html: html,
-						});
-						
-						console.log(`Account locked email sent to ${user.email}`);
-					} else {
-						console.log(`Email notification disabled for user ${user.email} - skipping account locked email`);
-					}
-				} catch (emailError) {
-					console.error("Error sending account locked email:", emailError);
-				}
-				
-				await user.save();
-				throw new ForbiddenError(
-					"Your account has been locked due to multiple failed login attempts. Please check your email for unlock instructions."
-				);
-			} else {
-				await user.save();
-			}
-			
-			throw new BadRequestError("Invalid credentials");
-		}
 
-		// Reset failed login attempts on successful login
-		if (user.failedLoginAttempts > 0) {
-			user.failedLoginAttempts = 0;
-			user.locked = false;
-			user.lockedUntil = null;
-			await user.save();
+		// Account lockout has been removed: a wrong password simply returns an
+		// "Invalid credentials" error, and logging in with the correct password
+		// always works (no attempt counting, no temporary 1-hour lock).
+		if (!isValid) {
+			throw new BadRequestError("Invalid credentials");
 		}
 
 		if (user.banned) {
