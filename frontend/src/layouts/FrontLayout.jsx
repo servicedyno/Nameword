@@ -180,7 +180,7 @@ const FrontLayout = ({ children, fluid = false }) => {
 
             <ThemeToggleButton />
             <CartNavButton />
-            <div className="hidden sm:block"><UserDropdownMenu /></div>
+            <div className="hidden sm:block"><UserDropdownMenu showQuickLinks={false} /></div>
           </div>
         </header>
 
@@ -207,7 +207,7 @@ const FrontLayout = ({ children, fluid = false }) => {
               onClose={() => setMobileOpen(false)}
               footer={
                 <div>
-                  <div className="border-t border-line pt-4 dark:border-white/[0.06]"><UserDropdownMenu /></div>
+                  <div className="border-t border-line pt-4 dark:border-white/[0.06]"><UserDropdownMenu showQuickLinks={false} /></div>
                   {mobileLangRow}
                 </div>
               }

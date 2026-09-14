@@ -31,10 +31,14 @@ export default function Hero() {
   const navigate = useNavigate();
   const reduced = useReducedMotion();
   const [submitted, setSubmitted] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchNonce, setSearchNonce] = useState(0);
   const resultsRef = useRef(null);
 
   const onSearch = (q) => {
     setSubmitted(q);
+    setSearching(true);
+    setSearchNonce((n) => n + 1);
     setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
 
@@ -90,6 +94,8 @@ export default function Hero() {
               testId="hero"
               placeholder={s.placeholder}
               buttonLabel={s.searchBtn}
+              busyLabel={s.searching}
+              busy={searching}
               onSubmit={onSearch}
               chips={s.heroChips}
             />
@@ -132,7 +138,7 @@ export default function Hero() {
 
       {submitted && (
         <div ref={resultsRef} className="nw-container relative scroll-mt-24 pb-16 pt-12" data-testid="hero-search-results">
-          <DomainSearchResults query={submitted} />
+          <DomainSearchResults query={submitted} nonce={searchNonce} onLoadingChange={setSearching} />
         </div>
       )}
     </section>

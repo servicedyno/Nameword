@@ -39,6 +39,7 @@ export const siteEn = {
     tabs: { search: "Register", transfer: "Transfer in" },
     placeholder: "yourname.com",
     searchBtn: "Search domains",
+    searching: "Searching…",
     transferBtn: "Start transfer",
     heroChips: ["Private WHOIS included", "Offshore & DMCA-ignored", "Prepaid crypto wallet"],
     heroFloat: { title: "Private WHOIS included", sub: "on every eligible domain" },

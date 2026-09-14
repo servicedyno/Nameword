@@ -6,7 +6,7 @@ import { useAlert } from "../../context/AlertContext";
 import { NavLink, useNavigate, useLocation } from "react-router";
 import { useLanguage } from "../../hooks/useLanguage";
 
-const UserDropdownMenu = ({ classAdd = false }) => {
+const UserDropdownMenu = ({ classAdd = false, showQuickLinks = true }) => {
   const { user, logout, loading } = useAuth();
   const userDropDown = useDropdown();
   const navigate = useNavigate();
@@ -85,25 +85,29 @@ const UserDropdownMenu = ({ classAdd = false }) => {
 
               <hr className="card-divider my-3.5" />
 
-              <div className="px-4">
-                <p className="mb-1 px-1 text-xs font-semibold uppercase tracking-wider text-ink-soft dark:text-gray-500">
-                  {menu.manageAccount}
-                </p>
-                {quickLinks.map((l) => (
-                  <NavLink
-                    key={l.to}
-                    to={l.to}
-                    className={`user-menu ${isActive(l.to) ? "!bg-brand-50 !text-brand-700 font-semibold rounded-lg dark:!bg-white/[0.06] dark:!text-brand-300" : ""}`}
-                    onClick={userDropDown.close}
-                    aria-current={isActive(l.to) ? "page" : undefined}
-                    data-testid={`user-menu-${l.testid}`}
-                  >
-                    {l.label}
-                  </NavLink>
-                ))}
-              </div>
+              {showQuickLinks && (
+                <>
+                  <div className="px-4">
+                    <p className="mb-1 px-1 text-xs font-semibold uppercase tracking-wider text-ink-soft dark:text-gray-500">
+                      {menu.manageAccount}
+                    </p>
+                    {quickLinks.map((l) => (
+                      <NavLink
+                        key={l.to}
+                        to={l.to}
+                        className={`user-menu ${isActive(l.to) ? "!bg-brand-50 !text-brand-700 font-semibold rounded-lg dark:!bg-white/[0.06] dark:!text-brand-300" : ""}`}
+                        onClick={userDropDown.close}
+                        aria-current={isActive(l.to) ? "page" : undefined}
+                        data-testid={`user-menu-${l.testid}`}
+                      >
+                        {l.label}
+                      </NavLink>
+                    ))}
+                  </div>
 
-              <hr className="card-divider my-3.5" />
+                  <hr className="card-divider my-3.5" />
+                </>
+              )}
 
               <div className="px-4">
                 {settingsLinks.map((l) => (

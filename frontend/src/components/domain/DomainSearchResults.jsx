@@ -48,7 +48,7 @@ function ResultCard({ domain, available, price_usd, registrar, ctaLabel, ctaIcon
 // Clicking "Register" starts the registration flow — logged-out visitors are
 // sent to sign in / create an account (with the domain remembered), and the
 // actual purchase (gated by the in-app wallet) happens in the authenticated area.
-export default function DomainSearchResults({ query }) {
+export default function DomainSearchResults({ query, nonce, onLoadingChange }) {
   const navigate = useNavigate();
   const [exact, setExact] = useState(null);
   const [exactLoading, setExactLoading] = useState(false);
@@ -59,19 +59,20 @@ export default function DomainSearchResults({ query }) {
   // Re-run whenever the submitted query changes.
   useEffect(() => {
     const q = String(query || "").trim().toLowerCase();
-    if (!q) { setExact(null); setSuggestions([]); return; }
+    if (!q) { setExact(null); setSuggestions([]); onLoadingChange?.(false); return; }
     const myId = ++reqIdRef.current;
     setExact(null);
     setSuggestions([]);
     setExactLoading(true);
     setSugLoading(true);
+    onLoadingChange?.(true);
 
-    resellerAPI.searchDomain(q)
+    const exactP = resellerAPI.searchDomain(q)
       .then((d) => { if (reqIdRef.current === myId) setExact(d || null); })
       .catch(() => { if (reqIdRef.current === myId) setExact(null); })
       .finally(() => { if (reqIdRef.current === myId) setExactLoading(false); });
 
-    resellerAPI.suggestDomains(q)
+    const sugP = resellerAPI.suggestDomains(q)
       .then((d) => {
         if (reqIdRef.current !== myId) return;
         const list = (d?.suggestions || [])
@@ -81,7 +82,11 @@ export default function DomainSearchResults({ query }) {
       })
       .catch(() => { if (reqIdRef.current === myId) setSuggestions([]); })
       .finally(() => { if (reqIdRef.current === myId) setSugLoading(false); });
-  }, [query]);
+
+    Promise.allSettled([exactP, sugP]).then(() => {
+      if (reqIdRef.current === myId) onLoadingChange?.(false);
+    });
+  }, [query, nonce]);
 
   // Add to cart and go straight to the hosting step (Hostinger pattern). The
   // account gate comes later, so guests can start the order right here.

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { LuSearch, LuCheck } from "react-icons/lu";
 
-export default function DomainSearchForm({ placeholder, buttonLabel, onSubmit, testId, glass = false, chips }) {
+export default function DomainSearchForm({ placeholder, buttonLabel, busyLabel, busy = false, onSubmit, testId, glass = false, chips }) {
   const [query, setQuery] = useState("");
   const submit = () => {
+    if (busy) return;
     const q = query.trim();
     if (!q) return;
     onSubmit(q);
@@ -29,9 +30,13 @@ export default function DomainSearchForm({ placeholder, buttonLabel, onSubmit, t
             data-testid={`${testId}-domain-input`}
           />
         </div>
-        <button onClick={submit} className="nw-btn-primary sm:w-auto" data-testid={`${testId}-search-button`}>
-          <LuSearch className="h-4 w-4" />
-          {buttonLabel}
+        <button onClick={submit} disabled={busy} aria-busy={busy} className="nw-btn-primary sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed" data-testid={`${testId}-search-button`}>
+          {busy ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" data-testid={`${testId}-search-spinner`} aria-hidden="true" />
+          ) : (
+            <LuSearch className="h-4 w-4" />
+          )}
+          {busy ? (busyLabel || buttonLabel) : buttonLabel}
         </button>
       </div>
       {chips && (

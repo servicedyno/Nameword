@@ -36,6 +36,7 @@ export const siteFr = {
     tabs: { search: "Enregistrer", transfer: "Transférer" },
     placeholder: "votrenom.com",
     searchBtn: "Rechercher en privé",
+    searching: "Recherche…",
     transferBtn: "Lancer le transfert",
     heroChips: ["Confidentialité WHOIS incluse", "Juridictions privées", "Portefeuille prépayé"],
     heroFloat: { title: "Confidentialité WHOIS incluse", sub: "sur chaque domaine éligible" },

@@ -36,6 +36,7 @@ export const siteEs = {
     tabs: { search: "Registrar", transfer: "Transferir" },
     placeholder: "tunombre.com",
     searchBtn: "Buscar en privado",
+    searching: "Buscando…",
     transferBtn: "Iniciar transferencia",
     heroChips: ["Privacidad WHOIS incluida", "Jurisdicciones privadas", "Monedero prepago"],
     heroFloat: { title: "Privacidad WHOIS incluida", sub: "en todo dominio elegible" },
