@@ -15,7 +15,7 @@ import os
 import sys
 
 # Base URL from environment
-BASE_URL = "https://nameword-dev-4.preview.emergentagent.com"
+BASE_URL = "https://hosting-platform-15.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 
 # MongoDB connection (from backend/.env)
