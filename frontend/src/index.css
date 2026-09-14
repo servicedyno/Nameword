@@ -177,31 +177,23 @@ h1, h2, h3, .nw-h2, .font-display {
 }
 
 .language-menu {
-  @apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase border border-lightgray focus:border-lightgray-300 dark:border-gray-800 focus:dark:border-gray-800 rounded-md px-2.5 py-2;
+  @apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase border border-line hover:border-brand/40 dark:border-gray-700 rounded-lg px-2.5 h-9 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60;
 }
 
 .dropdown {
-  @apply absolute top-full right-0 mt-2 bg-white dark:bg-gray-900 rounded border border-lightgray dark:border-gray-800 focus:dark:border-gray-800 z-50 w-auto px-2.5 py-2 gap-2 flex flex-col;
+  @apply absolute top-full right-0 mt-2 bg-white dark:bg-gray-900 rounded-xl border border-line dark:border-white/[0.08] shadow-xl z-50 w-auto px-2.5 py-2 gap-2 flex flex-col;
 }
 
 .dropdown-menu {
-  @apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase active:text-active hover:text-active;
+  @apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase rounded-md px-2 py-1.5 hover:bg-surface-2 dark:hover:bg-white/[0.06];
 }
 
 .user-menu {
   @apply flex items-center gap-2 text-13 text-primary dark:text-white font-medium;
 }
 
-.dropdown {
-  @apply absolute top-full right-0 mt-2 bg-white dark:bg-gray-900 rounded border border-lightgray dark:border-gray-800 focus:dark:border-gray-800 z-50 w-auto px-2.5 py-2 gap-2 flex flex-col;
-}
-
-.dropdown-menu {
-  @apply flex items-center gap-2 text-sm text-primary dark:text-white font-medium uppercase active:text-active hover:text-active;
-}
-
 .user-dropdown {
-  @apply absolute top-full right-0 mt-2 bg-white dark:bg-gray-900 rounded border border-lightgray dark:border-gray-900 focus:dark:border-gray-800 z-50 w-auto flex flex-col shadow-lg;
+  @apply absolute top-full right-0 mt-2 bg-white dark:bg-gray-900 rounded-xl border border-line dark:border-white/[0.08] z-50 w-auto flex flex-col shadow-xl;
   transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
   opacity: 0;
   transform: scale(0.95) translateY(-4px);
@@ -284,7 +276,7 @@ select {
 }
 
 .btn-blue {
-  @apply bg-brand hover:bg-brand-700 active:bg-brand-800 text-on-brand rounded-lg w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors;
+  @apply bg-brand hover:bg-brand-700 active:bg-brand-800 text-on-brand rounded-lg w-48 flex justify-center items-center h-16 cursor-pointer font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2;
 }
 
 .search-list {
@@ -334,23 +326,23 @@ select {
 }
 
 .save-lable {
-  @apply bg-save-badge px-1 py-0.5 text-sm font-medium;
+  @apply rounded-md bg-brand-100 px-1.5 py-0.5 text-xs font-semibold text-brand-800 dark:bg-brand/20 dark:text-brand-200;
 }
 
 .save-lable.bg-tealdark {
-  @apply bg-tealdark px-1 py-0.5 text-xs font-medium text-white;
+  @apply bg-brand px-1.5 py-0.5 text-xs font-semibold text-white;
 }
 
 .add-to-cart {
-  @apply bg-brand hover:bg-brand-700 active:bg-brand-800 text-on-brand rounded-lg min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors;
+  @apply bg-brand hover:bg-brand-700 active:bg-brand-800 text-on-brand rounded-lg min-w-40 h-14 flex justify-center items-center gap-2.5 text-sm font-semibold cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2;
 }
 
 .btn-text-link {
-  @apply bg-white hover:bg-darkbtn-hover active:bg-darkbtn-active text-darkbtn rounded-md w-40 h-14 flex justify-center items-center gap-2.5 text-13 font-medium hover:text-white cursor-pointer;
+  @apply bg-white hover:bg-darkbtn-hover active:bg-darkbtn-active text-darkbtn rounded-lg w-40 h-14 flex justify-center items-center gap-2.5 text-13 font-medium hover:text-white cursor-pointer transition-colors;
 }
 
 .btn-outline {
-  @apply border border-brand-600 text-brand-700 hover:bg-brand hover:text-on-brand rounded-lg min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-brand-300 dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors;
+  @apply border border-brand-600 text-brand-700 hover:bg-brand hover:text-on-brand rounded-lg min-w-[55px] h-14 flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-brand-300 dark:hover:border-brand text-13 font-semibold cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2;
 }
 
 /*---------------- domain tablist --------------------*/
@@ -429,7 +421,7 @@ select {
 }
 
 .cart-card {
-  @apply border border-stokecolor dark:border-gray-700 rounded-md sm:px-7 sm:py-5 p-4;
+  @apply border border-line dark:border-gray-700 rounded-xl sm:px-7 sm:py-5 p-4;
 }
 
 .cart-title {
@@ -462,7 +454,7 @@ select {
 }
 
 .input-field {
-  @apply text-primary dark:text-white border border-active-border dark:border-gray-700 px-5 pt-6 pb-2 text-13 font-medium rounded-md w-full focus:outline-0 focus:border-brand bg-white dark:bg-gray-950;
+  @apply text-primary dark:text-white border border-active-border dark:border-gray-700 px-5 pt-6 pb-2 text-13 font-medium rounded-lg w-full focus:outline-0 focus:border-brand focus:ring-4 focus:ring-brand/15 bg-white dark:bg-gray-950 transition-shadow;
 }
 
 .input-field:-webkit-autofill ~ label,
@@ -631,12 +623,12 @@ select {
 
 /*---------- Modal Dialog ----------*/
 .modal-dialog {
-  @apply bg-white dark:bg-gray-900 rounded-xl max-w-2xl w-full relative md:p-9 p-4;
-  box-shadow: 0px 10px 30px 0px #00000017;
+  @apply bg-white dark:bg-gray-900 rounded-2xl border border-line dark:border-white/[0.08] max-w-2xl w-full relative md:p-9 p-5;
+  box-shadow: 0px 24px 60px -20px rgba(15, 23, 42, 0.35);
 }
 
 .modal-title {
-  @apply text-2xl font-medium text-primary dark:text-white mb-5;
+  @apply font-display text-2xl font-bold tracking-tight text-primary dark:text-white mb-5;
 }
 
 /*---------- Admin Sidebar ----------*/
@@ -680,11 +672,11 @@ select {
 }
 
 .title-section {
-  @apply text-primary dark:text-white text-3xl font-medium;
+  @apply text-primary dark:text-white font-display text-2xl sm:text-3xl font-bold tracking-tight;
 }
 
 .title-section p {
-  @apply text-15;
+  @apply font-sans text-15 font-normal tracking-normal text-ink-soft dark:text-gray-400;
 }
 
 .register-domain-section {
@@ -696,11 +688,11 @@ select {
 }
 
 .card-admin-title {
-  @apply text-lg font-medium text-primary dark:text-gray-400 mb-3;
+  @apply text-lg font-semibold text-primary dark:text-gray-200 mb-3;
 }
 
 .input-admin {
-  @apply border border-stokecolor dark:border-gray-700 h-12 px-5 text-13 font-medium rounded-md bg-white dark:bg-gray-900 text-primary dark:text-white placeholder:text-primary/50 dark:placeholder:text-gray-500 focus:outline-0;
+  @apply border border-line dark:border-gray-700 h-12 px-5 text-13 font-medium rounded-lg bg-white dark:bg-gray-900 text-primary dark:text-white placeholder:text-primary/50 dark:placeholder:text-gray-500 focus:outline-0 focus:border-brand focus:ring-4 focus:ring-brand/15;
 }
 
 .btn-blue.w-50 {
@@ -708,7 +700,7 @@ select {
 }
 
 .admin-card {
-  @apply border border-stokecolor dark:border-gray-700 rounded-md p-5 md:w-[45%] w-full shrink-0 space-y-3 bg-white dark:bg-gray-800;
+  @apply border border-line dark:border-white/[0.07] rounded-xl p-5 md:w-[45%] w-full shrink-0 space-y-3 bg-white dark:bg-gray-900;
 }
 
 .admin-btn .add-to-cart,
@@ -721,28 +713,28 @@ select {
 }
 
 .table-card {
-  @apply border border-stokecolor dark:border-gray-700 rounded-md w-full bg-white dark:bg-gray-800;
+  @apply border border-line dark:border-white/[0.07] rounded-xl w-full bg-white dark:bg-gray-900 shadow-sm dark:shadow-none;
 }
 
 .searchbar-table {
-  @apply text-primary placeholder:text-primary/50 dark:text-white dark:placeholder:text-gray-500;
+  @apply text-primary placeholder:text-primary/50 dark:text-white dark:placeholder:text-gray-500 border-b border-line dark:border-white/[0.06];
 }
 
 /*-------- table style ------- */
 .table-main {
-  @apply w-full text-sm border-0 rounded-lg overflow-auto;
+  @apply w-full text-sm border-0 overflow-auto;
 }
 
 .table-thead tr th {
-  @apply text-13 font-semibold text-primary dark:text-gray-400 px-5;
+  @apply font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-ink-soft dark:text-gray-400 px-5 py-3 text-left bg-surface-2/70 dark:bg-white/[0.03] whitespace-nowrap;
 }
 
 .table-body tr {
-  @apply border-t border-stokecolor dark:border-gray-700;
+  @apply border-t border-line dark:border-white/[0.06] transition-colors hover:bg-surface-2/60 dark:hover:bg-white/[0.03];
 }
 
 .table-body tr td {
-  @apply text-13 font-medium text-primary dark:text-gray-400 px-5;
+  @apply text-13 font-medium text-primary dark:text-gray-300 px-5;
 }
 
 .table-main .icon-head {
@@ -751,7 +743,7 @@ select {
 
 .table-main .btn-outline,
 .btn-outline.small {
-  @apply px-4 py-2 text-xs font-medium cursor-pointer min-w-auto h-8 border border-darkbtn-200 text-darkbtn hover:bg-darkbtn-hover hover:text-white rounded-md flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-white dark:hover:border-darkbtn whitespace-nowrap;
+  @apply px-4 py-2 text-xs font-medium cursor-pointer min-w-auto h-8 border border-line text-brand-700 hover:bg-brand-50 hover:text-brand-800 rounded-lg flex justify-center items-center gap-2.5 dark:border-gray-700 dark:text-brand-300 dark:hover:bg-white/[0.06] whitespace-nowrap;
 }
 
 .table-main .btn-outline.btn-icon {
@@ -760,23 +752,23 @@ select {
 
 .table-main .add-to-cart,
 .add-to-cart.small {
-  @apply px-4 py-2 text-xs font-medium cursor-pointer min-w-auto lg:h-8 h-auto items-end text-center border border-darkbtn-200 bg-darkbtn hover:bg-darkbtn-hover active:bg-darkbtn-active text-white rounded-md flex justify-center items-center gap-2.5 dark:border-gray-700;
+  @apply px-4 py-2 text-xs font-medium cursor-pointer min-w-auto lg:h-8 h-auto items-end text-center border border-transparent bg-brand hover:bg-brand-700 active:bg-brand-800 text-white rounded-lg flex justify-center items-center gap-2.5;
 }
 
 .tab-button {
-  @apply text-15 font-medium text-secondary border border-transparent rounded-md px-6 py-3 hover:border-gray-700 hover:text-darkbtn cursor-pointer dark:text-white dark:hover:text-white hover:bg-mutebg hover:dark:bg-gray-800 whitespace-nowrap;
+  @apply text-sm font-medium text-ink-soft border border-line rounded-full px-4 py-2 hover:border-brand-200 hover:text-brand-700 cursor-pointer dark:text-gray-300 dark:border-gray-700 dark:hover:text-brand-200 transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60;
 }
 
 .tab-button.active {
-  @apply border-darkbtn-200 dark:border-gray-700 text-darkbtn dark:text-white bg-mutebg dark:bg-gray-800;
+  @apply border-brand-200 bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-transparent;
 }
 
 .action-card {
-  @apply border border-stokecolor dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 overflow-hidden;
+  @apply border border-line dark:border-white/[0.07] rounded-xl bg-white dark:bg-gray-900 overflow-hidden;
 }
 
 .inner-action-card {
-  @apply px-5 py-4 flex justify-between items-center text-13 font-medium text-primary dark:text-gray-400 border-t border-stokecolor dark:border-gray-700 cursor-pointer hover:bg-mutebg;
+  @apply px-5 py-4 flex justify-between items-center text-13 font-medium text-primary dark:text-gray-300 border-t border-line dark:border-white/[0.06] cursor-pointer hover:bg-surface-2 dark:hover:bg-white/[0.04] transition-colors;
 }
 
 .inner-action-card:first-child {
@@ -870,11 +862,11 @@ input[type="checkbox"]:checked {
 
 /*-------- user management style ------- */
 .account-tab-button {
-  @apply text-13 font-medium text-secondary rounded-md px-6 py-3 cursor-pointer text-left hover:bg-beige-100/50 hover:dark:bg-gray-800/50 hover:text-primary hover:dark:text-white;
+  @apply text-13 font-medium text-ink-soft rounded-lg px-4 py-2.5 cursor-pointer text-left hover:bg-surface-2 dark:hover:bg-white/[0.05] hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60;
 }
 
 .account-tab-button.active {
-  @apply text-primary dark:text-white bg-beige-100/50 dark:bg-gray-800/50;
+  @apply text-brand-700 dark:text-brand-200 bg-brand-50 dark:bg-brand/15 font-semibold;
 }
 
 .notification-table .icon-head {
@@ -1116,6 +1108,36 @@ input[type="checkbox"]:checked {
   .nw-badge-success {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-success-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300;
   }
+  .nw-badge-danger {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300;
+  }
+  .nw-badge-neutral {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-surface-3 text-ink-soft dark:bg-white/[0.08] dark:text-gray-300;
+  }
+
+  /* Horizontal scroll container with edge shadows that only show when there is more to scroll */
+  .nw-scroll-x {
+    @apply overflow-x-auto;
+    background:
+      linear-gradient(to right, var(--nw-scroll-bg, #ffffff) 30%, rgba(255, 255, 255, 0)),
+      linear-gradient(to right, rgba(255, 255, 255, 0), var(--nw-scroll-bg, #ffffff) 70%) 100% 0,
+      radial-gradient(farthest-side at 0 50%, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0)) 100% 0;
+    background-repeat: no-repeat;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+  .dark .nw-scroll-x {
+    --nw-scroll-bg: #111827;
+    background:
+      linear-gradient(to right, var(--nw-scroll-bg) 30%, rgba(17, 24, 39, 0)),
+      linear-gradient(to right, rgba(17, 24, 39, 0), var(--nw-scroll-bg) 70%) 100% 0,
+      radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)) 100% 0;
+    background-repeat: no-repeat;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
 
   .nw-chip {
     @apply inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-medium text-ink-soft dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300;
@@ -1151,14 +1173,30 @@ input[type="checkbox"]:checked {
 }
 /* App shell (authed) utilities */
 @layer components {
-  .app-rail-item {
-    @apply relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-white;
+  .app-side-item {
+    @apply relative flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60;
   }
-  .app-rail-item-active {
-    @apply bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300;
+  .app-side-item-active {
+    @apply bg-brand-50 font-semibold text-brand-700 dark:bg-brand/15 dark:text-brand-300;
+  }
+  .app-side-item-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 0 9999px 9999px 0;
+    background: var(--color-brand);
+  }
+  .app-side-collapsed .app-side-item-active::before {
+    display: none;
+  }
+  .app-side-group {
+    @apply mb-2 px-3 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-muted dark:text-gray-500;
   }
   .header-icon-btn {
-    @apply flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-primary dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-white;
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-primary dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 lg:h-9 lg:w-9;
   }
 }
 

@@ -20,7 +20,7 @@ const ITEMS = [
   { key: "api", to: "/api", icon: LuCode, group: "goto", keywords: "api developer key automation" },
   { key: "wallet", to: "/wallet", icon: LuWallet, group: "billing", keywords: "wallet balance funds prepaid" },
   { key: "rewards", to: "/wallet#rewards", icon: LuGift, group: "billing", keywords: "rewards points loyalty tier badge" },
-  { key: "subscriptions", to: "/subscriptions", icon: LuRepeat, group: "billing", keywords: "subscriptions renew recurring" },
+  { key: "subscriptions", to: "/services", icon: LuRepeat, group: "billing", keywords: "subscriptions renew recurring services expiry auto-renew" },
   { key: "payments", to: "/payment-history", icon: LuReceipt, group: "billing", keywords: "invoices payments receipts history" },
   { key: "settings", to: "/account-setting", icon: LuSettings, group: "account", keywords: "settings profile security api key password 2fa" },
   { key: "info", to: "/account-setting?tab=account-information", icon: LuUser, group: "account", keywords: "profile personal info" },

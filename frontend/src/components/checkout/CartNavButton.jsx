@@ -33,7 +33,7 @@ export default function CartNavButton({ className = "" }) {
       type="button"
       onClick={open}
       aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
-      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-primary hover:bg-surface-2 dark:text-gray-200 dark:hover:bg-white/[0.06] transition-colors ${pulse ? "nw-cart-pulse" : ""} ${className}`}
+      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-primary hover:bg-surface-2 dark:text-gray-200 dark:hover:bg-white/[0.06] transition-colors lg:h-9 lg:w-9 ${pulse ? "nw-cart-pulse" : ""} ${className}`}
       data-testid="nav-cart-button"
     >
       <LuShoppingCart size={20} />

@@ -14,6 +14,23 @@ export const formatDate = (date, format = "YYYY-MM-DD") => {
 };
 
 
+// Locale-aware display helpers. Never leak "Invalid Date" into the UI.
+const parse = (d) => {
+  if (!d) return null;
+  const dt = new Date(d);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+};
+
+export const fmtDate = (d, opts = { year: "numeric", month: "short", day: "numeric" }) => {
+  const dt = parse(d);
+  return dt ? dt.toLocaleDateString(undefined, opts) : "—";
+};
+
+export const fmtDateTime = (d) => {
+  const dt = parse(d);
+  return dt ? dt.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+};
+
 export const separateDateAndTime = (date) => {
   if(!date) return { date: "", time : ""};
 

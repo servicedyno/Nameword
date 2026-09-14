@@ -4,6 +4,7 @@ import { LuGlobe, LuNetwork, LuCloud, LuServer, LuWallet, LuShoppingCart, LuUser
 import { useLanguage } from "../hooks/useLanguage";
 import { useAuth } from "../hooks/useAuth";
 import { usePageMeta } from "../hooks/usePageMeta";
+import CopyButton from "../components/common/CopyButton";
 
 const GROUP_ICONS = [LuGlobe, LuNetwork, LuCloud, LuServer, LuWallet, LuShoppingCart];
 const STEP_ICONS = [LuUserPlus, LuKeyRound, LuTerminal];
@@ -89,7 +90,10 @@ export default function Api() {
                 <p className="text-xs uppercase tracking-wider text-gray-500">{s.header}</p>
                 <p className="mt-1"><span className="text-brand-300">x-api-key</span>: <span className="text-gray-400">&lt;userId&gt;|&lt;apiKey&gt;</span></p>
               </div>
-              <pre className="overflow-x-auto whitespace-pre rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 text-gray-200">{curl}</pre>
+              <div className="relative">
+                <CopyButton text={curl} label="Copy" className="absolute right-2 top-2" testid="copy-api-snippet-btn" />
+                <pre className="overflow-x-auto whitespace-pre rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 pr-24 text-gray-200">{curl}</pre>
+              </div>
             </div>
           </div>
         </div>

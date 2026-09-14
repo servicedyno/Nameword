@@ -13,6 +13,8 @@ import PaymentSuccessCelebration from "../cart/PaymentSuccessCelebration";
 import { useLanguage } from "../../hooks/useLanguage";
 
 const MIN_TOPUP = 10;
+const PRESETS = [20, 50, 100, 250];
+const POPULAR_PRESET = 50;
 const PREFERRED = ["USDT-TRC20", "USDT-ERC20", "ETH", "BTC"];
 
 // Friendly network hint per coin so users don't send on the wrong chain.
@@ -233,11 +235,11 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
   const showTimeline = credited || sentClicked || ["detected", "confirming"].includes(status);
 
   return (
-    <div className="fixed inset-0 z-50 bg-white/80 dark:bg-gray-600/80 overflow-auto py-5">
+    <div className="fixed inset-0 z-50 bg-gray-950/50 backdrop-blur-sm overflow-auto py-5">
       <div className="flex items-center justify-center w-full min-h-full">
-        <div className={`modal-dialog ${step === "pay" ? "!max-w-[520px] w-full" : ""}`}>
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-black z-10" aria-label="Close">
-            <IoClose className="text-primary dark:text-gray-500" size={30} />
+        <div className={`modal-dialog ${step === "pay" ? "!max-w-[520px] w-full" : ""}`} data-testid="wallet-topup-modal">
+          <button onClick={onClose} className="header-icon-btn absolute top-4 right-4 z-10" aria-label="Close" data-testid="topup-close">
+            <IoClose size={26} />
           </button>
 
           {step === "amount" && (
@@ -250,10 +252,41 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
               </div>
 
               <div className="mt-4 space-y-4">
+                {/* Presets */}
+                <div>
+                  <label className="block text-sm font-medium text-primary dark:text-gray-200 mb-2">Choose an amount</label>
+                  <div className="grid grid-cols-4 gap-2 pt-2" data-testid="topup-presets">
+                    {PRESETS.map((p) => {
+                      const selected = Number(amount) === p;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => { setAmount(String(p)); setTopupError(""); }}
+                          aria-pressed={selected}
+                          data-testid={`topup-preset-${p}`}
+                          className={`relative rounded-xl border px-2 py-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 ${
+                            selected
+                              ? "border-brand bg-brand-50 text-brand-700 ring-2 ring-brand/30 dark:bg-brand/15 dark:text-brand-200"
+                              : "border-line text-primary hover:border-brand/50 dark:border-gray-700 dark:text-white"
+                          }`}
+                        >
+                          ${p}
+                          {p === POPULAR_PRESET && (
+                            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white shadow-sm">
+                              Most popular
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Amount */}
                 <div>
                   <label htmlFor="topup-amount" className="block text-sm font-medium text-primary dark:text-gray-200 mb-1">
-                    Amount (USD)
+                    Or enter a custom amount (USD)
                   </label>
                   <input
                     id="topup-amount"
@@ -262,8 +295,8 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                     inputMode="decimal"
                     value={amount}
                     onChange={(e) => { setAmount(e.target.value); setTopupError(""); }}
-                    className="input-field peer w-full admin-form"
-                    placeholder={`e.g. ${MIN_TOPUP}`}
+                    className="nw-input"
+                    placeholder={`Minimum $${MIN_TOPUP}`}
                     data-testid="topup-amount-input"
                   />
                   {!amountValid && amount !== "" && (
@@ -291,10 +324,10 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                             onClick={() => { setCurrency(c); setTopupError(""); }}
                             aria-pressed={selected}
                             data-testid={`topup-coin-${c}`}
-                            className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 transition-colors ${
+                            className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 ${
                               selected
-                                ? "border-darkbtn ring-2 ring-darkbtn/30 bg-darkbtn/5 dark:bg-darkbtn/10"
-                                : "border-stokecolor dark:border-gray-700 hover:border-darkbtn/50"
+                                ? "border-brand ring-2 ring-brand/30 bg-brand-50 dark:bg-brand/15"
+                                : "border-line dark:border-gray-700 hover:border-brand/50"
                             }`}
                           >
                             <Icon className="h-6 w-6" style={{ color: meta.color }} />
@@ -315,15 +348,15 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end admin-btn">
+              <div className="mt-5 flex justify-end">
                 <button
                   type="button"
                   onClick={startTopup}
-                  className={`${!amountValid || !currency || submitting ? "disable" : ""} add-to-cart`}
+                  className="nw-btn-primary"
                   disabled={!amountValid || !currency || submitting}
                   data-testid="topup-generate-address"
                 >
-                  <IoCardOutline className="text-white text-base" />
+                  <IoCardOutline className="text-base" />
                   <span>{submitting ? "Generating…" : `Get address for $${amountValid ? amountNum : 0}`}</span>
                 </button>
               </div>
@@ -379,7 +412,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                           <span className="font-semibold text-primary dark:text-white break-all" data-testid="topup-amount-crypto">
                             {pay.cryptoAmount} {pay.currency}
                           </span>
-                          <button type="button" onClick={() => copy(pay.cryptoAmount, "amount")} className="btn-outline !py-1 !px-2 text-xs shrink-0" aria-label="Copy amount">
+                          <button type="button" onClick={() => copy(pay.cryptoAmount, "amount")} className="nw-btn-secondary nw-btn-sm !px-2 !py-1 shrink-0" aria-label="Copy amount">
                             <IoCopyOutline size={14} /> {copied === "amount" ? "Copied" : "Copy"}
                           </button>
                         </div>
@@ -390,7 +423,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                         <p className="text-xs text-secondary mb-1">To this address</p>
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-sm text-primary dark:text-white break-all" data-testid="topup-address">{pay.address}</span>
-                          <button type="button" onClick={() => copy(pay.address, "address")} className="btn-outline !py-1 !px-2 text-xs shrink-0" aria-label="Copy address">
+                          <button type="button" onClick={() => copy(pay.address, "address")} className="nw-btn-secondary nw-btn-sm !px-2 !py-1 shrink-0" aria-label="Copy address">
                             <IoCopyOutline size={14} /> {copied === "address" ? "Copied" : "Copy"}
                           </button>
                         </div>
@@ -404,7 +437,7 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-mono text-sm font-bold text-primary dark:text-white break-all" data-testid="topup-tag">{pay.destinationTag}</span>
-                            <button type="button" onClick={() => copy(pay.destinationTag, "tag")} className="btn-outline !py-1 !px-2 text-xs shrink-0" aria-label="Copy destination tag">
+                            <button type="button" onClick={() => copy(pay.destinationTag, "tag")} className="nw-btn-secondary nw-btn-sm !px-2 !py-1 shrink-0" aria-label="Copy destination tag">
                               <IoCopyOutline size={14} /> {copied === "tag" ? "Copied" : "Copy"}
                             </button>
                           </div>
@@ -440,12 +473,12 @@ const WalletModal = ({ onClose, onSuccess, presetAmount, resumePayment }) => {
                     <button
                       type="button"
                       onClick={() => { setSentClicked(true); checkStatus(true); }}
-                      className="add-to-cart max-w-max text-sm"
+                      className="nw-btn-primary"
                       data-testid="topup-ive-paid"
                     >
                       {showTimeline ? "Check now" : "I've sent it"}
                     </button>
-                    <button type="button" onClick={onClose} className="btn-outline max-w-max text-sm">
+                    <button type="button" onClick={onClose} className="nw-btn-secondary">
                       Close
                     </button>
                   </div>

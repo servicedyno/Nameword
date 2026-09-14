@@ -9,6 +9,7 @@ import { useAlert } from "../../context/AlertContext";
 import checkoutAPI from "../../api/checkout";
 import CartSummary from "../../components/checkout/CartSummary";
 import CryptoCheckoutModal from "../../components/cart/CryptoCheckoutModal";
+import EmptyCartSuggestions from "../../components/cart/EmptyCartSuggestions";
 import { money, durationLabel } from "../../utils/checkoutFormat";
 import { regionLabel } from "../../utils/regions";
 import Loader from "../../components/common/Loader";
@@ -249,11 +250,15 @@ export default function CartPage() {
       </div>
 
       {cart.isEmpty ? (
-        <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-line dark:border-gray-800 px-6 py-16 text-center" data-testid="cart-empty-state">
-          <FiGlobe className="text-ink-muted mb-3" size={30} />
-          <p className="text-lg font-semibold text-primary dark:text-white">Your cart is empty</p>
-          <p className="mt-1 text-sm text-ink-soft dark:text-gray-400">Find a domain to get started.</p>
-          <Link to="/domains" className="nw-btn-primary mt-6" data-testid="cart-empty-search-link">Search domains <FiArrowRight size={16} /></Link>
+        <div className="mt-10" data-testid="cart-empty-state">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line dark:border-gray-800 px-6 py-12 text-center">
+            <span className="nw-icon h-14 w-14 rounded-2xl"><FiGlobe size={26} /></span>
+            <p className="mt-4 text-lg font-semibold text-primary dark:text-white">Your cart is empty</p>
+            <p className="mt-1 text-sm text-ink-soft dark:text-gray-400">Pick something below — everything is paid from your prepaid wallet, no card stored.</p>
+            <Link to="/domains" className="nw-btn-primary mt-6" data-testid="cart-empty-search-link">Search domains <FiArrowRight size={16} /></Link>
+          </div>
+          <p className="nw-eyebrow mt-10 mb-4">Popular right now</p>
+          <EmptyCartSuggestions />
         </div>
       ) : (
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_380px]">

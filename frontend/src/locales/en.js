@@ -615,6 +615,7 @@ export const en = {
     subscriptions: "Subscriptions",
     paymentHistory: "Payment history",
     orders: "Orders",
+    myServices: "My services & renewals",
     vps: "VPS",
     rdp: "RDP",
     rewards: "Rewards",

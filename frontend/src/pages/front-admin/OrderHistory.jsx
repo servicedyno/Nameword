@@ -13,40 +13,14 @@ import checkoutAPI from "../../api/checkout";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { useLanguage } from "../../hooks/useLanguage";
 import { money, durationLabel } from "../../utils/checkoutFormat";
+import { fmtDateTime } from "../../utils/formatDate";
 import Loader from "../../components/common/Loader";
+import StatusBadge from "../../components/common/StatusBadge";
 
-// Per-item provisioning status (mirrors OrderSuccess).
-const ITEM_STATUS = {
-  active: { label: "Active", cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-  test_mode: { label: "Test mode", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" },
-  failed: { label: "Failed · refunded", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-  pending: { label: "Pending", cls: "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200" },
-};
-
-// Order-level status.
-const ORDER_STATUS = {
-  paid: { label: "Paid", cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-  partial: { label: "Partial", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" },
-  failed: { label: "Failed · refunded", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-};
-
-const fmtDate = (d) => {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return String(d);
-  }
-};
+// "failed" means the item/order was refunded to the wallet.
+const failedLabel = (status) => (status === "failed" ? "Failed · refunded" : undefined);
 
 function OrderCard({ order }) {
-  const os = ORDER_STATUS[order.status] || ORDER_STATUS.paid;
   const isTest = order.mode === "dry_run";
   const items = Array.isArray(order.items) ? order.items : [];
 
@@ -57,16 +31,10 @@ function OrderCard({ order }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-primary dark:text-white nw-mono">{order.orderNumber}</span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${os.cls}`} data-testid={`order-status-${order.orderNumber}`}>
-              {os.label}
-            </span>
-            {isTest && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                Test mode
-              </span>
-            )}
+            <StatusBadge status={order.status || "paid"} label={failedLabel(order.status)} testid={`order-status-${order.orderNumber}`} />
+            {isTest && <StatusBadge status="test_mode" />}
           </div>
-          <p className="mt-1 text-xs text-ink-soft dark:text-gray-400">{fmtDate(order.createdAt)}</p>
+          <p className="mt-1 text-xs text-ink-soft dark:text-gray-400">{fmtDateTime(order.createdAt)}</p>
         </div>
         <div className="flex items-center justify-between gap-4 sm:justify-end">
           <div className="text-right">
@@ -86,7 +54,6 @@ function OrderCard({ order }) {
       {/* Items */}
       <ul className="divide-y divide-line dark:divide-gray-800">
         {items.map((it, i) => {
-          const st = ITEM_STATUS[it.status] || ITEM_STATUS.pending;
           return (
             <li
               key={`${it.type}-${it.domain}-${i}`}
@@ -108,7 +75,7 @@ function OrderCard({ order }) {
                 </div>
               </div>
               <div className="flex items-center gap-3 pl-12 sm:pl-0 sm:flex-col sm:items-end sm:gap-1">
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>{st.label}</span>
+                <StatusBadge status={it.status || "pending"} label={failedLabel(it.status)} />
                 <span className="font-semibold text-primary dark:text-white nw-mono">{money(it.price_usd)}</span>
               </div>
             </li>

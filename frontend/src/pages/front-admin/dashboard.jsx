@@ -27,7 +27,7 @@ const Dashboard = () => {
   // (their real SLD across other TLDs). We do NOT guess from the account name/email.
   useEffect(() => {
     const owned = (domains || [])
-      .map((d) => (d?.websiteName || "").trim())
+      .map((d) => (d?.domain || d?.websiteName || "").trim())
       .find((n) => n && n.includes("."));
     if (owned) {
       setBaseDomainName(owned.split(".")[0].toLowerCase().replace(/[^a-z0-9-]/g, ""));
@@ -95,14 +95,14 @@ const Dashboard = () => {
       ) : null}
 
       {/* Inline domain search — search, see prices, add to cart without leaving */}
-      <div className="register-domain-section">
+      <div className="nw-card relative overflow-hidden" data-testid="dashboard-register-card">
         <img
           src={globeIcon}
           alt={t.admin.globeImageAlt}
           title={t.admin.globeImageTitle}
-          className="globe-image dark:opacity-5"
+          className="pointer-events-none absolute -right-6 -top-6 w-72 opacity-70 dark:opacity-10"
         />
-        <div className="flex flex-col lg:w-2/3 w-full justify-start">
+        <div className="relative flex w-full flex-col justify-start lg:w-2/3">
           <p className="card-admin-title">{t.domain.registerNewDomain}</p>
           <InlineDomainSearch />
         </div>

@@ -8,6 +8,7 @@ import { useAuth } from "../../hooks/useAuth";
 import checkoutAPI from "../../api/checkout";
 import CryptoCheckoutModal from "./CryptoCheckoutModal";
 import AcceptedCoins from "./AcceptedCoins";
+import EmptyCartSuggestions from "./EmptyCartSuggestions";
 import { money } from "../../utils/checkoutFormat";
 import { regionLabel } from "../../utils/regions";
 
@@ -151,13 +152,17 @@ export default function MiniCartDrawer() {
           {/* Items */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {cart.isEmpty ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="mini-cart-empty">
-                <FiGlobe className="mb-3 text-ink-muted" size={28} />
-                <p className="font-semibold text-primary dark:text-white">Your cart is empty</p>
-                <p className="mt-1 text-sm text-ink-soft dark:text-gray-400">Find a domain to get started.</p>
-                <button type="button" onClick={() => { close(); navigate("/domains"); }} className="nw-btn-primary mt-6" data-testid="mini-cart-browse">
-                  Search domains <FiArrowRight size={16} />
-                </button>
+              <div className="py-6" data-testid="mini-cart-empty">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <span className="nw-icon h-12 w-12 rounded-2xl"><FiGlobe size={22} /></span>
+                  <p className="mt-3 font-semibold text-primary dark:text-white">Your cart is empty</p>
+                  <p className="mt-1 text-sm text-ink-soft dark:text-gray-400">Add a domain, hosting or a server to get started.</p>
+                  <button type="button" onClick={() => { close(); navigate("/domains"); }} className="nw-btn-primary mt-5" data-testid="mini-cart-browse">
+                    Search domains <FiArrowRight size={16} />
+                  </button>
+                </div>
+                <p className="nw-eyebrow mt-8 mb-3">Popular right now</p>
+                <EmptyCartSuggestions compact onNavigate={close} />
               </div>
             ) : (
               <ul className="space-y-3">

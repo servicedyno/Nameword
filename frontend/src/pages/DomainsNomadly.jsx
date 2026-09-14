@@ -307,19 +307,20 @@ export default function DomainsNomadly() {
 
       {/* Sticky cart bar */}
       {cart.count > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line dark:border-white/[0.08] bg-white/95 dark:bg-gray-950/95 backdrop-blur-md" data-testid="cart-bar">
+        <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-line dark:border-white/[0.08] bg-white/95 dark:bg-gray-950/95 backdrop-blur-md ${isAuthenticated ? "max-lg:bottom-[62px]" : ""}`} data-testid="cart-bar">
           <div className="nw-container flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3 min-w-0">
               <span className="nw-icon h-10 w-10 shrink-0"><FiShoppingCart size={18} /></span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-primary dark:text-white" data-testid="cart-bar-count">{cart.count} item{cart.count === 1 ? "" : "s"} in cart</p>
-                <p className="text-xs text-ink-soft dark:text-gray-400 truncate">{cart.domains.map((d) => d.domain).join(", ")}</p>
+                <p className="whitespace-nowrap text-sm font-semibold text-primary dark:text-white" data-testid="cart-bar-count">{cart.count} item{cart.count === 1 ? "" : "s"} in cart</p>
+                <p className="hidden truncate text-xs text-ink-soft dark:text-gray-400 sm:block">{cart.domains.map((d) => d.domain).join(", ")}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 shrink-0">
               <span className="hidden sm:block text-lg font-bold text-primary dark:text-white nw-mono" data-testid="cart-bar-total">{money(cart.subtotal)}</span>
               <button type="button" onClick={continueCheckout} className="nw-btn-primary" data-testid="cart-bar-continue">
-                Continue <FiArrowRight size={16} />
+                <span className="sm:hidden">Continue · {money(cart.subtotal)}</span>
+                <span className="hidden sm:inline">Continue</span> <FiArrowRight size={16} />
               </button>
             </div>
           </div>

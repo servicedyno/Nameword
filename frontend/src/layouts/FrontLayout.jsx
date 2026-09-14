@@ -1,19 +1,15 @@
-import Sidebar from "../components/front-admin/admin-common/sidebar";
-import AppRail from "../components/front-admin/admin-common/AppRail";
+import AppSidebar from "../components/front-admin/admin-common/AppSidebar";
 import CommandPalette from "../components/common/CommandPalette";
 import VerifyEmailBanner from "../components/common/VerifyEmailBanner";
 import { Outlet, NavLink, useLocation } from "react-router";
 import { useState, useEffect, useCallback } from "react";
-import { RxCross2 } from "react-icons/rx";
 import { CgMenu } from "react-icons/cg";
-import {
-  LuSearch, LuWallet, LuBell, LuGift, LuLayoutDashboard, LuGlobe, LuServer, LuUser,
-} from "react-icons/lu";
+import { LuSearch, LuWallet, LuBell, LuGift, LuLayoutDashboard, LuGlobe, LuServer, LuUser } from "react-icons/lu";
 import { IoChevronDown } from "react-icons/io5";
-import { favicon, Help, USA, ES, FR } from "../components/common/icons";
+import { favicon, USA, ES, FR } from "../components/common/icons";
 import ThemeToggleButton from "../components/common/ThemeToggleButton";
 import UserDropdownMenu from "../components/common/UserDropdownMenu";
-import CartIconButton from "../components/common/CartIconButton";
+import CartNavButton from "../components/checkout/CartNavButton";
 import useDropdown from "../hooks/useDropdown";
 import { useLanguage } from "../hooks/useLanguage";
 import { useAuth } from "../hooks/useAuth";
@@ -27,6 +23,9 @@ const BOTTOM_TABS = [
   { key: "account", to: "/account-setting", icon: LuUser },
 ];
 
+const LANGS = ["en", "es", "fr"];
+const flag = (lang) => (lang === "es" ? ES : lang === "fr" ? FR : USA);
+
 const FrontLayout = ({ children, fluid = false }) => {
   const { user, refreshUser } = useAuth();
   const { language, changeLanguage, t } = useLanguage();
@@ -38,8 +37,6 @@ const FrontLayout = ({ children, fluid = false }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [balance, setBalance] = useState(null);
-
-  const flag = (lang) => (lang === "es" ? ES : lang === "fr" ? FR : USA);
 
   const toggleCollapsed = () => {
     setCollapsed((c) => {
@@ -54,8 +51,7 @@ const FrontLayout = ({ children, fluid = false }) => {
       const el = e.target;
       const typing =
         el &&
-        (["input", "textarea", "select"].includes((el.tagName || "").toLowerCase()) ||
-          el.isContentEditable);
+        (["input", "textarea", "select"].includes((el.tagName || "").toLowerCase()) || el.isContentEditable);
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
         e.preventDefault();
         setPaletteOpen((o) => !o);
@@ -68,10 +64,8 @@ const FrontLayout = ({ children, fluid = false }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // close mobile drawer on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  // fetch wallet balance for the top-bar chip
   const fetchBalance = useCallback(() => {
     if (!user) { setBalance(null); return; }
     walletAPI.getWallet()
@@ -82,12 +76,8 @@ const FrontLayout = ({ children, fluid = false }) => {
       .catch(() => {});
   }, [user]);
 
-  // Refresh on mount, when the user changes, and on every route change (so a
-  // top-up credited in the background shows up as soon as the user navigates).
   useEffect(() => { fetchBalance(); }, [fetchBalance, pathname]);
 
-  // When a top-up/payment credits or debits the wallet, refresh the balance chip
-  // AND the user (reward points come from the auth user object).
   useEffect(() => {
     const onWallet = () => { fetchBalance(); refreshUser?.(); };
     window.addEventListener("wallet:updated", onWallet);
@@ -97,34 +87,40 @@ const FrontLayout = ({ children, fluid = false }) => {
   const handleLanguageChange = (lang) => { changeLanguage(lang); languageDropDown.close(); };
   const app = t.site.app;
 
+  const mobileLangRow = (
+    <div className="mt-4 flex items-center gap-2 border-t border-line pt-4 dark:border-white/[0.06]" data-testid="sidebar-language-row">
+      {LANGS.map((lng) => (
+        <button
+          key={lng}
+          type="button"
+          onClick={() => changeLanguage(lng)}
+          className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border text-13 font-semibold uppercase ${language === lng ? "border-brand bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-300" : "border-line text-ink-soft dark:border-gray-700 dark:text-gray-300"}`}
+          aria-pressed={language === lng}
+        >
+          <img src={flag(lng)} alt="" className="h-3 w-5 object-cover" />{lng}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex h-screen overflow-hidden bg-surface-2 dark:bg-gray-950">
-      {/* Desktop icon rail */}
-      <div className="hidden lg:flex shrink-0">
-        <AppRail collapsed={collapsed} onToggle={toggleCollapsed} />
-      </div>
-
-      {/* Desktop contextual panel */}
-      {!collapsed && (
-        <div className="hidden lg:block w-[280px] shrink-0 overflow-y-auto border-r border-line bg-white px-6 py-7 dark:border-white/[0.06] dark:bg-gray-900">
-          <Sidebar setIsEnlarge={setMobileOpen} />
-        </div>
-      )}
+      {/* Desktop sidebar (single smart sidebar: expanded or icon rail) */}
+      <aside className={`hidden shrink-0 lg:flex transition-[width] duration-200 ${collapsed ? "w-[76px]" : "w-[248px]"}`} data-testid="desktop-sidebar">
+        <AppSidebar collapsed={collapsed} onToggle={toggleCollapsed} />
+      </aside>
 
       {/* Main column */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar */}
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-white/85 px-4 backdrop-blur-md dark:border-white/[0.06] dark:bg-gray-950/85 lg:px-6">
-          {/* mobile menu + brand */}
-          <button className="lg:hidden text-primary dark:text-white" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-white/85 px-3 backdrop-blur-md dark:border-white/[0.06] dark:bg-gray-950/85 sm:gap-3 sm:px-4 lg:px-6">
+          <button className="header-icon-btn lg:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)} data-testid="mobile-menu-button">
             <CgMenu size={22} />
           </button>
           <NavLink to="/dashboard" className="lg:hidden"><img src={favicon} alt="Nameword" className="h-8 w-8" /></NavLink>
 
-          {/* global search / command palette trigger */}
           <button
             onClick={() => setPaletteOpen(true)}
-            className="group hidden sm:flex items-center gap-2.5 rounded-xl border border-line bg-surface-2 px-3.5 py-2 text-ink-soft transition-colors hover:border-brand/40 dark:border-white/[0.08] dark:bg-gray-900 dark:hover:border-brand/40 w-full max-w-sm"
+            className="group hidden w-full max-w-sm items-center gap-2.5 rounded-xl border border-line bg-surface-2 px-3.5 py-2 text-ink-soft transition-colors hover:border-brand/40 dark:border-white/[0.08] dark:bg-gray-900 dark:hover:border-brand/40 sm:flex"
             data-testid="global-search"
           >
             <LuSearch className="h-4 w-4" />
@@ -132,23 +128,19 @@ const FrontLayout = ({ children, fluid = false }) => {
             <kbd className="ml-auto rounded border border-line bg-white px-1.5 py-0.5 text-[11px] font-semibold text-ink-soft dark:border-gray-700 dark:bg-gray-800">/</kbd>
           </button>
 
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
-            {/* search icon (mobile) */}
-            <button onClick={() => setPaletteOpen(true)} className="sm:hidden header-icon-btn" aria-label="Search" data-testid="global-search-mobile"><LuSearch className="h-5 w-5" /></button>
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <button onClick={() => setPaletteOpen(true)} className="header-icon-btn sm:hidden" aria-label="Search" data-testid="global-search-mobile"><LuSearch className="h-5 w-5" /></button>
 
-            {/* reward points */}
-            <NavLink to="/wallet#rewards" title={app.rewards} data-testid="rewards-chip" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 sm:px-3 py-1.5 text-13 font-semibold text-primary dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-gray-200">
+            <NavLink to="/wallet#rewards" title={app.rewards} data-testid="rewards-chip" className="hidden items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-semibold text-primary dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-gray-200 md:inline-flex">
               <LuGift className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {Number(user?.rewardPoints ?? 0)} <span className="hidden sm:inline">{app.pts}</span>
             </NavLink>
 
-            {/* wallet chip */}
-            <NavLink to="/wallet" title={app.wallet} data-testid="wallet-chip" className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-13 font-semibold text-brand-700 dark:bg-brand/15 dark:text-brand-300">
+            <NavLink to="/wallet" title={app.wallet} data-testid="wallet-chip" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-brand-50 px-3 text-13 font-semibold text-brand-700 dark:bg-brand/15 dark:text-brand-300 lg:h-9">
               <LuWallet className="h-4 w-4" /> {balance == null ? "—" : `$${balance.toFixed(2)}`}
             </NavLink>
 
-            {/* notifications */}
             <div ref={notifDropDown.ref} className="relative">
-              <button onClick={notifDropDown.toggle} className="header-icon-btn" aria-label="Notifications"><LuBell className="h-5 w-5" /></button>
+              <button onClick={notifDropDown.toggle} className="header-icon-btn" aria-label="Notifications" data-testid="notifications-button"><LuBell className="h-5 w-5" /></button>
               {notifDropDown.isOpen && (
                 <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-line bg-white p-4 shadow-xl dark:border-white/[0.08] dark:bg-gray-900">
                   <p className="mb-1 text-sm font-semibold text-primary dark:text-white">{app.notifications}</p>
@@ -157,23 +149,17 @@ const FrontLayout = ({ children, fluid = false }) => {
               )}
             </div>
 
-            {/* help (desktop) */}
-            <NavLink to="/help-support" className="hidden lg:inline-flex header-icon-btn" title={t.nav.helpSupport} aria-label="Help">
-              <img src={Help} alt="" className="h-5 w-5 dark-mode" />
-            </NavLink>
-
-            {/* language */}
-            <div ref={languageDropDown.ref} className="relative hidden sm:block">
-              <button onClick={languageDropDown.toggle} type="button" className="language-menu">
-                <img src={flag(language)} alt={language.toUpperCase()} className="w-5 h-3 object-cover object-center" />
+            <div ref={languageDropDown.ref} className="relative hidden lg:block">
+              <button onClick={languageDropDown.toggle} type="button" className="language-menu" data-testid="language-menu">
+                <img src={flag(language)} alt={language.toUpperCase()} className="h-3 w-5 object-cover object-center" />
                 <p>{language.toUpperCase()}</p>
                 <IoChevronDown />
               </button>
               {languageDropDown.isOpen && (
                 <div className="dropdown">
-                  {["en", "es", "fr"].map((lng) => (
+                  {LANGS.map((lng) => (
                     <button key={lng} onClick={() => handleLanguageChange(lng)} className="dropdown-menu w-full text-left">
-                      <img src={flag(lng)} alt={lng} className="w-5 h-3 object-cover object-center" />
+                      <img src={flag(lng)} alt={lng} className="h-3 w-5 object-cover object-center" />
                       <span>{lng.toUpperCase()}</span>
                     </button>
                   ))}
@@ -182,12 +168,11 @@ const FrontLayout = ({ children, fluid = false }) => {
             </div>
 
             <ThemeToggleButton />
-            <CartIconButton />
-            <UserDropdownMenu />
+            <CartNavButton />
+            <div className="hidden sm:block"><UserDropdownMenu /></div>
           </div>
         </header>
 
-        {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <VerifyEmailBanner />
           {fluid ? (children ?? <Outlet />) : <div className="main-content">{children ?? <Outlet />}</div>}
@@ -203,16 +188,19 @@ const FrontLayout = ({ children, fluid = false }) => {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden" data-testid="mobile-drawer">
           <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 flex h-full w-[86%] max-w-xs bg-white shadow-2xl dark:bg-gray-950 dark:border-r dark:border-white/[0.06]">
-            <AppRail collapsed={false} onToggle={null} />
-            <div className="flex-1 overflow-y-auto px-5 py-5">
-              <div className="mb-4 flex items-center justify-end">
-                <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="header-icon-btn"><RxCross2 size={20} /></button>
-              </div>
-              <Sidebar setIsEnlarge={setMobileOpen} />
-            </div>
+          <div className="absolute left-0 top-0 flex h-full w-[86%] max-w-xs flex-col bg-white shadow-2xl dark:border-r dark:border-white/[0.06] dark:bg-gray-950">
+            <AppSidebar
+              collapsed={false}
+              onClose={() => setMobileOpen(false)}
+              footer={
+                <div>
+                  <div className="border-t border-line pt-4 dark:border-white/[0.06]"><UserDropdownMenu /></div>
+                  {mobileLangRow}
+                </div>
+              }
+            />
           </div>
         </div>
       )}
@@ -222,7 +210,7 @@ const FrontLayout = ({ children, fluid = false }) => {
         {BOTTOM_TABS.map((tab) => {
           const active = pathname === tab.to || pathname.startsWith(tab.to);
           return (
-            <NavLink key={tab.to} to={tab.to} className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium ${active ? "text-brand-700 dark:text-brand-300" : "text-ink-soft dark:text-gray-400"}`}>
+            <NavLink key={tab.to} to={tab.to} className={`flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1 text-[11px] font-medium ${active ? "text-brand-700 dark:text-brand-300" : "text-ink-soft dark:text-gray-400"}`} data-testid={`bottom-tab-${tab.key}`}>
               <tab.icon className="h-5 w-5" />
               {app.tabs[tab.key]}
             </NavLink>

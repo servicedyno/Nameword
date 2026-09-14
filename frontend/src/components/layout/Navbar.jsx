@@ -142,7 +142,7 @@ const Navbar = () => {
         <div className="flex items-center gap-1 lg:hidden">
           <ThemeToggleButton />
           <CartNavButton />
-          <button type="button" onClick={() => setMobileOpen(true)} aria-label={s.nav.openMenu} className="p-2 text-primary dark:text-white">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-label={s.nav.openMenu} className="header-icon-btn h-11 w-11 text-primary dark:text-white" data-testid="nav-mobile-menu">
             <IoMenu size={26} />
           </button>
         </div>
@@ -157,7 +157,7 @@ const Navbar = () => {
           <div className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col overflow-y-auto bg-white p-5 shadow-2xl dark:bg-gray-950 dark:border-l dark:border-white/[0.06]">
             <div className="mb-6 flex items-center justify-between">
               <BrandLogo markClassName="h-8 w-8" />
-              <button type="button" onClick={() => setMobileOpen(false)} aria-label={s.nav.closeMenu} className="p-2 text-primary dark:text-white">
+              <button type="button" onClick={() => setMobileOpen(false)} aria-label={s.nav.closeMenu} className="header-icon-btn h-11 w-11 text-primary dark:text-white">
                 <RxCross2 size={24} />
               </button>
             </div>

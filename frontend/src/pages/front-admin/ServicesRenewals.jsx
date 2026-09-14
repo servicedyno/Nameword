@@ -14,29 +14,15 @@ import checkoutAPI from "../../api/checkout";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { useAlert } from "../../context/AlertContext";
 import { money } from "../../utils/checkoutFormat";
+import { fmtDate } from "../../utils/formatDate";
 import Loader from "../../components/common/Loader";
+import StatusBadge from "../../components/common/StatusBadge";
 
 const TYPE_META = {
   domain: { icon: FiGlobe, label: "Domain", manage: (r) => `/dns-manager?domain=${encodeURIComponent(r.domain || "")}`, manageLabel: "DNS" },
   hosting: { icon: FiServer, label: "Hosting", manage: () => "/hosting", manageLabel: "Manage" },
   vps: { icon: FiServer, label: "VPS", manage: () => "/vps", manageLabel: "Manage" },
   rdp: { icon: FiMonitor, label: "RDP", manage: () => "/rdp", manageLabel: "Manage" },
-};
-
-const BUCKET_META = {
-  expired: { label: "Expired", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-  expiring_soon: { label: "Expiring soon", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" },
-  upcoming: { label: "Active", cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-  unknown: { label: "—", cls: "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200" },
-};
-
-const fmtDate = (d) => {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-  } catch {
-    return String(d);
-  }
 };
 
 const expiryPhrase = (days) => {
@@ -68,7 +54,6 @@ function AutoRenewToggle({ on, busy, onToggle, testid }) {
 function RenewalRow({ row, onRenew, onToggle, busyRenew, busyToggle }) {
   const meta = TYPE_META[row.type] || TYPE_META.domain;
   const Icon = meta.icon;
-  const bucket = BUCKET_META[row.bucket] || BUCKET_META.unknown;
   const isTest = row.status === "test_mode";
   const key = `${row.order_id}:${row.idx}`;
   return (
@@ -79,8 +64,8 @@ function RenewalRow({ row, onRenew, onToggle, busyRenew, busyToggle }) {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-semibold text-primary dark:text-white break-all">{row.title || row.domain || row.plan || meta.label}</p>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${bucket.cls}`}>{bucket.label}</span>
-              {isTest && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Test mode</span>}
+              <StatusBadge status={row.bucket || "unknown"} testid={`renewal-bucket-${key}`} />
+              {isTest && <StatusBadge status="test_mode" />}
             </div>
             <p className="mt-1 text-xs text-ink-soft dark:text-gray-400">{meta.label}{row.plan ? ` · ${row.plan}` : ""}</p>
             <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-ink-soft dark:text-gray-400">
@@ -201,10 +186,10 @@ export default function ServicesRenewals() {
       </div>
 
       {!loading && !error && rows.length > 0 && (
-        <div className="flex flex-wrap gap-3" data-testid="renewals-summary">
-          <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">{summary.expired} expired</span>
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">{summary.expiring_soon} expiring soon</span>
-          <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">{summary.upcoming} active</span>
+        <div className="flex flex-wrap gap-2" data-testid="renewals-summary">
+          <StatusBadge status="expired" label={`${summary.expired} expired`} className="!px-3 !py-1.5 !text-sm" />
+          <StatusBadge status="expiring_soon" label={`${summary.expiring_soon} expiring soon`} className="!px-3 !py-1.5 !text-sm" />
+          <StatusBadge status="active" label={`${summary.upcoming} active`} className="!px-3 !py-1.5 !text-sm" />
         </div>
       )}
 

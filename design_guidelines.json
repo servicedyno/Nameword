@@ -10,22 +10,22 @@
       "wallet_topup_flow": "1. Check wallet balance chip in TopBar -> 2. Open Wallet modal or page -> 3. Select Preset Amount ($20, $50, $100, $250) -> 4. Choose Crypto (BTC, ETH, USDT, SOL) -> 5. Generate DynoPay payment link/QR -> 6. Real-time balance refresh on confirmation"
     }
   },
-  "design_options": {
-    "option_1": {
+  "design_tokens": {
+    "editorial_indigo": {
       "id": "editorial_indigo",
       "name": "Option 1: Editorial Indigo & Obsidian (Dynopay Benchmark Default)",
-      "concept": "Clean, light-first public canvas with deep obsidian dark mode. Features editorial serif/display headlines, high contrast Indigo accents, crisp 1px borders, monospace technical metadata tags, and elevated single-card focus areas.",
+      "concept": "Clean, light-first public canvas with deep obsidian dark mode. Features editorial display headlines, high contrast Indigo accents, crisp 1px borders, monospace technical metadata tags, and elevated single-card focus areas.",
       "emotional_archetype": "Swiss High-Contrast & Editorial Trust",
       "typography": {
         "display_heading_font": "Outfit / Plus Jakarta Sans",
-        "body_font": "Inter / Plus Jakarta Sans",
+        "body_font": "Plus Jakarta Sans / Inter",
         "mono_font": "JetBrains Mono / Roboto Mono",
         "google_fonts_import": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
         "hierarchy": {
           "hero_title": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08]",
-          "section_title": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-ink",
-          "card_title": "text-lg sm:text-xl font-semibold text-ink",
-          "mono_eyebrow": "font-mono text-xs uppercase tracking-[0.2em] font-medium text-brand"
+          "section_title": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-primary dark:text-white",
+          "card_title": "text-lg sm:text-xl font-semibold text-primary dark:text-white",
+          "mono_eyebrow": "font-mono text-xs uppercase tracking-[0.2em] font-medium text-brand dark:text-brand-300"
         }
       },
       "color_tokens": {
@@ -33,11 +33,6 @@
           "brand": "#4F46E5",
           "brand-hover": "#4338CA",
           "brand-soft": "#EEF2FF",
-          "brand-50": "#EEF2FF",
-          "brand-100": "#E0E7FF",
-          "brand-500": "#6366F1",
-          "brand-600": "#4F46E5",
-          "brand-700": "#4338CA",
           "ink": "#0F172A",
           "ink-soft": "#475569",
           "ink-muted": "#94A3B8",
@@ -46,20 +41,14 @@
           "surface-3": "#F1F5F9",
           "line": "#E2E8F0",
           "line-strong": "#CBD5E1",
-          "accent": "#06B6D4",
+          "accent": "#F59E0B",
           "success": "#10B981",
-          "warning": "#F59E0B",
           "danger": "#EF4444"
         },
         "dark": {
           "brand": "#6366F1",
           "brand-hover": "#818CF8",
           "brand-soft": "rgba(99, 102, 241, 0.12)",
-          "brand-50": "rgba(99, 102, 241, 0.08)",
-          "brand-100": "rgba(99, 102, 241, 0.16)",
-          "brand-500": "#6366F1",
-          "brand-600": "#818CF8",
-          "brand-700": "#A5B4FC",
           "ink": "#F8FAFC",
           "ink-soft": "#94A3B8",
           "ink-muted": "#64748B",
@@ -68,9 +57,8 @@
           "surface-3": "#1F2937",
           "line": "#1E293B",
           "line-strong": "#334155",
-          "accent": "#22D3EE",
+          "accent": "#FBBF24",
           "success": "#34D399",
-          "warning": "#FBBF24",
           "danger": "#F87171"
         }
       },
@@ -79,95 +67,29 @@
         "shadows": "shadow-sm for flat cards, shadow-lg shadow-indigo-500/5 for interactive elements",
         "borders": "1px solid var(--line) with hover:border-brand/40 transition-colors"
       }
-    },
-    "option_2": {
-      "id": "cyber_tactical",
-      "name": "Option 2: Swiss Technical & Emerald Tactical",
-      "concept": "A high-density, engineer-grade tactical interface. Deep slate dark base with vivid Emerald green telemetry indicators, high-contrast monospace data grids, cardless container lines, and military-precision status chips.",
-      "emotional_archetype": "Performance Pro & Tactical Precision",
-      "typography": {
-        "display_heading_font": "Space Grotesk / Chivo",
-        "body_font": "Inter / IBM Plex Sans",
-        "mono_font": "JetBrains Mono",
-        "google_fonts_import": "https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap",
-        "hierarchy": {
-          "hero_title": "text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none",
-          "section_title": "text-2xl sm:text-3xl font-bold tracking-tight text-ink uppercase",
-          "card_title": "text-base sm:text-lg font-bold text-ink",
-          "mono_eyebrow": "font-mono text-xs uppercase tracking-[0.25em] text-success font-semibold"
-        }
-      },
-      "color_tokens": {
-        "light": {
-          "brand": "#059669",
-          "brand-hover": "#047857",
-          "brand-soft": "#ECFDF5",
-          "ink": "#022C22",
-          "ink-soft": "#334155",
-          "surface": "#FFFFFF",
-          "surface-2": "#F0FDF4",
-          "line": "#E2E8F0"
-        },
-        "dark": {
-          "brand": "#10B981",
-          "brand-hover": "#34D399",
-          "brand-soft": "rgba(16, 185, 129, 0.12)",
-          "ink": "#F0FDF4",
-          "ink-soft": "#94A3B8",
-          "surface": "#060D0A",
-          "surface-2": "#0D1814",
-          "line": "#1B2E26"
-        }
-      },
-      "geometry_and_styling": {
-        "border_radius": "rounded-md for all containers (sharp technical aesthetic)",
-        "shadows": "none (pure 1px solid stroke definition)",
-        "borders": "1px solid var(--line)"
-      }
     }
   },
-  "shared_component_blueprint": {
-    "public_navigation": {
-      "style": "Sticky Crystal Glassmorphism header with backdrop-blur-xl bg-surface/80 border-b border-line z-50",
-      "elements": "Logo with brand icon + Brand Name, Navigation Links (Domains, Hosting, VPS & RDP, Private Email, Pricing, API), Language Selector (EN/ES/FR), Theme Toggle (Light/Dark), Sign In Link, Create Account CTA"
-    },
-    "hero_section": {
-      "composition": "Two-column grid or high-impact editorial split. Left: Large editorial title with 1 highlighted gradient text span, monospace metadata badge ('OFFSHORE INFRASTRUCTURE v2.4'), value props with checkmarks. Right: Live interactive Product Search Card or Sandbox Preview Card with 'SANDBOX ACTIVE' status pill.",
-      "search_bar": "Massive rounded-2xl or rounded-xl input with embedded TLD dropdown, live availability status trigger, and high-visibility Search CTA button."
-    },
-    "app_shell": {
-      "sidebar": "Collapsible left navigation with clean icons (Lucide React), categorized into Overview, Infrastructure (Domains, Hosting, VPS/RDP), Billing (Orders, Wallet, Invoices), Developer (API Keys), Settings.",
-      "topbar": "Global Command Palette / Search input, Wallet Balance Chip with quick +Add Funds modal trigger, Test Mode Indicator Badge (when dry-run active), Language Switcher, User Dropdown Menu with avatar."
-    },
-    "unified_checkout_stepper": {
-      "location": "Inside the app shell context (maintaining sidebar + topbar context)",
-      "steps": [
-        {"step": 1, "name": "Configure", "details": "Choose domain WHOIS privacy, server location (EU/SG), OS image, SSH keys, billing cycle (7-day / 30-day / 1-year)"},
-        {"step": 2, "name": "Review & Promo", "details": "Itemized cost breakdown, TLD ICANN fees, promo code input, instant subtotal recalculation"},
-        {"step": 3, "name": "Pay with Wallet", "details": "Shows current wallet balance vs order total. Inline 'Top up $' button if balance is insufficient"},
-        {"step": 4, "name": "Confirmation", "details": "Instant activation status, root credentials / cPanel login reveal, WHOIS privacy confirmation"}
-      ]
-    },
-    "tables_and_cards": {
-      "data_table": "Clean, dense row lines with monospace IPs/IDs, status pills (Active: green, Pending: amber, Suspended: red), quick action buttons (DNS Manager, Console, Reboot, Renew).",
-      "product_card": "Minimalist card with top pill ('Popular', 'Privacy Tier'), prominent price/month in large mono font, feature checklist, and primary action button."
-    }
+  "audit_findings_summary": {
+    "total_pages_audited": 23,
+    "key_issues": [
+      "App shell navigation redundancy across AppRail.jsx, sidebar.jsx, and topbar.jsx consuming ~380px horizontal space.",
+      "Data tables displaying raw string noise ('test_mode', 'Invalid Date') without defensive fallback handling.",
+      "Button utility class fragmentation (btn-blue, btn-teal, add-to-cart) causing inconsistent border-radii.",
+      "Transparent overlay backgrounds in header/dropdown menus causing text bleed over underlying page content.",
+      "Missing data-testid attributes across interactive domain/hosting/wallet elements."
+    ]
   },
-  "image_urls": {
-    "datacenter_hero": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxzZXJ2ZXIlMjByYWNrJTIwZGF0YWNlbnRlciUyMHNlY3VyaXR5fGVufDB8fHx8MTc4OTExMTEwOXww&ixlib=rb-4.1.0&q=85",
-    "server_racks": "https://images.unsplash.com/photo-1506399558188-acca6f8cbf41?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHw0fHxzZXJ2ZXIlMjByYWNrJTIwZGF0YWNlbnRlciUyMHNlY3VyaXR5fGVufDB8fHx8MTc4OTExMTEwOXww&ixlib=rb-4.1.0&q=85",
-    "minimal_bg_blue": "https://images.unsplash.com/photo-1579548122080-c35fd6820ecb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwdGVjaG5vbG9neSUyMGdlb21ldHJpYyUyMGdyYWRpZW50fGVufDB8fHx8MTc4OTExMTEwOXww&ixlib=rb-4.1.0&q=85"
+  "general_ui_ux_guidelines": {
+    "header_and_overlays": "DO NOT use complete transparent backgrounds in headers, dropdowns, or overlays. Always use glassmorphism (backdrop-blur-xl bg-white/80 dark:bg-gray-900/80) or solid backgrounds with subtle 1px borders.",
+    "testing_attributes": "All interactive and key informational elements MUST include a kebab-case data-testid attribute (e.g. data-testid='hero-domain-search-input', data-testid='checkout-pay-button').",
+    "typography": "Use Plus Jakarta Sans / Outfit (.js format components) for display headlines. Avoid Inter for main titles. Use JetBrains Mono for technical IDs, prices, and status tags.",
+    "colors_and_contrast": "Primary brand color is Indigo (#4F46E5 / #6366F1). Restrict Amber (#F59E0B) strictly to sandbox/test mode or warning states. Ensure all text meets WCAG AA 4.5:1 contrast standards.",
+    "defensive_rendering": "Never display raw unformatted strings like 'Invalid Date' or 'test_mode' in data tables. Fall back gracefully to '—' or styled status badges."
   },
-  "forbidden_ai_slop_patterns": [
-    "NEVER use generic centered layouts with no visual contrast or asymmetry.",
-    "NEVER use Inter font for headlines or large text (use display font like Outfit or Space Grotesk).",
-    "NEVER use plain full-screen dark gradients with 100% opacity dark backgrounds without subtle borders.",
-    "NEVER use emojis as UI icons (e.g. 🤖, 💻, 🔒). Always use Lucide icons.",
-    "NEVER use default browser select inputs or native date pickers.",
-    "NEVER use pure black #000000 or pure white background without subtle 1px border separation for cards.",
-    "NEVER leave interactive elements without hover/focus states or data-testid attributes."
-  ],
-  "testing_and_qa_requirements": {
-    "data_testid_rule": "ALL interactive components (buttons, links, inputs, dropdowns, table rows, cards) MUST include kebab-case data-testid attributes (e.g. data-testid='domain-search-input', data-testid='checkout-step-pay-button')."
-  }
+  "instructions_to_main_agent": [
+    "Refer to /app/design_audit.md for page-by-page audit findings and specific recommended fixes.",
+    "When modifying React .js components in /app/frontend/src/, ensure all interactive elements retain or add kebab-case data-testid attributes.",
+    "Ensure headers and dropdown menus never use transparent backgrounds without backdrop blur and border separation.",
+    "Prioritize fixing data formatting in DomainList.jsx, Wallet.jsx, and OrderHistory.jsx."
+  ]
 }

@@ -33,7 +33,6 @@ import Dashboard from "../pages/front-admin/dashboard";
 import PaymentHistory from "../pages/front-admin/billing/PaymentHistory";
 import OrderHistory from "../pages/front-admin/OrderHistory";
 import ServicesRenewals from "../pages/front-admin/ServicesRenewals";
-import Subscriptions from "../pages/front-admin/billing/Subscriptions";
 import Wallet from "../pages/front-admin/billing/Wallet";
 
 import AccountSettings from "../pages/front-admin/UserManagement/AccountSettings";
@@ -152,7 +151,7 @@ function Router() {
         <Route path="/payment-history" element={<PaymentHistory />} />
         <Route path="/orders" element={<OrderHistory />} />
         <Route path="/services" element={<ServicesRenewals />} />
-        <Route path="/subscriptions" element={<Subscriptions />} />
+        <Route path="/subscriptions" element={<Navigate to="/services" replace />} />
         <Route path="/wallet" element={<Wallet />} />
       </Route>
       <Route path="/help-support" element={<HelpSupport />} />

@@ -46,7 +46,6 @@ const UserDropdownMenu = ({ classAdd = false }) => {
     { to: "/wallet#rewards", label: t.site?.app?.rail?.rewards || "Rewards", testid: "rewards" },
     { to: "/orders", label: admin.orders || "Orders", testid: "orders" },
     { to: "/services", label: admin.myServices || "My services", testid: "services" },
-    { to: "/subscriptions", label: admin.subscriptions || "Subscriptions", testid: "subscriptions" },
     { to: "/payment-history", label: admin.paymentHistory || "Payment history", testid: "payment-history" },
     { to: "/help-support", label: admin.helpSupport || "Help & Support", testid: "help" },
   ];

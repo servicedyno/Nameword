@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend-only regression + Phase 1/2/3 UX audit for Nameword. Logged in as buyer@nameword.local and validated the new single smart sidebar (app-sidebar), sidebar collapse+localStorage persistence, top bar (search/wallet-chip/rewards-chip/notifications/language/theme/cart), Dashboard domain list (22 real domains, no 'Invalid Date', Test-mode amber badges, Cloudflare DNS, Manage DNS deep-link), Wallet ($50 balance, 526.20 pts, all action links, TopUp modal presets/aria-pressed/min-10 hint/coin grid/close), Payment history (23 rows, StatusBadges, invoice buttons, no Invalid date), Orders (25 cards, order-status badges, 50 Test-mode occurrences), Services (renewals-summary + 24 renewal rows) + /subscriptions→/services redirect, Cart empty state + Mini-cart empty suggestions (VPS shows 'From $18.00/mo'), Sticky VPS cart bar sitting 62px above viewport bottom on mobile (above bottom tabs) with 'Checkout · $18.00' text, /api page copy button showing 'Copied', theme toggle (aria-pressed flips + dark mode dashboard/wallet readable), language switch to FR translating sidebar labels exactly as spec (Vue d'ensemble, Domaines, DNS, Hébergement, VPS, RDP, Portefeuille, Commandes, Mes services, Historique des paiements, Récompenses, Paramètres et API, Aide et support; groups Produits/Facturation/Compte). Mobile 390x844: mobile-menu-button opens mobile-drawer with sidebar-language-row, sidebar-close closes, all 5 bottom-tab-* present, no horizontal overflow on /dashboard, /wallet, /vps. Public landing hero-domain-input + /domains domain-search-input + public theme-toggle + nav-mobile-menu confirmed. No console errors observed on page loads (only a benign 'Missing VITE_API_KEY' warning).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard/Wallet (FR locale)", "issues": ["Data-table column headers 'Nameservers', 'Registered', 'Actions' and action button labels ('Manage DNS', 'Refresh') remain in English when locale=FR. Row dates ('Sep 13, 2026') and reward-history section were not verified for translation. Spec only required sidebar labels + group headers to translate, so treating this as a minor i18n polish item, not a blocker."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional i18n polish: translate DataTable column headers (Nameservers/Registered/Actions) and inline action buttons (Manage DNS, Refresh) when locale != EN.",
+    "Optional: consider adding a dedicated data-testid on the language option buttons (e.g. lang-option-en/es/fr) — current implementation only exposes flag+code text, which makes selector-based automation slightly fragile but does NOT block users."
+  ],
+  "critical_code_review_comments": [
+    "Everything specified in the review request is present and working; no critical code-quality issues surfaced during UI testing.",
+    "wallet-topup-modal 'Get address' button's disabled state relies on class/opacity rather than the DOM disabled attribute (getAttribute('disabled') returned null even when button appeared inactive). Prefer setting the real `disabled` attribute so screen-readers and E2E tests can detect state reliably."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100%"},
+  "test_credentials": "buyer@nameword.local / Buyer@12345 (22 domains, $50 wallet, 526.20 pts)",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All Phase 1/2/3 shipped items pass. FR locale switch was verified via `page.get_by_text('FR', exact=True).first.click()` after opening [data-testid=language-menu]; ES option exists in the DOM but the text 'ES' is duplicated (button + inner span) — use `.first` or add a data-testid. Sticky VPS cart bar bottom offset = 62px on 390px viewport when authenticated. /subscriptions correctly navigates to /services. No console errors. Buyer top-ups showing 'Expired' StatusBadges is expected (they truly are expired seed data).",
+  "rca of the issue": "n/a — no bugs found"
+}

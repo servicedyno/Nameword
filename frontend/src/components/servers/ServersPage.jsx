@@ -304,7 +304,7 @@ export default function ServersPage({ product = "vps" }) {
             <div className="flex flex-col items-center justify-center text-center rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 py-12 px-6">
               <FiAlertTriangle className="text-red-500 mb-3" size={28} />
               <p className="text-primary dark:text-white font-medium mb-1">{plansError}</p>
-              <button onClick={() => loadPlans(region)} className="btn-teal mt-3">Retry</button>
+              <button onClick={() => loadPlans(region)} className="nw-btn-secondary nw-btn-sm mt-3">Retry</button>
             </div>
           ) : plans.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-line dark:border-gray-800 py-12 px-6">
@@ -447,8 +447,8 @@ export default function ServersPage({ product = "vps" }) {
               <p className="flex items-center gap-2 text-xs text-secondary dark:text-gray-400"><FiLock size={13} /> Pay from your prepaid wallet at checkout. Billed monthly.</p>
             </div>
             <div className="px-6 py-4 border-t border-lightgray dark:border-gray-800 flex justify-end gap-3">
-              <button onClick={closeConfigure} className="px-4 py-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white text-sm font-medium">Cancel</button>
-              <button onClick={addToCart} className="px-5 py-2 rounded-md bg-darkbtn hover:bg-darkbtn-hover text-white text-sm font-medium inline-flex items-center gap-2" data-testid="server-add-to-cart-confirm"><FiShoppingCart size={15} /> Add to cart · {money(configPlan.price_usd)}</button>
+              <button onClick={closeConfigure} className="nw-btn-secondary nw-btn-sm">Cancel</button>
+              <button onClick={addToCart} className="nw-btn-primary nw-btn-sm" data-testid="server-add-to-cart-confirm"><FiShoppingCart size={15} /> Add to cart · {money(configPlan.price_usd)}</button>
             </div>
           </div>
         </div>
@@ -474,19 +474,20 @@ export default function ServersPage({ product = "vps" }) {
       {/* Sticky cart bar — a persistent, always-visible way to reach the cart
           and the crypto checkout after adding a plan (mirrors the domains page). */}
       {cart.count > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line dark:border-white/[0.08] bg-white/95 dark:bg-gray-950/95 backdrop-blur-md" data-testid="server-cart-bar">
+        <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-line dark:border-white/[0.08] bg-white/95 dark:bg-gray-950/95 backdrop-blur-md ${isAuthenticated ? "max-lg:bottom-[62px]" : ""}`} data-testid="server-cart-bar">
           <div className="nw-container flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3 min-w-0">
               <span className="nw-icon h-10 w-10 shrink-0"><FiShoppingCart size={18} /></span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-primary dark:text-white" data-testid="server-cart-bar-count">{cart.count} item{cart.count === 1 ? "" : "s"} in cart</p>
-                <p className="text-xs text-ink-soft dark:text-gray-400 truncate">{cart.servers.map((s) => s.plan_name || s.plan_id).join(", ") || "Ready to checkout"}</p>
+                <p className="whitespace-nowrap text-sm font-semibold text-primary dark:text-white" data-testid="server-cart-bar-count">{cart.count} item{cart.count === 1 ? "" : "s"} in cart</p>
+                <p className="hidden truncate text-xs text-ink-soft dark:text-gray-400 sm:block">{cart.servers.map((s) => s.plan_name || s.plan_id).join(", ") || "Ready to checkout"}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 shrink-0">
               <span className="hidden sm:block text-lg font-bold text-primary dark:text-white nw-mono" data-testid="server-cart-bar-total">{money(cart.subtotal)}</span>
               <button type="button" onClick={openCart} className="nw-btn-primary" data-testid="server-cart-bar-checkout">
-                View cart &amp; checkout <FiArrowRight size={16} />
+                <span className="sm:hidden">Checkout · {money(cart.subtotal)}</span>
+                <span className="hidden sm:inline">View cart &amp; checkout</span> <FiArrowRight size={16} />
               </button>
             </div>
           </div>

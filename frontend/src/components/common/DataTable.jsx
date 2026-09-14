@@ -66,7 +66,7 @@ const DataTable = ({
         </div>
       )}
       {children && children}
-      <div className="table-auto md:table-fixed w-full overflow-auto">
+      <div className="nw-scroll-x w-full">
         <table className="table-main">
           <thead className="table-thead">
             {table.getHeaderGroups().map((headerGroup) => (

@@ -4,6 +4,8 @@ import { SiTether, SiLitecoin, SiDogecoin, SiBitcoincash, SiSolana, SiPolygon, S
 import { LuCoins } from "react-icons/lu";
 import { walletAPI } from "../../../api/walletApi";
 import { useLanguage } from "../../../hooks/useLanguage";
+import StatusBadge from "../../common/StatusBadge";
+import { fmtDate } from "../../../utils/formatDate";
 
 const COIN_ICONS = {
   BTC: { Icon: FaBitcoin, color: "#f7931a" },
@@ -24,22 +26,6 @@ const coinMeta = (code) => {
   const base = c.includes("-") ? c.split("-")[0] : c;
   const m = COIN_ICONS[base] || { Icon: LuCoins, color: "#6366f1" };
   return { Icon: m.Icon, color: m.color, label: base };
-};
-
-const STATUS = {
-  pending: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
-  confirming: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
-  credited: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
-  expired: "bg-gray-100 text-gray-600 dark:bg-gray-700/40 dark:text-gray-300",
-  failed: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
-};
-
-const fmtDate = (d) => {
-  try {
-    return new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return "";
-  }
 };
 
 // Auto-refresh cadence + a hard cap so we NEVER poll forever if a user opened a
@@ -117,7 +103,7 @@ const TopupHistory = ({ onResume }) => {
   return (
     <div data-testid="topup-history">
       <p className="card-admin-title">{labels.title || "Recent top-ups"}</p>
-      <div className="action-card overflow-hidden">
+      <div className="nw-card !p-0 overflow-hidden">
         {rows === null ? (
           <div className="px-5 py-6 text-sm text-secondary dark:text-gray-400">{labels.loading || "Loading…"}</div>
         ) : rows.length === 0 ? (
@@ -125,7 +111,7 @@ const TopupHistory = ({ onResume }) => {
             {labels.empty || "No crypto top-ups yet. Use “Top Up” above to add funds."}
           </div>
         ) : (
-          <ul className="divide-y divide-stokecolor dark:divide-gray-700">
+          <ul className="divide-y divide-line dark:divide-white/[0.06]">
             {rows.map((r) => {
               const { Icon, color, label } = coinMeta(r.currency);
               const resumable = isLivePending(r) && typeof onResume === "function" && r.address;
@@ -171,12 +157,11 @@ const TopupHistory = ({ onResume }) => {
                         Resume →
                       </span>
                     )}
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS[r.status] || STATUS.pending}`}
-                      data-testid={`topup-status-${r.paymentId}`}
-                    >
-                      {statusLabels[r.status] || r.status}
-                    </span>
+                    <StatusBadge
+                      status={r.status === "expired" ? "inactive" : r.status}
+                      label={statusLabels[r.status] || undefined}
+                      testid={`topup-status-${r.paymentId}`}
+                    />
                   </div>
                 </li>
               );
