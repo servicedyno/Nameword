@@ -616,6 +616,7 @@ export const es = {
     paymentHistory: "Historial de pagos",
     orders: "Pedidos",
     myServices: "Mis servicios y renovaciones",
+    rewards: "Recompensas",
     refundHistory: "Historial de reembolsos",
     subscriptionsSeePaymentHistory: "Ver historial de pagos",
     walletBalance: "Saldo de la billetera",

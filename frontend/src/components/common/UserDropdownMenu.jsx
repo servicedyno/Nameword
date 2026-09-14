@@ -43,7 +43,7 @@ const UserDropdownMenu = ({ classAdd = false }) => {
     { to: "/dashboard", label: admin.dashboard || "Dashboard", testid: "dashboard" },
     { to: "/domains", label: admin.domains || "Domains", testid: "domains" },
     { to: "/wallet", label: admin.wallet || "Wallet", testid: "wallet" },
-    { to: "/wallet#rewards", label: t.site?.app?.rail?.rewards || "Rewards", testid: "rewards" },
+    { to: "/wallet#rewards", label: admin.rewards || "Rewards", testid: "rewards" },
     { to: "/orders", label: admin.orders || "Orders", testid: "orders" },
     { to: "/services", label: admin.myServices || "My services", testid: "services" },
     { to: "/payment-history", label: admin.paymentHistory || "Payment history", testid: "payment-history" },
