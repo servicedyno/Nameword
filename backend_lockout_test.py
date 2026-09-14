@@ -11,7 +11,7 @@ import time
 from typing import Dict, Any, Tuple
 
 # Base URL from frontend/.env
-BASE_URL = "https://a0e5014a-ac28-42f8-802b-66cce16fb82f.preview.emergentagent.com/api/v1"
+BASE_URL = "https://nameword-preview-2.preview.emergentagent.com/api/v1"
 
 # Timeout for API calls
 TIMEOUT = 30

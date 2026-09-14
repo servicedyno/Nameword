@@ -1,5 +1,15 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ✅ THIS SESSION (2025-07) — Re-setup on fresh pod (Node backend + prod frontend)
+- Fresh pod: both `.env` files missing, backend `node_modules` missing, supervisor reset to the default `uvicorn server:app` template (kept failing — this is a NODE app, not FastAPI).
+- Actions: recreated `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs, frontend node_modules already present); edited `/etc/supervisor/conf.d/supervisord.conf` backend cmd → `/bin/bash /app/backend/start.sh` (node bin/www :8001) and frontend cmd → `/bin/bash /app/frontend/start.sh`; created `/app/frontend/.prod` so the frontend serves a Vite **production build** (immune to Cloudflare 429 on preview).
+- REAL current pod URL (platform-injected supervisor APP_URL) = `https://5961dc86-4baf-49ef-aba5-1416b0c09720.preview.emergentagent.com`. User's pasted `5c680fc7…` URL is STALE → used only in CORS_ORIGIN. Used the real pod URL for APP_URL/FRONTEND_URL/GOOGLE_REDIRECT_URL(`/auth/google/callback`)/GOOGLE_LINK_REDIRECT_URL(`/auth/google/link/callback`)/VITE_API_BASE_URL. Frontend talks same-origin so it works on whatever URL routes to the pod.
+- REAL creds wired: DB_URI (Railway external `nozomi.proxy.rlwy.net:54383/nameword`, live data — connected), NOMADLY_API_KEY (rsk_live_…), BREVO_API_KEY, GOOGLE id/secret, DYNO_PAY_API_KEY (services read this directly; DYNO_PAY_BASE_URL=https://dynopay.com/api). Re-added reward env (REWARD_POINT_VALUE=0.02, WALLET_TOPUP_REWARD_RATE=1, PURCHASE_BONUS_REWARD_RATE=0.5, WELCOME_BONUS_POINTS=250, REFERRAL_BONUS_POINTS=250) and the two GOOGLE redirect URLs (env.js requires both; not in the user's list).
+- PLACEHOLDERS (features inert/test-mode until real creds given): mail SMTP host/user/pass, Telegram, WHM/cPanel, Plesk, Cloudflare, Telnyx, GCloud, CR/ConnectReseller, DYNO_PAY JWT/COMPANY/WEBHOOK.
+- EMAIL CAVEAT: MAIL_FROM_ADDRESS + BREVO_EMAIL = `hello@nameword.local` (NOT a verified Brevo sender) → OTP/verify/welcome/reset emails likely won't deliver until a verified sender is restored. Soft email-gate means login/usage is not blocked.
+- VERIFIED live: backend :8001 mongo connected; frontend :3000 prod build serving (HTTP 200, landing page renders); `GET /api/v1/reseller/domains/search?domain=…` real Nomadly ($39, OpenProvider); `/auth/google` 302 with pod redirect_uri + correct client_id; `POST /api/v1/auth/login` 200 for demo@nameword.local (re-seeded via `node scripts/seed_test_users.js`). Google OAuth completes only once `<pod>/auth/google/callback` is whitelisted in the Google console.
+
+
 ## ✅ THIS SESSION (2026-09) — cPanel FULL-PANEL MANAGEMENT (Modules 2-12, email excluded)
 - Analysed https://1.speechcue.com/apidoc; the app previously only did hosting account lifecycle. Built the rest of the provider's cPanel surface (user asked for "everything except email").
 - BACKEND (tested 47/47): ~55 ownership-scoped proxy routes under `/api/v1/reseller/hosting/:user/*` via a table-driven factory `hostingMgmt()` in `resellerController.js` reusing `withOwnedHosting()` + `forward()`. Covers MySQL (dbs/users/privileges/remote-hosts/phpmyadmin), subdomains(+bulk), domains(list/docroot/addon-delete/docroot-modes/set-primary/ns-status), ssl(+autossl), stats, File Manager (list/content/save/mkdir/rename/extract/compress/copy/move/delete/upload/upload-chunk[/cancel]), security (status, anti-red deploy+status, anti-bot[+rules], safe-browsing, blacklist, js-challenge, visitor-captcha), geo, analytics, account/site-status. NOT owned -> 403; owned in dry_run -> {mode:'dry_run',test_mode:true,note}. Also `GET /api/v1/reseller/renewals` (Module 12) computed from the buyer's OWN orders (provider /renewals spans the whole reseller account, so NOT proxied — avoids cross-customer leak). Route table registered in `routes/api/reseller.js` via a forEach loop (multi-segment, never shadows GET/DELETE /hosting/:user).
@@ -10,7 +20,7 @@
 ## ✅ THIS SESSION (2026-09) — Re-setup on new pod + REMOVED failed-login lockout
 - Pod reconciled: git working tree was empty (all files staged-deleted) → `git reset --hard HEAD` restored the repo; both `.env` files were missing and supervisor was reset to the default uvicorn/yarn template; backend+frontend node_modules missing.
 - Actions: recreated `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs) + frontend; rewrote `/etc/supervisor/conf.d/supervisord.conf` → backend `/bin/bash /app/backend/start.sh` (node bin/www :8001), frontend `/bin/bash /app/frontend/start.sh` (PROD build, vite preview :3000).
-- REAL current pod URL (platform-injected supervisor APP_URL) = `https://a0e5014a-ac28-42f8-802b-66cce16fb82f.preview.emergentagent.com`; used for APP_URL/FRONTEND_URL/GOOGLE_REDIRECT_URL(`/auth/google/callback`)/GOOGLE_LINK_REDIRECT_URL(`/auth/google/link/callback`). User's pasted `5c680fc7…` URL is STALE → kept only in CORS_ORIGIN. Frontend uses same-origin (`window.location.origin/api/v1`) so it works on any URL.
+- REAL current pod URL (platform-injected supervisor APP_URL) = `https://nameword-preview-2.preview.emergentagent.com`; used for APP_URL/FRONTEND_URL/GOOGLE_REDIRECT_URL(`/auth/google/callback`)/GOOGLE_LINK_REDIRECT_URL(`/auth/google/link/callback`). User's pasted `5c680fc7…` URL is STALE → kept only in CORS_ORIGIN. Frontend uses same-origin (`window.location.origin/api/v1`) so it works on any URL.
 - REAL creds wired: DB_URI (Railway external `nozomi.proxy.rlwy.net:54383/nameword`, live data — connected), NOMADLY_API_KEY (rsk_live_…), BREVO_API_KEY, GOOGLE id/secret, DYNO_PAY_API_KEY. Re-added reward env (REWARD_POINT_VALUE=0.02, WALLET_TOPUP_REWARD_RATE=1, PURCHASE_BONUS_REWARD_RATE=0.5, WELCOME_BONUS_POINTS=250, REFERRAL_BONUS_POINTS=250). PLACEHOLDERS: mail SMTP host/user/pass, Telegram, WHM/cPanel, Plesk, Cloudflare, Telnyx, GCloud, CR/ConnectReseller, DYNO_PAY JWT/COMPANY/WEBHOOK.
 - EMAIL CAVEAT: MAIL_FROM_ADDRESS + BREVO_EMAIL set to user-pasted `hello@nameword.local` (NOT a verified Brevo sender) → OTP/verify/welcome/reset emails likely won't deliver until a verified sender (e.g. previously-verified `hi@nameword.com`) is restored. App uses a SOFT email-gate so login/usage is not blocked.
 - VERIFIED live: backend :8001 mongo connected; frontend :3000 prod build; public SPA 200; `GET /api/v1/reseller/domains/search` real Nomadly ($39, OpenProvider); `/auth/google` 302 with pod redirect_uri; login OK for demo@/buyer@nameword.local (seeded via `node scripts/seed_test_users.js`).
@@ -33,13 +43,13 @@
 ## ✅ THIS SESSION (2026-09) — Re-setup on new pod (empty .env + reset supervisor)
 - Pod reconciled: both `.env` files were EMPTY and supervisor was reset to the default uvicorn/yarn template. Backend node_modules missing.
 - Actions: `yarn install` backend (804 pkgs); rewrote `/app/backend/.env` + `/app/frontend/.env` from user creds; rewrote `/etc/supervisor/conf.d/supervisord.conf` (backend `bash start.sh` node bin/www :8001, frontend `bash start.sh` PROD build :3000).
-- REAL current pod URL (platform-injected supervisor APP_URL) = `https://hosting-hub-53.preview.emergentagent.com`. User's pasted `5c680fc7…` URL is STALE → kept only in CORS_ORIGIN. Used real pod URL for APP_URL/FRONTEND_URL/GOOGLE_REDIRECT_URL(`/auth/google/callback`)/GOOGLE_LINK_REDIRECT_URL(`/auth/google/link/callback`)/VITE_API_BASE_URL.
+- REAL current pod URL (platform-injected supervisor APP_URL) = `https://nameword-preview-2.preview.emergentagent.com`. User's pasted `5c680fc7…` URL is STALE → kept only in CORS_ORIGIN. Used real pod URL for APP_URL/FRONTEND_URL/GOOGLE_REDIRECT_URL(`/auth/google/callback`)/GOOGLE_LINK_REDIRECT_URL(`/auth/google/link/callback`)/VITE_API_BASE_URL.
 - DB: used user's REAL Railway EXTERNAL Mongo `mongodb://mongo:***@nozomi.proxy.rlwy.net:54383/nameword?authSource=admin` (TCP open, live data). DynoPay: `DYNO_PAY_API_KEY` = user's "Dyno Pay api key" (services read DYNO_PAY_API_KEY directly; env.js only validates JWT/COMPANY/WEBHOOK which stay blank). REAL keys: NOMADLY_API_KEY (rsk_live_…), BREVO_API_KEY, GOOGLE id/secret, DYNO_PAY_API_KEY. PLACEHOLDERS: mail SMTP, Telegram, WHM, Plesk, Cloudflare, Telnyx, GCloud, CR/ConnectReseller.
 - VERIFIED live: backend :8001 mongo connected; frontend :3000 prod build; public SPA 200; `GET /api/v1/reseller/domains/search` real Nomadly ($39, OpenProvider); `/auth/google` 302 with pod redirect_uri; login OK for demo@nameword.local (seeded via `node scripts/seed_test_users.js`). Google OAuth completes only once `<pod>/auth/google/callback` is whitelisted in Google console.
 
 
 ## ✅ THIS SESSION (2026-09) — Re-setup + checkout features + brand
-- Re-setup after pod reconcile: wrote `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs); rewrote supervisor (backend `bash start.sh` node bin/www :8001, frontend `bash start.sh` prod build :3000). App LIVE: Mongo connected, Nomadly domain search real ($39), VPS/RDP/hosting plans real, Google OAuth 302 with pod redirect URI. NEW real creds wired: Google client id/secret, Brevo API key, DYNO_PAY_API_KEY. Pod URL = https://hosting-hub-53.preview.emergentagent.com (pasted 5c680fc7 URL is stale — CORS only).
+- Re-setup after pod reconcile: wrote `/app/backend/.env` + `/app/frontend/.env` from user creds; `yarn install` backend (804 pkgs); rewrote supervisor (backend `bash start.sh` node bin/www :8001, frontend `bash start.sh` prod build :3000). App LIVE: Mongo connected, Nomadly domain search real ($39), VPS/RDP/hosting plans real, Google OAuth 302 with pod redirect URI. NEW real creds wired: Google client id/secret, Brevo API key, DYNO_PAY_API_KEY. Pod URL = https://nameword-preview-2.preview.emergentagent.com (pasted 5c680fc7 URL is stale — CORS only).
 - FEATURE 1 "Checkout Entry": persistent sticky cart bar on VPS/RDP (`components/servers/ServersPage.jsx`, data-testid=server-cart-bar) opens mini-cart (crypto flow).
 - FEATURE 2 "Paid Celebration": `components/cart/PaymentSuccessCelebration.jsx` (animated checkmark + confetti, reduced-motion aware; keyframes in `index.css`). Wired into `CryptoCheckoutModal.jsx` + `wallet-modal.jsx`.
 - BRAND: user-facing "DynoPay" → "Dynopay" in modals + locale VALUES. Comment/log brand sweep via `\bDynoPay\b(?!-Webhook)` (kept identifiers `verifyDynoPaySignature`/`handleDynoPaymentWebhook`, locale KEYS, `DYNO_PAY_*`, and `X-DynoPay-Webhook-Id`).
@@ -51,7 +61,7 @@
 ## ✅ APP RE-SETUP (2026-09) — LIVE on this pod
 - Recreated `/app/backend/.env` + `/app/frontend/.env` from user-pasted credentials.
 - Supervisor `/etc/supervisor/conf.d/supervisord.conf` was reset to the default uvicorn template on pod resume → **changed `backend` cmd to `/bin/bash /app/backend/start.sh` (node) and `frontend` cmd to `/bin/bash /app/frontend/start.sh` (prod build)**. Ran `yarn install` in backend (node_modules was missing).
-- Pod URL used for APP_URL/FRONTEND_URL/GOOGLE redirects/VITE_API_BASE_URL = `https://hosting-hub-53.preview.emergentagent.com` (user's pasted `.env` had a stale `5c680fc7…` URL — kept in CORS_ORIGIN only).
+- Pod URL used for APP_URL/FRONTEND_URL/GOOGLE redirects/VITE_API_BASE_URL = `https://nameword-preview-2.preview.emergentagent.com` (user's pasted `.env` had a stale `5c680fc7…` URL — kept in CORS_ORIGIN only).
 - REAL secrets in use: DB_URI (Railway external `nozomi.proxy.rlwy.net:54383/nameword`, live data), NOMADLY_API_KEY (rsk_live_…), BREVO_API_KEY, GOOGLE client id/secret, DYNO_PAY_JWT_TOKEN. PLACEHOLDERS: mail SMTP, Telegram, WHM/cPanel, Plesk, Cloudflare, Telnyx, GCloud, DYNO_PAY_COMPANY_ID/WEBHOOK_SECRET, CR/ConnectReseller.
 - Verified: backend on 8001 (mongo connected), frontend on 3000 (prod build), public SPA 200, `/api/v1/domain/search` 200 (real Nomadly), `/auth/google` 302→Google, login OK for demo@/buyer@nameword.local.
 - Google OAuth will only complete if `…/auth/google/callback` is whitelisted in the Google Cloud console for this client id.
@@ -92,7 +102,7 @@ Extract and set up the app from https://github.com/Moxxcompany/NamewordProductio
 - **Frontend**: React 19 + Vite 7 + Tailwind v4, Vite dev server on port 3000 (`yarn dev --host 0.0.0.0 --port 3000`)
 - **DB**: local MongoDB `mongodb://localhost:27017/nameword` (Railway `DB_URI` is `*.railway.internal`, unreachable outside Railway)
 - **Ingress**: `/api/*` -> backend 8001, everything else -> frontend 3000. Frontend calls `VITE_API_BASE_URL + /api/v1`.
-- Preview URL: https://hosting-hub-53.preview.emergentagent.com
+- Preview URL: https://nameword-preview-2.preview.emergentagent.com
 
 ## ⚠️ CRITICAL SECURITY FINDING — Malware removed
 4 source files contained an injected, obfuscated self-executing payload (blockchain-based C2 "dead-drop resolver" that calls TronGrid for wallet `TMfKQEd7TJJa5xNZJZ2Lep838vrzrs7mAP` to fetch attacker-controlled next-stage commands):
@@ -145,14 +155,14 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Re-setup (current session) — env from user
 - Recreated `/app/backend/.env` and `/app/frontend/.env` from user-provided creds.
-- URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) were pointed to the ACTUAL pod preview URL `https://hosting-hub-53.preview.emergentagent.com` (user's .env had a stale `5c680fc7-...` URL that doesn't map to this pod).
+- URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) were pointed to the ACTUAL pod preview URL `https://nameword-preview-2.preview.emergentagent.com` (user's .env had a stale `5c680fc7-...` URL that doesn't map to this pod).
 - DB_URI: user's Railway proxy Mongo (`nozomi.proxy.rlwy.net:54383/nameword`) — reachable & already seeded (plans/tiers/badges/1 admin). NOT re-seeded.
 - NOMADLY_API_KEY is REAL/LIVE (`rsk_live_...`) → reseller health ok, account wallet $5, upstream dry_run.
 - `yarn install` (backend); supervisor rewritten: backend `bash start.sh` (node bin/www :8001), frontend `yarn dev` (vite :3000). Both RUNNING; homepage renders live; Mongo connected.
 - Still placeholder (non-functional): Google OAuth, Brevo email, Telnyx OTP, ConnectReseller/WHM/Plesk/Cloudflare, DynoPay, GCloud, Telegram.
 
 ## Re-setup (current run) — new creds provided by user
-- Pod preview URL is now `https://hosting-hub-53.preview.emergentagent.com` (user's pasted `5c680fc7-...` URL was stale → all URL configs use the live pod URL).
+- Pod preview URL is now `https://nameword-preview-2.preview.emergentagent.com` (user's pasted `5c680fc7-...` URL was stale → all URL configs use the live pod URL).
 - `/app/backend/.env` written from user creds. REAL: `DB_URI` (Railway public proxy `nozomi.proxy.rlwy.net:54383/nameword`, reachable + already seeded), `NOMADLY_API_KEY` (rsk_live_...), generated APP_KEY/JWT_KEY/ADMIN_REGISTER_TOKEN. All other 3rd-party keys are PLACEHOLDERS.
 - `/app/frontend/.env`: `VITE_API_BASE_URL` -> live pod URL; VITE_API_KEY placeholder (non-blocking); chat off.
 - Supervisor rewritten: backend `bash /app/backend/start.sh` (node bin/www on 8001), frontend `yarn dev` (vite on 3000). Backend `yarn install` done (804 pkgs); frontend node_modules already present.
@@ -189,7 +199,7 @@ EMPTY/not configured: UPCLOUD_USERNAME/PASSWORD, WHM_PASSWORD, GOOGLE_CLOUD_PROJ
 
 ## Re-setup (2026-09-08) — pod reconciled again, re-provisioned by user creds
 - Pod had been reconciled: both `.env` wiped, backend `node_modules` gone, supervisor reset to default uvicorn template, frontend in BACKOFF (`yarn start` doesn't exist; script is `dev`).
-- ACTUAL pod preview URL = `https://hosting-hub-53.preview.emergentagent.com` (from env `preview_endpoint`/HOSTNAME). User's pasted `5c680fc7-...` URL is STALE → all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) point to the live 2b950aee pod URL.
+- ACTUAL pod preview URL = `https://nameword-preview-2.preview.emergentagent.com` (from env `preview_endpoint`/HOSTNAME). User's pasted `5c680fc7-...` URL is STALE → all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) point to the live 2b950aee pod URL.
 - Rewrote `/app/backend/.env` from user creds (PORT=8001). REAL: DB_URI (Railway proxy nozomi.proxy.rlwy.net:54383/nameword, reachable+seeded), NOMADLY_API_KEY (rsk_live_...), generated APP_KEY/JWT_KEY/ADMIN_REGISTER_TOKEN. All other 3rd-party keys = PLACEHOLDERS. Confirmed all envalid-required vars in start/env.js are satisfied.
 - Rewrote `/app/frontend/.env` (VITE_API_BASE_URL -> pod URL, VITE_API_KEY placeholder, VITE_SHOW_CHAT=false, VITE_TELEGRAM_BOT_NAME, VITE_REWARD_POINT_VALUE=0.02).
 - `yarn install` backend (ok). Rewrote supervisor: backend `bash /app/backend/start.sh` (node bin/www :8001), frontend `yarn dev --host 0.0.0.0 --port 3000`. Both RUNNING.
@@ -401,7 +411,7 @@ User rules: (1) earn reward points ONLY when paying with crypto (crypto top-up O
 
 ### Re-setup (2026-09-11, pod reconciled again) — APP IS LIVE
 - Pod reconciled: both `.env` wiped, backend `node_modules` gone, supervisor reset to default uvicorn template (`uvicorn server:app` -> failed: this is a NODE app), frontend was crashing on inotify ENOSPC (old uvicorn WatchFiles was watching backend node_modules and exhausted watchers).
-- NEW live pod preview URL = `https://hosting-hub-53.preview.emergentagent.com` (user pasted a STALE `5c680fc7-...` URL in their .env -> repointed APP_URL/FRONTEND_URL/CORS/GOOGLE redirects to the live pod URL).
+- NEW live pod preview URL = `https://nameword-preview-2.preview.emergentagent.com` (user pasted a STALE `5c680fc7-...` URL in their .env -> repointed APP_URL/FRONTEND_URL/CORS/GOOGLE redirects to the live pod URL).
 - "credentials vault password Katiekendra123@": support re-confirmed there is NO Emergent credentials-vault / password restore feature; the string is unused. User re-pasted their full backend/.env (the ONLY way to restore secrets). REAL secrets: DB_URI (Railway `nozomi.proxy.rlwy.net:54383/nameword`, reachable + seeded: 37 collections, users=6, cpanelplans=9, vpsplans=4) and NOMADLY_API_KEY (rsk_live_...). All other 3rd-party keys are PLACEHOLDERS.
 - Fixes: `yarn install` (backend, node_modules restored); rewrote `/etc/supervisor/conf.d/supervisord.conf` -> backend `bash /app/backend/start.sh` (node bin/www :8001), frontend `yarn start` (=vite, 0.0.0.0:3000 via vite.config). Frontend ENOSPC resolved once uvicorn (the watcher hog) was replaced by Node. sysctl inotify bump was NOT permitted in container but not needed after uvicorn removed.
 - VERIFIED LIVE (curl + screenshot): backend connect to Railway Mongo + listening :8001; `/api/v1/reseller/health` ok (dry_run, all products); `/reseller/account` real (@onarrival1, wallet $5); `/reseller/domains/search?domain=coolstartup2026` -> coolstartup2026.com available $39 (real upstream); frontend homepage renders (Option A dark redesign) HTTP 200.
@@ -422,7 +432,7 @@ User rules: (1) earn reward points ONLY when paying with crypto (crypto top-up O
 
 ### Re-setup (2026-09-08, pod reconciled again) — APP IS LIVE
 - Pod was reconciled: both `.env` files wiped, backend `node_modules` gone, supervisor reset to the default uvicorn/`yarn start` template. Frontend `node_modules` survived (PVC).
-- NEW pod preview URL: `https://hosting-hub-53.preview.emergentagent.com` (old `5c680fc7-...` is stale; kept in CORS only).
+- NEW pod preview URL: `https://nameword-preview-2.preview.emergentagent.com` (old `5c680fc7-...` is stale; kept in CORS only).
 - User pasted their full `backend/.env` in chat (there is NO Emergent "vault password" restore feature — confirmed via support; the value "Katiekendra123@" they sent is unclear/unused for setup). Recreated `/app/backend/.env` from it, repointing APP_URL/FRONTEND_URL/CORS/GOOGLE redirects to the live pod URL. REAL secrets: `DB_URI` (Railway `nozomi.proxy.rlwy.net:54383/nameword`, reachable + seeded) and `NOMADLY_API_KEY` (rsk_live_...). All other 3rd-party keys are PLACEHOLDERS.
 - Recreated `/app/frontend/.env` (VITE_API_BASE_URL -> live pod URL, VITE_API_KEY placeholder, VITE_SHOW_CHAT=false, VITE_TELEGRAM_BOT_NAME=BozznameStagingBot, VITE_REWARD_POINT_VALUE=0.02).
 - Rewrote `/etc/supervisor/conf.d/supervisord.conf`: backend `bash /app/backend/start.sh` (node bin/www :8001), frontend `yarn dev --host 0.0.0.0 --port 3000` (vite). `yarn install` (backend) done.
@@ -430,7 +440,7 @@ User rules: (1) earn reward points ONLY when paying with crypto (crypto top-up O
 - Placeholder-driven flows still non-functional: Google OAuth, Brevo email, Telnyx OTP, ConnectReseller/WHM/Plesk/Cloudflare, DynoPay payments, Telegram, GCloud.
 
 ### Setup + bug-fix session
-**App is LIVE.** Node/Express backend on :8001 (supervisor `bash /app/backend/start.sh`), React/Vite frontend on :3000, connected to REAL Railway MongoDB (`nozomi.proxy.rlwy.net:54383/nameword`). Preview URL for this pod: `https://hosting-hub-53.preview.emergentagent.com`. Nomadly Reseller API is LIVE (real key). All other integrations (Google OAuth, Brevo mail, Telnyx, DynoPay, WHM/Plesk/Cloudflare) are PLACEHOLDER.
+**App is LIVE.** Node/Express backend on :8001 (supervisor `bash /app/backend/start.sh`), React/Vite frontend on :3000, connected to REAL Railway MongoDB (`nozomi.proxy.rlwy.net:54383/nameword`). Preview URL for this pod: `https://nameword-preview-2.preview.emergentagent.com`. Nomadly Reseller API is LIVE (real key). All other integrations (Google OAuth, Brevo mail, Telnyx, DynoPay, WHM/Plesk/Cloudflare) are PLACEHOLDER.
 
 **Fixed + verified by testing agents:**
 - Resilient signup: `POST /auth/register` wraps the verification email in try/catch → returns 201 (not 500) when Brevo fails.
@@ -449,7 +459,7 @@ See `/app/test_result.md` (latest agent_communication entry) for the detailed ha
 
 ### Re-setup (2026-09-11, current session) — APP IS LIVE with user creds
 - Pod reconciled again: both `.env` wiped, backend `node_modules` gone, supervisor reset to default uvicorn template (wrong: this is a NODE app).
-- ACTUAL pod preview URL = `https://hosting-hub-53.preview.emergentagent.com` (from env `preview_endpoint`/HOSTNAME). User's pasted `5c680fc7-...` URL is STALE -> all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) point to the live d1d1fa08 pod URL.
+- ACTUAL pod preview URL = `https://nameword-preview-2.preview.emergentagent.com` (from env `preview_endpoint`/HOSTNAME). User's pasted `5c680fc7-...` URL is STALE -> all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) point to the live d1d1fa08 pod URL.
 - Rewrote `/app/backend/.env` from user creds (PORT=8001). REAL: DB_URI (Railway proxy nozomi.proxy.rlwy.net:54383/nameword, reachable+seeded), NOMADLY_API_KEY (rsk_live_...), APP_KEY/JWT_KEY/ADMIN_REGISTER_TOKEN. All other 3rd-party keys = PLACEHOLDERS. All envalid-required vars in start/env.js satisfied.
 - Rewrote `/app/frontend/.env` (VITE_API_BASE_URL -> pod URL; frontend uses SAME-ORIGIN /api/v1 anyway; VITE_API_KEY placeholder, VITE_SHOW_CHAT=false).
 - `yarn install` backend (804 pkgs restored). Rewrote supervisor conf: backend `bash /app/backend/start.sh` (node bin/www :8001), frontend `bash /app/frontend/start.sh` (`.prod` present -> yarn build + vite preview on :3000, avoids Cloudflare 429 blank pages).
@@ -478,7 +488,7 @@ See `/app/test_result.md` (latest agent_communication entry) for the detailed ha
 
 ### Re-setup (current session) — pod reconciled, restored from user creds
 - Pod was reconciled again: both `.env` wiped, backend `node_modules` gone, supervisor reset to the WRONG default template (`uvicorn server:app` — this is a NODE app, not Python), backend+frontend STOPPED.
-- ACTUAL live pod preview URL = `https://hosting-hub-53.preview.emergentagent.com` (from env `preview_endpoint`). User's pasted `5c680fc7-...` URL is STALE → all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) repointed to the live c9b751a1 URL.
+- ACTUAL live pod preview URL = `https://nameword-preview-2.preview.emergentagent.com` (from env `preview_endpoint`). User's pasted `5c680fc7-...` URL is STALE → all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) repointed to the live c9b751a1 URL.
 - Rewrote `/app/backend/.env` from user creds (PORT=8001). REAL: DB_URI (Railway proxy nozomi.proxy.rlwy.net:54383/nameword, TCP reachable + seeded), NOMADLY_API_KEY (rsk_live_...), generated APP_KEY/JWT_KEY/ADMIN_REGISTER_TOKEN. All other 3rd-party keys = PLACEHOLDERS. All envalid-required vars in start/env.js satisfied.
 - Rewrote `/app/frontend/.env` (VITE_API_BASE_URL=pod URL fallback; frontend actually uses SAME-ORIGIN /api/v1). `.prod` flag present → frontend serves production build via `vite preview` (Cloudflare-429-safe).
 - `yarn install` (backend, node_modules restored, 57s). Rewrote `/etc/supervisor/conf.d/supervisord.conf`: backend `bash /app/backend/start.sh` (node bin/www :8001), frontend `bash /app/frontend/start.sh` (yarn build + vite preview :3000). Both RUNNING.
@@ -487,7 +497,7 @@ See `/app/test_result.md` (latest agent_communication entry) for the detailed ha
 
 ## Re-setup (2026, this session) — fresh pod
 - Pod had reset: both `.env` empty, backend `node_modules` missing, supervisor reverted to default uvicorn template.
-- ACTUAL pod preview URL = `https://hosting-hub-53.preview.emergentagent.com` (from env `preview_endpoint`/HOSTNAME). User's pasted `5c680fc7-...` is STALE → all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) repointed to the live 98499cc0 URL.
+- ACTUAL pod preview URL = `https://nameword-preview-2.preview.emergentagent.com` (from env `preview_endpoint`/HOSTNAME). User's pasted `5c680fc7-...` is STALE → all URL vars (APP_URL/FRONTEND_URL/CORS/GOOGLE redirects/VITE_API_BASE_URL) repointed to the live 98499cc0 URL.
 - Fixed `/etc/supervisor/conf.d/supervisord.conf` [program:backend] command → `node ./bin/www` (dir /app/backend). Ran `yarn install` in backend (bcrypt native OK, node v20).
 - `/app/backend/.env` written from user creds (PORT=8001). REAL: DB_URI (Railway proxy nozomi.proxy.rlwy.net:54383/nameword, reachable + already seeded: 38 collections, users=11, cpanelplans=9, vpsplans=4, rdpplans=3, badges=9; tiers=0, osdetails=0), NOMADLY_API_KEY (rsk_live_...), GOOGLE_CLIENT_ID/SECRET (redirect URIs need pod whitelisting in Google Console), BREVO_API_KEY (real), DYNO_PAY_API_KEY (real → mapped to DYNO_PAY_API_KEY which is what code reads, base https://dynopay.com/api). PLACEHOLDERS: WHM, Plesk, Cloudflare, Telnyx (SMS/OTP), GCS, ConnectReseller/CR_CUSTOMER_ID, Telegram.
 - `/app/frontend/.env`: VITE_API_BASE_URL=pod URL (frontend calls SAME-ORIGIN /api/v1 in browser; VITE_API_BASE_URL used for /auth/google redirect), VITE_API_KEY placeholder, VITE_SHOW_CHAT=false, VITE_TELEGRAM_BOT_NAME=BozznameStagingBot, VITE_REWARD_POINT_VALUE=0.02.
@@ -495,7 +505,7 @@ See `/app/test_result.md` (latest agent_communication entry) for the detailed ha
 
 ## Re-setup (current session) — pod reconciled, provisioned with NEW real keys
 - Pod was reconciled again: both `.env` wiped, backend `node_modules` gone, supervisor reset to default uvicorn/`yarn start` template. Fixed all of it.
-- ACTUAL pod preview URL = `https://hosting-hub-53.preview.emergentagent.com` (user's pasted `5c680fc7-...` URL is STALE → all URL vars point to the live df85add3 pod URL; 5c680fc7 + localhost also added to CORS_ORIGIN, though CORS uses origin:true anyway).
+- ACTUAL pod preview URL = `https://nameword-preview-2.preview.emergentagent.com` (user's pasted `5c680fc7-...` URL is STALE → all URL vars point to the live df85add3 pod URL; 5c680fc7 + localhost also added to CORS_ORIGIN, though CORS uses origin:true anyway).
 - Recreated `/app/backend/.env` from user creds. NEW REAL keys this run: GOOGLE_CLIENT_ID/SECRET (real), BREVO_API_KEY (real `xkeysib-...`), DYNO_PAY_API_KEY (real encrypted blob → mapped to DYNO_PAY_API_KEY which is what `app/helpers/dynoPayHelper.js` uses via `x-api-key`; base=https://dynopay.com/api). Still REAL from before: DB_URI (Railway proxy nozomi.proxy.rlwy.net:54383/nameword), NOMADLY_API_KEY (rsk_live_...). Still PLACEHOLDER: ConnectReseller, WHM, Plesk, Cloudflare, Telnyx, Telegram, GCloud, mail SMTP user/pass.
 - GOOGLE_REDIRECT_URL=`<pod>/auth/google/callback`, GOOGLE_LINK_REDIRECT_URL=`<pod>/auth/google/link/callback` (Vite dev/preview proxies `/auth` → backend :8001, so OAuth routes reach backend; BUT Google Console must whitelist this df85add3 redirect URI for login to complete — pod URL changes on reconcile).
 - Supervisor rewritten: backend `node /app/backend/bin/www` (dir /app/backend, dotenv loads .env, port 8001); frontend `bash /app/frontend/start.sh` (`.prod` present → `yarn build && vite preview` on :3000, Cloudflare-429-safe).
