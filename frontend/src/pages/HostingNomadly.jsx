@@ -3,6 +3,7 @@ import ProductShell from "../components/layout/ProductShell";
 import EmptyState from "../components/common/EmptyState";
 import resellerAPI from "../api/reseller";
 import WalletNudge from "../components/reseller/WalletNudge";
+import CpanelTabs from "../components/hosting/CpanelTabs";
 import { useAlert } from "../context/AlertContext";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useBuyer } from "../hooks/useBuyer";
@@ -99,6 +100,7 @@ export default function HostingNomadly() {
   const [manageCaptcha, setManageCaptcha] = useState(null);
   const [manageLoading, setManageLoading] = useState(false);
   const [manageBusy, setManageBusy] = useState(null); // 'upgrade' | 'addon' | 'captcha'
+  const [manageTab, setManageTab] = useState("overview"); // 'overview' | 'advanced'
   const [addonInput, setAddonInput] = useState("");
   const [upgradePlan, setUpgradePlan] = useState("");
 
@@ -260,6 +262,7 @@ export default function HostingNomadly() {
   const openManage = async (a) => {
     const user = a.username;
     setManage({ user, domain: a.domain || null, plan_id: a.plan_id || null });
+    setManageTab("overview");
     setManageData(null);
     setManageAddons(null);
     setManageCaptcha(null);
@@ -647,11 +650,21 @@ export default function HostingNomadly() {
       {/* Manage modal (4d): details/usage, upgrade, addon domains, Visitor Captcha */}
       {manage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeManage}>
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="hosting-manage-modal">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="hosting-manage-modal">
             <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
               <h3 className="text-lg font-semibold text-primary dark:text-white">Manage {manage.domain || manage.user}</h3>
               <button onClick={closeManage} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
             </div>
+            {/* Overview / Advanced switch */}
+            <div className="flex items-center gap-2 px-6 pt-4">
+              <button onClick={() => setManageTab("overview")} data-testid="manage-tab-overview" className={`rounded-lg px-3 py-1.5 text-sm font-medium ${manageTab === "overview" ? "bg-brand-600 text-white dark:bg-brand-500" : "text-secondary dark:text-gray-400 hover:bg-lightgray dark:hover:bg-gray-800"}`}>Overview</button>
+              <button onClick={() => setManageTab("advanced")} data-testid="manage-tab-advanced" className={`rounded-lg px-3 py-1.5 text-sm font-medium ${manageTab === "advanced" ? "bg-brand-600 text-white dark:bg-brand-500" : "text-secondary dark:text-gray-400 hover:bg-lightgray dark:hover:bg-gray-800"}`}>Advanced cPanel</button>
+            </div>
+            {manageTab === "advanced" ? (
+              <div className="px-6 py-5">
+                <CpanelTabs user={manage.user} domain={manage.domain} />
+              </div>
+            ) : (
             <div className="px-6 py-5 space-y-5 text-sm">
               {manageLoading ? (
                 <p className="text-secondary dark:text-gray-400 flex items-center gap-2"><FiRefreshCw className="animate-spin" size={15} /> Loading account…</p>
@@ -742,6 +755,7 @@ export default function HostingNomadly() {
                 </>
               )}
             </div>
+            )}
           </div>
         </div>
       )}

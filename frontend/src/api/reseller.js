@@ -80,6 +80,84 @@ export const resellerAPI = {
     (await apiClient.get(`${R}/hosting/captcha/${encodeURIComponent(domain)}`)).data,
   setHostingCaptcha: async (domain, enabled) =>
     (await apiClient.post(`${R}/hosting/captcha/${encodeURIComponent(domain)}`, { enabled })).data,
+
+  // Unified upcoming-expiry list, scoped to the signed-in buyer (Module 12).
+  getRenewals: async (days = 30) =>
+    (await apiClient.get(`${R}/renewals`, { params: { days } })).data,
+
+  // ---- cPanel FULL-PANEL MANAGEMENT (Modules 2-11) ----
+  // All routes are ownership-scoped server-side; `u` is the account username.
+  hostingManage: {
+    // MySQL
+    mysqlDatabases: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/mysql/databases`)).data,
+    createMysqlDatabase: async (u, name) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/mysql/databases`, { name })).data,
+    deleteMysqlDatabase: async (u, name) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/mysql/databases`, { params: { name }, data: { name } })).data,
+    mysqlUsers: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/mysql/users`)).data,
+    createMysqlUser: async (u, name, password) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/mysql/users`, { name, password })).data,
+    deleteMysqlUser: async (u, name) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/mysql/users`, { params: { name }, data: { name } })).data,
+    setMysqlUserPassword: async (u, user, password) => (await apiClient.put(`${R}/hosting/${encodeURIComponent(u)}/mysql/users/password`, { user, password })).data,
+    grantMysqlPrivileges: async (u, user, database, privileges) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/mysql/privileges/grant`, { user, database, privileges })).data,
+    revokeMysqlPrivileges: async (u, user, database) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/mysql/privileges/revoke`, { user, database })).data,
+    mysqlRemoteHosts: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/mysql/remote-hosts`)).data,
+    addMysqlRemoteHost: async (u, host) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/mysql/remote-hosts`, { host })).data,
+    deleteMysqlRemoteHost: async (u, host) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/mysql/remote-hosts`, { params: { host }, data: { host } })).data,
+    phpMyAdmin: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/mysql/phpmyadmin`)).data,
+
+    // Subdomains
+    subdomains: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/subdomains`)).data,
+    createSubdomain: async (u, payload) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/subdomains`, payload)).data,
+    deleteSubdomain: async (u, subdomain) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/subdomains`, { params: { subdomain }, data: { subdomain } })).data,
+    bulkCreateSubdomains: async (u, subdomains, rootdomain) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/subdomains/bulk-create`, { subdomains, rootdomain })).data,
+
+    // Domains on the account
+    domains: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/domains`)).data,
+    setDocroot: async (u, payload) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/domains/docroot`, payload)).data,
+    deleteAddonDomain: async (u, domain) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/domains/addon`, { params: { domain }, data: { domain } })).data,
+    docrootModes: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/domains/docroot-modes`)).data,
+    setDocrootMode: async (u, domain, mode) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/domains/docroot-mode`, { domain, mode })).data,
+    setPrimaryDomain: async (u, domain) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/domains/set-primary`, { domain })).data,
+    nsStatus: async (u, domain) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/domains/ns-status`, { params: { domain } })).data,
+
+    // SSL
+    ssl: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/ssl`)).data,
+    autossl: async (u) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/ssl/autossl`, {})).data,
+
+    // Stats
+    stats: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/stats`)).data,
+
+    // File Manager
+    files: async (u, dir = '/public_html') => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/files`, { params: { dir } })).data,
+    fileContent: async (u, dir, file) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/files/content`, { params: { dir, file } })).data,
+    saveFile: async (u, dir, file, content) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/save`, { dir, file, content })).data,
+    mkdir: async (u, dir, name) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/mkdir`, { dir, name })).data,
+    renameFile: async (u, dir, oldName, newName) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/rename`, { dir, oldName, newName })).data,
+    deleteFile: async (u, dir, file, isDirectory = false) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/files`, { data: { dir, file, isDirectory } })).data,
+    uploadFile: async (u, dir, fileName, content_base64) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/upload`, { dir, fileName, content_base64 })).data,
+
+    // Security / Anti-Red / Cloudflare
+    securityStatus: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/status`)).data,
+    deployAntiRed: async (u) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/security/anti-red/deploy`, {})).data,
+    antiRedStatus: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/anti-red/status`)).data,
+    setAntiBot: async (u, profile) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/security/anti-bot`, { profile })).data,
+    safeBrowsing: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/safe-browsing`)).data,
+    blacklist: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/blacklist`)).data,
+    jsChallenge: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/js-challenge`)).data,
+    setJsChallenge: async (u, enabled) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/security/js-challenge`, { enabled })).data,
+    visitorCaptcha: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/visitor-captcha`)).data,
+    setVisitorCaptcha: async (u, enabled, domain) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/security/visitor-captcha`, { enabled, domain })).data,
+
+    // Geo firewall (Gold)
+    geo: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/geo`)).data,
+    addGeoRule: async (u, payload) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/geo`, payload)).data,
+    deleteGeoRule: async (u, ruleId) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/geo`, { params: { ruleId }, data: { ruleId } })).data,
+
+    // Analytics
+    analytics: async (u, days = 7) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/analytics`, { params: { days } })).data,
+
+    // Site status
+    siteStatus: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/account/site-status`)).data,
+    setSiteStatus: async (u, action, mode) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/account/site-status`, { action, mode })).data,
+  },
 };
 
 // Product-scoped facade so a single component can drive both VPS and RDP.

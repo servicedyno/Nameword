@@ -488,6 +488,183 @@ const setHostingCaptcha = (req, res) =>
     { mode: "dry_run", status: "test_mode", message: "Test mode — Visitor Captcha can be toggled once a live Gold-plan account is provisioned." }
   );
 
+// ============================================================================
+// cPanel Hosting — FULL PANEL MANAGEMENT (Modules 2-11)
+// ----------------------------------------------------------------------------
+// MySQL, subdomains, addon/domains, SSL, stats, File Manager, security
+// (Anti-Red / Cloudflare), geo firewall, analytics and site-status — the whole
+// "manage my site" surface the provider exposes. Every route is ownership-scoped
+// to the signed-in buyer (withOwnedHosting) and simply relays to the provider in
+// live mode. In dry_run (no upstream account provisioned yet) we return a friendly
+// { mode:'dry_run', test_mode:true, note } envelope so the dashboard can render a
+// clear "available once live" state instead of erroring. Email is intentionally
+// NOT proxied here.
+// ============================================================================
+const dryTest = (feature) => ({
+  mode: "dry_run",
+  test_mode: true,
+  note: `Test mode — ${feature} is available once a live account is provisioned.`,
+});
+
+// Build an ownership-scoped proxy handler for /hosting/:user<suffix>.
+function hostingMgmt(method, suffix, feature) {
+  return (req, res) =>
+    withOwnedHosting(
+      req,
+      res,
+      (u) => {
+        const url = `/hosting/${enc(u)}${suffix}`;
+        if (method === "get")
+          return forward(res, nomadly.get(url, { params: req.query }));
+        if (method === "put")
+          return forward(res, nomadly.put(url, req.body || {}, { params: req.query }));
+        if (method === "delete")
+          return forward(res, nomadly.delete(url, { params: req.query, data: req.body || {} }));
+        return forward(res, nomadly.post(url, req.body || {}, { params: req.query }));
+      },
+      dryTest(feature)
+    );
+}
+
+// [ method, suffix-after-/hosting/:user, dry-run feature label ]
+const HOSTING_MGMT_ROUTES = [
+  // ---- MySQL databases (Premium/Gold) ----
+  ["get", "/mysql/databases", "MySQL databases"],
+  ["post", "/mysql/databases", "MySQL databases"],
+  ["delete", "/mysql/databases", "MySQL databases"],
+  ["post", "/mysql/databases/rename", "MySQL databases"],
+  ["post", "/mysql/databases/repair", "MySQL databases"],
+  ["post", "/mysql/databases/check", "MySQL databases"],
+  ["get", "/mysql/users", "MySQL users"],
+  ["post", "/mysql/users", "MySQL users"],
+  ["delete", "/mysql/users", "MySQL users"],
+  ["put", "/mysql/users/password", "MySQL users"],
+  ["post", "/mysql/users/rename", "MySQL users"],
+  ["post", "/mysql/privileges/grant", "MySQL privileges"],
+  ["post", "/mysql/privileges/revoke", "MySQL privileges"],
+  ["get", "/mysql/remote-hosts", "MySQL remote hosts"],
+  ["post", "/mysql/remote-hosts", "MySQL remote hosts"],
+  ["delete", "/mysql/remote-hosts", "MySQL remote hosts"],
+  ["get", "/mysql/phpmyadmin", "phpMyAdmin"],
+  // ---- Subdomains ----
+  ["get", "/subdomains", "Subdomains"],
+  ["post", "/subdomains", "Subdomains"],
+  ["delete", "/subdomains", "Subdomains"],
+  ["post", "/subdomains/bulk-create", "Subdomains"],
+  // ---- Domains on the account ----
+  ["get", "/domains", "Domains"],
+  ["post", "/domains/docroot", "Document root"],
+  ["delete", "/domains/addon", "Addon domains"],
+  ["get", "/domains/docroot-modes", "Document root modes"],
+  ["post", "/domains/docroot-mode", "Document root modes"],
+  ["post", "/domains/set-primary", "Primary domain"],
+  ["get", "/domains/ns-status", "Nameserver status"],
+  // ---- SSL ----
+  ["get", "/ssl", "SSL status"],
+  ["post", "/ssl/autossl", "AutoSSL"],
+  // ---- Stats ----
+  ["get", "/stats", "Disk & bandwidth stats"],
+  // ---- File Manager ----
+  ["get", "/files", "File Manager"],
+  ["get", "/files/content", "File Manager"],
+  ["post", "/files/save", "File Manager"],
+  ["post", "/files/mkdir", "File Manager"],
+  ["post", "/files/rename", "File Manager"],
+  ["post", "/files/extract", "File Manager"],
+  ["post", "/files/compress", "File Manager"],
+  ["post", "/files/copy", "File Manager"],
+  ["post", "/files/move", "File Manager"],
+  ["delete", "/files", "File Manager"],
+  ["post", "/files/upload", "File Manager"],
+  ["post", "/files/upload-chunk", "File Manager"],
+  ["post", "/files/upload-chunk/cancel", "File Manager"],
+  // ---- Security / Anti-Red / Cloudflare ----
+  ["get", "/security/status", "Security status"],
+  ["post", "/security/anti-red/deploy", "Anti-Red protection"],
+  ["get", "/security/anti-red/status", "Anti-Red protection"],
+  ["post", "/security/anti-bot", "Anti-bot profile"],
+  ["post", "/security/anti-bot/rules", "Anti-bot rules"],
+  ["get", "/security/safe-browsing", "Safe-Browsing check"],
+  ["get", "/security/blacklist", "Blacklist check"],
+  ["get", "/security/js-challenge", "JS challenge"],
+  ["post", "/security/js-challenge", "JS challenge"],
+  ["get", "/security/visitor-captcha", "Visitor Captcha"],
+  ["post", "/security/visitor-captcha", "Visitor Captcha"],
+  // ---- Geo firewall (Gold) ----
+  ["get", "/geo", "Geo firewall"],
+  ["post", "/geo", "Geo firewall"],
+  ["delete", "/geo", "Geo firewall"],
+  // ---- Analytics ----
+  ["get", "/analytics", "Analytics"],
+  // ---- Site status ----
+  ["get", "/account/site-status", "Site status"],
+  ["post", "/account/site-status", "Site status"],
+];
+
+const hostingManagementRoutes = HOSTING_MGMT_ROUTES.map(([method, suffix, feature]) => ({
+  method,
+  path: `/hosting/:user${suffix}`,
+  handler: hostingMgmt(method, suffix, feature),
+}));
+
+// Unified upcoming-expiry list (Module 12). The provider's /renewals spans the
+// ENTIRE reseller account (every customer), so we build a per-user view from the
+// signed-in buyer's own order records to avoid cross-customer data leakage.
+async function getRenewals(req, res) {
+  try {
+    const days = parseInt(req.query.days, 10) || 30;
+    const now = Date.now();
+    const DAY = 86400000;
+    const types = ["hosting", "domain", "vps", "rdp"];
+    const renewals = [];
+    for (const t of types) {
+      const list = await ownership.ownedList(userId(req), t);
+      for (const e of list) {
+        const expRaw = e.item.expires_at || e.item.expiresAt || null;
+        if (!expRaw) continue;
+        const exp = new Date(expRaw).getTime();
+        if (Number.isNaN(exp)) continue;
+        const daysLeft = Math.ceil((exp - now) / DAY);
+        // Always include already-expired items; otherwise only within the window.
+        if (daysLeft >= 0 && daysLeft > days) continue;
+        let status = "upcoming";
+        if (daysLeft < 0) status = "expired";
+        else if (daysLeft <= 7) status = "expiring_soon";
+        renewals.push({
+          product: t,
+          id: e.ref,
+          domain: e.item.domain || null,
+          plan: e.item.plan_name || e.item.plan_id || null,
+          region: e.item.region || null,
+          expires_at: expRaw,
+          days_until_expiry: daysLeft,
+          status,
+          suspended: false,
+          mode: e.mode,
+        });
+      }
+    }
+    renewals.sort(
+      (a, b) => (a.days_until_expiry ?? 1e9) - (b.days_until_expiry ?? 1e9)
+    );
+    const summary = {
+      expired: renewals.filter((r) => r.status === "expired").length,
+      expiring_soon: renewals.filter((r) => r.status === "expiring_soon").length,
+      upcoming: renewals.filter((r) => r.status === "upcoming").length,
+    };
+    return res.json({
+      within_days: days,
+      count: renewals.length,
+      summary,
+      renewals,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ success: false, error: "internal_error", message: err.message });
+  }
+}
+
 module.exports = {
   getHealth,
   getAccount,
@@ -528,4 +705,6 @@ module.exports = {
   addHostingAddon,
   getHostingCaptcha,
   setHostingCaptcha,
+  hostingManagementRoutes,
+  getRenewals,
 };

@@ -11,6 +11,8 @@ const auth = require("../../app/middlewares/session-or-apikey");
 // ---------- Meta ----------
 router.get("/health", c.getHealth);
 router.get("/account", ...auth, c.getAccount);
+// Unified upcoming-expiry list, scoped to the signed-in buyer (Module 12).
+router.get("/renewals", ...auth, c.getRenewals);
 
 // ---------- VPS (Linux) ----------
 router.get("/vps/plans", c.getVpsPlans);
@@ -58,6 +60,12 @@ router.get("/hosting/:user/login", ...auth, c.hostingLogin);
 router.get("/hosting/:user/credentials", ...auth, c.hostingCredentials);
 router.get("/hosting/:user/addons", ...auth, c.listHostingAddons);
 router.post("/hosting/:user/addons", ...auth, c.addHostingAddon);
+// Full panel management (Modules 2-11): MySQL, subdomains, domains, SSL, stats,
+// File Manager, security/Anti-Red, geo, analytics, site-status. Each entry is
+// ownership-scoped and multi-segment, so it never shadows GET/DELETE /hosting/:user.
+c.hostingManagementRoutes.forEach(({ method, path, handler }) => {
+  router[method](path, ...auth, handler);
+});
 router.delete("/hosting/:user", ...auth, c.terminateHosting);
 router.get("/hosting/:user", ...auth, c.getHostingDetails);
 
