@@ -863,8 +863,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Brilliant dark-mode redesign — regression + visual sanity across app (dark + light, desktop + mobile)"
-    - "Glowing hero-card rollout: Wallet, Dashboard, Domains/DNS/VPS/RDP heroes, Orders, Cart summary"
+    - "Phase 4 Motion: wallet balance/points count-up + dashboard staggered entrance (respect reduced-motion)"
+    - "Phase 5 Auth showcase: SignIn + CreateAccount branded split-screen (form logic preserved), mobile stacks form-only"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -995,3 +995,78 @@ agent_communication:
     message: "FRONTEND i18n — please FRONTEND-TEST ONLY (user approved). Two focus tasks (see current_focus): (1) CRYPTO CHECKOUT MODAL fully translated en/es/fr, (2) WALLET TOP-UP MODAL fully translated en/es/fr + a new Top-Up Preview card. Language switch persists in localStorage key 'language' ('en'|'es'|'fr') — the RELIABLE way to switch is: navigate to a page, run localStorage.setItem('language','es') (or 'fr'), then reload. (Clicking the authed navbar language control is a dropdown; a prior test mis-clicked it — please use localStorage+reload.) CREDS: buyer@nameword.local / Buyer@12345 (wallet $50). LOGIN: /sign-in, fill #email and #password, click button[type=submit] (lands on /dashboard). \n\nTASK 2 (Wallet top-up — EASY, already smoke-verified by main in ES): Go to /wallet, click [data-testid='wallet-topup-button'] to open [data-testid='wallet-topup-modal']. VERIFY in ES and FR: the whole amount-step is translated (title 'Recargar billetera'/'Recharger le portefeuille', subtitle, 'Choose an amount', presets 'Most popular', 'Pay with', coin picker) with NO raw keys. NEW PREVIEW CARD [data-testid='topup-preview']: shows [topup-preview-amount] (=selected amount), [topup-preview-current] (=wallet balance, $50.00 for buyer), [topup-preview-new] (=current+amount). Click preset [data-testid='topup-preset-50'] -> amount $50.00, current $50.00, new $100.00; type 100 in [data-testid='topup-amount-input'] -> new becomes $150.00. Then click [data-testid='topup-generate-address'] to reach the PAY step (real DynoPay call ~a few s) and confirm the pay screen is also translated ('Send exactly'/'Envía exactamente', 'To this address', 'Payment status', buttons). \n\nTASK 1 (Crypto checkout modal): Reaching it needs an item in the cart. On /domains search a random available domain (e.g. 'coolstartup<rand>'), click its Add to cart button, then open the mini-cart drawer's 'Open full cart' link -> /cart. On /cart click [data-testid='cart-pay-crypto-button'] ('Pay $X with crypto') to open [data-testid='crypto-checkout-modal']. VERIFY in ES and FR: header title 'Pagar con cripto'/'Payer en crypto', the order summary [data-testid='crypto-order-summary'] labels ('Order summary','Total due','Your wallet balance','Wallet after payment'), the payingIntro line, coin picker label, network hint, and the [data-testid='crypto-modal-generate'] button ('Get payment address') are all translated with NO raw keys. If you can, click generate to reach the pay panel and confirm 'Send exactly'/timeline labels translate too. If add-to-cart is flaky, you may seed the cart directly in localStorage key 'nw_cart_v2'. NOTES: Nomadly/DynoPay are dry_run/live-read (nothing charged) — test_mode is EXPECTED. Preview may 429 on rapid reloads — back off and retry. Do NOT test backend."
   - agent: "testing"
     message: "✅ DARK MODE REDESIGN REGRESSION TEST COMPLETE - ALL TESTS PASSED (100%). Tested 9 pages in dark mode desktop (1920x800), 3 pages in light mode desktop, 2 pages in mobile dark mode (390x844). RESULTS: (1) All pages render correctly with no white screens in both themes. (2) Text legibility verified - no dark-on-dark or light-on-light issues. (3) Theme toggle working correctly. (4) Interactive controls functional: Top Up modal opens, Refund history tab switches, VPS/RDP Add to cart buttons visible. (5) Gradient text found (2 elements) and glowing hero cards found (7 elements with box-shadow). (6) Mobile: NO horizontal scroll on /dashboard and /wallet (scrollWidth=clientWidth=390), bottom tab bar visible. (7) Console logs: only benign ERR_ABORTED for CDN resources, NO uncaught JS errors, NO 429 errors. (8) Preview mode / Test mode banners visible everywhere (EXPECTED). CRITICAL VERIFICATION: Dark mode body bg rgb(9,8,13), light mode body bg rgb(255,255,255), all text colors appropriate, all pages fully usable. NO ISSUES FOUND. Dark mode redesign is FULLY WORKING and production-ready. Screenshots captured for all 25+ test states. Main agent can summarize and finish."
+
+
+# ============================================================================
+# Phase 4 Motion + Phase 5 Auth Redesign Verification (January 2026)
+# ============================================================================
+
+frontend:
+  - task: "Phase 5 Auth redesign - split-screen layout with branded gradient left panel"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/layouts/AuthLayout.jsx, /app/frontend/src/pages/auth/SignIn.jsx, /app/frontend/src/pages/auth/CreateAccount.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ CHECKPOINT 1 & 2 & 3 PASSED - Auth split-screen layout working perfectly. DESKTOP (1920x800, dark): Brand panel (data-testid='auth-brand-panel') visible on /sign-in with headline 'Privacy and freedom, hosted offshore.', 3 feature bullets (Private WHOIS, Offshore infrastructure, Prepaid crypto wallet), gradient background. Form on right side with Email + Password fields, password visibility toggle (data-testid='signin-password-toggle') working correctly (password → text on click), Login button, Continue with Google button. ACTUAL LOGIN TEST: Successfully logged in as buyer@nameword.local / Buyer@12345 and landed on /dashboard - authentication flow working. MOBILE (390x844): Brand panel correctly HIDDEN (is_visible=False), form visible with nameword logo, NO horizontal scroll (scrollWidth=390, clientWidth=390). CREATE ACCOUNT (desktop, light): Split-screen visible, form has Email + Password + Confirm Password fields, Create Account button, Continue with Google button. All form fields and buttons functional. NO white screens, NO console errors."
+
+  - task: "Phase 4 Motion - count-up animations on wallet balance and reward points"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/front-admin/billing/Wallet.jsx, /app/frontend/src/components/common/CountUp.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ CHECKPOINT 4 PASSED - Count-up animations settling at correct final values. Logged in as buyer@nameword.local, navigated to /wallet (dark mode), waited 1.5s for animations to settle. WALLET BALANCE (data-testid='wallet-balance'): Final value '$50.00' ✓ (correct, not stuck at 0). REWARD POINTS (data-testid='wallet-points'): Final value '526.20' ✓ (correct, not stuck at 0). CountUp component animating from 0 to target values over 1000ms (balance) and 1100ms (points) using requestAnimationFrame with easeOutCubic easing. Top Up button (data-testid='wallet-topup-button') opens modal correctly. Animations working perfectly."
+
+  - task: "Phase 4 Motion - fade/rise animations on dashboard sections"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/front-admin/dashboard.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ CHECKPOINT 5 PASSED - Dashboard sections fade/rise to full visibility. Navigated to /dashboard (dark mode), waited 1.5s for animations to settle. GREETING: 'Welcome back, Test Buyer.' visible with gradient text on name. SECTIONS: Found 3 elements with .nw-rise class (title section, smart suggestion cards, register panel), first element opacity: 1 (fully visible, not stuck hidden). Register panel (data-testid='dashboard-register-card') visible, domains table visible with 22 domains. MOBILE (390x844): NO horizontal scroll (scrollWidth=390, clientWidth=390). All sections rendering correctly with proper fade/rise animations ending at opacity 1."
+
+  - task: "General regression - no white screens, no console errors, text legibility, controls clickable"
+    implemented: true
+    working: true
+    file: "/app/frontend/src (all pages)"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ GENERAL CHECKS PASSED - No regressions found. CONSOLE LOGS: 0 critical JavaScript errors (excluding benign Cloudflare CDN ERR_ABORTED and preload warnings). NETWORK: 12 failed requests all benign (Cloudflare /cdn-cgi/rum, aborted domain suggestion API calls). DARK MODE: Body background rgb(9, 8, 13), html class 'dark', text legible. LIGHT MODE: Body background rgb(255, 255, 255), html class '', text legible. THEME TOGGLE: Working correctly (found in top bar). NO WHITE SCREENS: All pages rendered fully. CONTROLS CLICKABLE: Login button, Top Up button, password toggle, all interactive elements working. Test mode badges expected (provider in dry_run). Phase 4 Motion + Phase 5 Auth redesign is FULLY WORKING and production-ready."
+
+metadata:
+  created_by: "testing_agent"
+  version: "2.0"
+  test_sequence: 2
+  run_ui: true
+  test_date: "2026-01-14"
+
+test_plan:
+  current_focus:
+    - "Phase 5 Auth redesign - split-screen layout"
+    - "Phase 4 Motion - count-up animations"
+    - "Phase 4 Motion - fade/rise animations"
+    - "General regression testing"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "✅ PHASE 4 MOTION + PHASE 5 AUTH REDESIGN VERIFICATION COMPLETE - ALL TESTS PASSED (100% success rate). Tested 5 checkpoints across desktop (1920x800) and mobile (390x844) viewports in dark and light themes. RESULTS: (1) /sign-in dark desktop: Brand panel visible with gradient, headline, 3 feature bullets; form with email/password fields, password toggle working; ACTUAL LOGIN SUCCESSFUL as buyer@nameword.local. (2) /sign-in mobile: Brand panel hidden, form visible, NO horizontal scroll. (3) /create-account light desktop: Split-screen visible, all form fields present. (4) /wallet dark: Count-up animations settle at correct final values ($50.00 and 526.20), Top Up button opens modal. (5) /dashboard dark: Greeting visible, sections fade/rise to opacity 1, NO horizontal scroll on mobile. GENERAL: 0 critical console errors, dark/light themes working, all controls clickable, no white screens. NO ISSUES FOUND. Ready for production."

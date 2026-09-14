@@ -30,13 +30,13 @@ const AuthNavbar = () => {
   };
 
   return (
-    <div className="sticky top-0 left-0 w-full z-20 bg-white dark:bg-gray-900 p-5">
+    <div className="sticky top-0 left-0 w-full z-20 bg-transparent p-5">
       <nav className="flex items-center justify-between w-full px-0 sm:px-5 xl:px-7">
-        <NavLink to={"/"} className="flex items-center space-x-4">
+        <NavLink to={"/"} className="flex items-center space-x-4 lg:hidden">
           <BrandLogo />
         </NavLink>
 
-        <div className="lg:flex hidden justify-between items-center gap-14">
+        <div className="lg:flex hidden justify-between items-center gap-14 lg:ml-auto">
           <ul className="lg:flex hidden justify-center items-center gap-10">
             <li>
               <NavLink to="/help-support" className="auth-navlink">

@@ -77,7 +77,7 @@ const Dashboard = () => {
       <PendingCryptoStrip />
 
       {/* Dashboard title */}
-      <div className="flex flex-col gap-2 title-section">
+      <div className="flex flex-col gap-2 title-section nw-rise">
         {(() => {
           const greeting = t.admin.dashboardGreeting || "Welcome back, {name}.";
           const [before, after = ""] = greeting.split("{name}");
@@ -97,7 +97,7 @@ const Dashboard = () => {
           <div className="border-gray-300 h-6 w-6 animate-spin rounded-full border-4 border-t-darkbtn" />
         </div>
       ) : cardData.length > 0 ? (
-        <div className="flex flex-nowrap gap-2.5 overflow-x-auto w-full">
+        <div className="flex flex-nowrap gap-2.5 overflow-x-auto w-full nw-rise nw-rise-2">
           {cardData.map((card, index) => (
             <AdminCard key={index} {...card} onMoreOptions={handleMoreOptions} onHide={handleHideCard} />
           ))}
@@ -105,7 +105,7 @@ const Dashboard = () => {
       ) : null}
 
       {/* Inline domain search — search, see prices, add to cart without leaving */}
-      <div className="nw-card nw-stat-glow relative overflow-hidden" data-testid="dashboard-register-card">
+      <div className="nw-card nw-stat-glow nw-rise nw-rise-3 relative overflow-hidden" data-testid="dashboard-register-card">
         <img
           src={globeIcon}
           alt={t.admin.globeImageAlt}
