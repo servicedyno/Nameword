@@ -17,6 +17,9 @@ import {
   FiExternalLink,
   FiChevronRight,
   FiAlertTriangle,
+  FiEdit2,
+  FiSave,
+  FiX,
 } from "react-icons/fi";
 
 const M = resellerAPI.hostingManage;
@@ -284,11 +287,17 @@ const SslTab = ({ user }) => {
 };
 
 /* ---------------------------- File Manager --------------------------- */
+const TEXT_EDITABLE = /\.(txt|md|html?|htm|css|scss|less|js|mjs|cjs|jsx|ts|tsx|json|xml|ya?ml|env|ini|conf|cfg|htaccess|log|php|py|rb|sh|bash|sql|csv|tsv|svg|vue|toml|gitignore)$/i;
+const isEditable = (name) => TEXT_EDITABLE.test(name) || !/\.[a-z0-9]+$/i.test(name); // known text ext or no ext
+
 const FilesTab = ({ user }) => {
   const [dir, setDir] = useState("/public_html");
   const { data, loading, reload } = useLoad(() => M.files(user, dir), [user, dir]);
   const { run, busy } = useRunner();
+  const { showAlert } = useAlert();
   const [newFolder, setNewFolder] = useState("");
+  // Inline editor: { file, content, original, loading, test }
+  const [editor, setEditor] = useState(null);
   const list = Array.isArray(data?.data) ? data.data : [];
   const goUp = () => {
     if (dir === "/" || !dir.includes("/")) return;
@@ -296,6 +305,31 @@ const FilesTab = ({ user }) => {
     parts.pop();
     setDir(parts.join("/") || "/");
   };
+
+  const openFile = async (name) => {
+    setEditor({ file: name, content: "", original: "", loading: true, test: false });
+    try {
+      const res = await M.fileContent(user, dir, name);
+      const content =
+        typeof res?.data?.content === "string" ? res.data.content
+        : typeof res?.content === "string" ? res.content
+        : typeof res?.data === "string" ? res.data
+        : "";
+      setEditor({ file: name, content, original: content, loading: false, test: isTest(res) });
+    } catch (e) {
+      showAlert(e?.response?.data?.message || "Could not open file.", { type: "fail" });
+      setEditor(null);
+    }
+  };
+
+  const saveFile = async () => {
+    if (!editor) return;
+    const res = await run(() => M.saveFile(user, dir, editor.file, editor.content), "File saved.");
+    if (res) setEditor((e) => (e ? { ...e, original: e.content } : e));
+  };
+
+  const dirty = editor && editor.content !== editor.original;
+
   return (
     <div className="space-y-3" data-testid="cpanel-tab-files">
       <TestBanner data={data} feature="File Manager" />
@@ -310,21 +344,66 @@ const FilesTab = ({ user }) => {
           {list.map((f, i) => {
             const name = f.file || f.name || String(f);
             const isDir = f.type === "dir" || f.type === "directory" || f.isDirectory;
+            const canEdit = !isDir && isEditable(name);
             return (
               <li key={i} className="flex items-center justify-between text-sm text-secondary dark:text-gray-300">
                 <button
-                  className={`inline-flex items-center gap-2 ${isDir ? "hover:text-primary dark:hover:text-white" : "cursor-default"}`}
-                  onClick={() => isDir && setDir(`${dir.replace(/\/+$/, "")}/${name}`)}
+                  className={`inline-flex items-center gap-2 min-w-0 text-left ${isDir || canEdit ? "hover:text-primary dark:hover:text-white" : "cursor-default"}`}
+                  onClick={() => {
+                    if (isDir) setDir(`${dir.replace(/\/+$/, "")}/${name}`);
+                    else if (canEdit) openFile(name);
+                  }}
+                  title={isDir ? "Open folder" : canEdit ? "Open & edit" : "Not editable here"}
+                  data-testid={isDir ? `files-dir-${name}` : `files-file-${name}`}
                 >
-                  {isDir ? <FiFolder size={13} /> : <FiFile size={13} />} {name}
-                  {!isDir && f.size != null && <span className="text-xs text-secondary/70">({Math.round(f.size / 1024)} KB)</span>}
+                  {isDir ? <FiFolder size={13} className="shrink-0" /> : <FiFile size={13} className="shrink-0" />}
+                  <span className="truncate">{name}</span>
+                  {!isDir && f.size != null && <span className="text-xs text-secondary/70 shrink-0">({Math.round(f.size / 1024)} KB)</span>}
                 </button>
-                <button onClick={async () => { await run(() => M.deleteFile(user, dir, name, isDir), "Deleted."); reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Delete"><FiTrash2 size={14} /></button>
+                <span className="flex items-center gap-3 shrink-0">
+                  {canEdit && (
+                    <button onClick={() => openFile(name)} disabled={busy} className="text-brand-600 dark:text-brand-400 hover:opacity-80 disabled:opacity-50" aria-label={`Edit ${name}`} data-testid={`files-edit-${name}`}><FiEdit2 size={14} /></button>
+                  )}
+                  <button onClick={async () => { await run(() => M.deleteFile(user, dir, name, isDir), "Deleted."); if (editor?.file === name) setEditor(null); reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Delete"><FiTrash2 size={14} /></button>
+                </span>
               </li>
             );
           })}
         </ul>
       ) : <Empty>Empty folder.</Empty>}
+
+      {editor && (
+        <div className="rounded-xl border border-line dark:border-gray-800 overflow-hidden" data-testid="file-editor">
+          <div className="flex items-center justify-between px-3 py-2 bg-lightgray/60 dark:bg-gray-800/60">
+            <span className="text-sm font-medium text-primary dark:text-white inline-flex items-center gap-2 min-w-0">
+              <FiFile size={13} className="shrink-0" />
+              <span className="truncate">{editor.file}</span>
+              {dirty && <span className="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">unsaved</span>}
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={saveFile} disabled={busy || editor.loading || !dirty} className="nw-btn-primary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1" data-testid="file-editor-save"><FiSave size={13} /> Save</button>
+              <button onClick={() => setEditor(null)} disabled={busy} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1" data-testid="file-editor-close"><FiX size={13} /> Close</button>
+            </div>
+          </div>
+          {editor.test && (
+            <p className="px-3 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10">Test mode — file contents and saves apply once your account is live.</p>
+          )}
+          {editor.loading ? (
+            <div className="px-3"><Loading /></div>
+          ) : (
+            <textarea
+              value={editor.content}
+              onChange={(e) => setEditor((ed) => ({ ...ed, content: e.target.value }))}
+              spellCheck={false}
+              rows={14}
+              className="w-full resize-y bg-white dark:bg-gray-900 text-primary dark:text-gray-100 font-mono text-xs leading-relaxed p-3 outline-none border-0 focus:ring-0"
+              placeholder="File is empty. Start typing…"
+              data-testid="file-editor-textarea"
+            />
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-2 border-t border-lightgray dark:border-gray-800 pt-3">
         <input value={newFolder} onChange={(e) => setNewFolder(e.target.value)} placeholder="new folder name" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="files-mkdir-input" />
         <button onClick={async () => { if (!newFolder.trim()) return; await run(() => M.mkdir(user, dir, newFolder.trim()), "Folder created."); setNewFolder(""); reload(); }} disabled={busy || !newFolder.trim()} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"><FiPlus size={13} /> New folder</button>
