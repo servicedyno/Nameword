@@ -163,12 +163,14 @@ export const AuthProvider = ({ children }) => {
 
       return response;
     } catch (error) {
-      if (error?.response?.data?.errors) {
-        setError(error?.response?.data?.errors[0]?.message);
-      } else {
-        const errorMessage = error?.response?.data?.message || "Login failed";
-        setError(errorMessage);
-      }
+      const rawMessage =
+        error?.response?.data?.errors?.[0]?.message ||
+        error?.response?.data?.message ||
+        "Login failed";
+      // Show a single, clear message for a bad email/password combo (the backend
+      // returns "Invalid credentials"/"Invalid credentials." for both cases).
+      const isBadCredentials = /invalid credentials/i.test(rawMessage);
+      setError(isBadCredentials ? "Incorrect email or password" : rawMessage);
       throw error;
     }
   };

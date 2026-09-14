@@ -105,6 +105,18 @@
 user_problem_statement: "Test the NEW onboarding SOFT-GATE flow on the Nameword app. After sign-up the user is logged in AND dropped on the 'Confirm your email' (OTP) screen; they can 'Skip for now' to enter the app; an app-wide amber banner keeps nudging unverified users to verify."
 
 frontend:
+  - task: "Login form: password visibility toggle (eye icon) + clearer 'Incorrect email or password' error"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/auth/SignIn.jsx, /app/frontend/src/context/AuthContext.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "SignIn.jsx already had an eye toggle but the icon was inverted; fixed to the intuitive convention (hidden -> open eye to reveal, visible -> eye-off to hide) and added aria-label + data-testid='signin-password-toggle'. AuthContext.login now maps any 'Invalid credentials'/'Invalid credentials.' backend response to a single friendly 'Incorrect email or password' message (other errors like banned/deactivated pass through unchanged). Verified via scripted screenshot on the live pod: password input type toggled password->text on click; submitting a wrong password showed the red 'Incorrect email or password' banner and NOT the old 'Invalid credentials' text. Checkout login (AccountGate.jsx) already had a correct toggle - left as-is."
+
   - task: "Onboarding soft-gate flow - sign-up logs user in, OTP screen with Skip button, amber banner on dashboard"
     implemented: true
     working: true
