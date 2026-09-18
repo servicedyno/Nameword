@@ -9,7 +9,7 @@ import json
 import sys
 
 # Backend URL from frontend/.env
-BASE_URL = "https://8d280244-8546-40f5-9dac-635f393a5b88.preview.emergentagent.com"
+BASE_URL = "https://hosting-control-12.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 
 # Test credentials from /app/memory/test_credentials.md
