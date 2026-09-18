@@ -120,7 +120,7 @@ function extractProviderIds(type, upstream) {
     if (ip) out.server_ip = ip;
   } else if (type === "hosting") {
     const box = u.account || u.hosting || nested.account || nested.hosting || {};
-    const username = pick(u.username, u.cpanel_username, u.user, box.username, box.cpanel_username, nested.username);
+    const username = pick(u.username, u.cpanel_username, u.user, box.username, box.cpanel_username, nested.username, nested.cpanel_username, nested.user);
     if (username) out.provider_username = username;
     const panel = pick(u.panel_url, u.cpanel_url, box.panel_url, box.cpanel_url, nested.panel_url);
     if (panel) out.panel_url = panel;

@@ -1,6 +1,30 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
 ## ⏳ LATEST SESSION (2026-09, pod 118bb331) — fresh re-setup + LIVE 7-day HOSTING buy via crypto (ETH)
+### FOLLOW-UPS THIS SESSION (after user paid the ETH):
+1. **Hosting provisioned.** User paid the $30 ETH → crypto order `6aad6757…` went payment_status=paid but
+   provisioning FAILED: upstream Nomadly RESELLER wallet ($25) < $30 plan → order auto-refunded $30 to the
+   buyer's Nameword wallet. User then gave the RESELLER BACKEND Mongo (roundhouse.proxy.rlwy.net:52715, db
+   `test`). Reseller wallet lives in `walletOf._id="5590563715"` as `usdIn/usdOut` (balance = usdIn−usdOut).
+   Set `usdIn=1030` → balance $1000 (verified via GET /api/v1/reseller/account). Then re-ran the app's retry
+   endpoint `POST /api/v1/checkout/orders/6aad6757…/items/0/retry` (debits the buyer's now-$40 wallet $30,
+   net-zero, then re-provisions). RESULT: item.status=active, cPanel user **namea3a5**, panel
+   https://panel.1.hostbay.io, IP 68.183.77.106, term 7d, expires 2026-09-25; reseller wallet 1000→970.
+2. **BUG FOUND+FIXED — cPanel management stuck in test_mode.** `ownership.extractProviderIds()` hosting
+   branch didn't map the upstream `result.cpanel_username` → `item.provider_username` (it only checked
+   `nested.username`), so `withOwnedHosting()` (gates live calls on provider_username) returned the
+   dry_run/test_mode envelope for EVERY /hosting/:user management route. Fix: added
+   `nested.cpanel_username, nested.user` to the username pick() in `backend/app/services/ownership.js`; also
+   backfilled the existing order item (namewords.sbs → provider_username=namea3a5). After fix the account
+   HANDLE becomes the real cpanel user (namea3a5), NOT the old composite `orderId:idx`. Verified LIVE (curl +
+   auto_frontend_testing_agent): GET /account/site-status=online (turn site on/off works on premium plan);
+   POST /security/visitor-captcha=403 gold_only (per-domain, Golden-only); GET /mysql/databases=403
+   mysql_requires_monthly (7-day trial); security/status live. Frontend CpanelTabs (Site/Security/Databases)
+   all render LIVE, NO test-mode banner. (GET /ssl returns upstream CPANEL_AUTH_FAILURE — provider WHM auth,
+   not our app.) Reseller cPanel API surface confirmed at https://1.speechcue.com/apidoc: the "website on/off"
+   is `/account/site-status` (account-level, any plan) + `/security/visitor-captcha` & `/security/js-challenge`
+   & `/geo` (per-domain, GOLDEN plan only).
+
 Live pod URL: `https://118bb331-58a2-45ac-bc3c-e4f174f02f5a.preview.emergentagent.com`
 (user's pasted `5c680fc7…` URL is STALE.) Fresh pod: both `.env` MISSING, backend `node_modules` MISSING,
 supervisor on DEFAULT (uvicorn + `yarn start`).
