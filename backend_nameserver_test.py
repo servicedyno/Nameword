@@ -10,7 +10,7 @@ import time
 import sys
 
 # Backend URL from frontend/.env
-BASE_URL = "https://38812491-fe02-4414-a6aa-043863e097bb.preview.emergentagent.com"
+BASE_URL = "https://nameword-test.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 
 def log(msg):

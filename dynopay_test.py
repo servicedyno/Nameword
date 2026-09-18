@@ -11,7 +11,7 @@ import random
 import string
 
 # Backend base URL (same-origin ingress with /api/v1 prefix)
-BASE_URL = "https://domain-manager-46.preview.emergentagent.com/api/v1"
+BASE_URL = "https://nameword-test.preview.emergentagent.com/api/v1"
 
 # Test configuration
 TIMEOUT_STANDARD = 30
