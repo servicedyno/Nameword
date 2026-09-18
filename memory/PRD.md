@@ -1,5 +1,43 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ⏳ LATEST SESSION (2026-09, pod 60be9ede) — fresh re-setup + LIVE crypto buy→register→DNS (2 bugs fixed)
+Live pod URL: `https://60be9ede-73be-430d-89c2-34c11d084596.preview.emergentagent.com`
+(user's pasted `5c680fc7…` URL is STALE). Fresh pod: both `.env` missing, backend `node_modules` missing,
+supervisor reset to default `uvicorn server:app` (WRONG — this is a NODE app) AND frontend `yarn start`
+(vite dev; must be prod build via start.sh/.prod on this Cloudflare-flaky preview).
+
+RE-SETUP DONE: recreated `/app/backend/.env` + `/app/frontend/.env` from user creds (used REAL pod URL
+for APP_URL/FRONTEND_URL/CORS/GOOGLE_REDIRECT_URL=`/auth/google/callback`/GOOGLE_LINK_REDIRECT_URL=
+`/auth/google/link/callback`/VITE_API_BASE_URL); `yarn install` backend (804 pkgs); repointed supervisor
+backend→`node /app/backend/bin/www`, frontend→`/bin/bash /app/frontend/start.sh` (prod build, `.prod`
+already present). REAL creds: DB_URI (Railway nozomi.proxy.rlwy.net:54383/nameword — live), NOMADLY_API_KEY
+(rsk_live_…, mode=live), BREVO_API_KEY, GOOGLE id/secret, DYNO_PAY_API_KEY (services read this directly;
+DYNO_PAY_BASE_URL=https://dynopay.com/api). PLACEHOLDERS: mail SMTP, Telegram, WHM/cPanel, Plesk,
+Cloudflare, Telnyx, GCloud, CR/ConnectReseller.
+
+LIVE E2E (user account `moxxcompany@gmail.com` / `Onlygod123@`): bought `namewords.sbs` via crypto → user
+sent REAL ETH → payment confirmed (tx 0xa1200bf3…ae3c) → domain auto-registered ACTIVE (order
+NW-MU73ZSWPPIVS, payment N_1789…, invoice HCY-13714621) → DNS managed (added/deleted A + TXT on the
+live Cloudflare zone). Crypto order flow = `POST /api/v1/checkout/orders/crypto {items,client_order_id,
+currency}` → returns {payment:{address,cryptoAmount,qrCode,expireAt}}; poll `GET /checkout/orders/:id/
+crypto-status`. NOTE: reward points auto-redeem (max) before crypto; if points fully cover, order is
+`fully_covered` (NO crypto address) — moxx had 0 pts so full $30 charged.
+
+BUGS FOUND + FIXED THIS SESSION (both verified by auto_frontend_testing_agent):
+1. **Domain search hung forever on "Searching…".** Causes: `API_CONFIG.TIMEOUT` was UNDEFINED → axios had
+   no timeout (hung request never aborts); and `doSearch` awaited `Promise.allSettled([search, suggest])`
+   so the fast availability result was blocked behind the slow 12-TLD suggest. Fixes in
+   `frontend/src/config/api.js` (TIMEOUT=30000) and `frontend/src/pages/DomainsNomadly.jsx` (decoupled:
+   exact controls the spinner, suggestions fill in independently). Search now ~1.9s. Also switched
+   frontend to PROD build (supervisor→start.sh) — vite-dev is Cloudflare-429-flaky on preview.
+2. **DNS Manager table showed EMPTY Type/Name/Value cells.** API returns `{recordType,recordName,
+   recordContent,cfRecordId}` but `frontend/src/pages/DnsManagerNomadly.jsx` rendered `{type,name,value,
+   id}`. Fixed in `loadRecords` by mapping API→component fields (spread + type/name/value/id). Verified:
+   NS rows visible, add A + TXT (HTTP 200, real Cloudflare IDs), delete works.
+⚠️ Frontend is a PROD build → after ANY frontend source edit you MUST `sudo supervisorctl restart frontend`
+   (start.sh runs `yarn build`, ~15s) or the change is NOT live.
+
+
 ## ⏳ LATEST SESSION (2026-09, pod 38812491) — login fix + NS/hosting + NEXT TASK
 Live pod URL: `https://hosting-control-12.preview.emergentagent.com`
 (user's `5c680fc7…` URL was stale). `.env` rebuilt from user creds; supervisor backend repointed

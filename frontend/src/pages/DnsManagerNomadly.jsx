@@ -50,7 +50,17 @@ export default function DnsManagerNomadly() {
     setLoaded(false);
     try {
       const data = await resellerAPI.listDns(dom);
-      setRecords(Array.isArray(data?.records) ? data.records : []);
+      // Map API response fields (recordType, recordName, recordContent) to component fields (type, name, value)
+      const mappedRecords = Array.isArray(data?.records) 
+        ? data.records.map(r => ({
+            ...r,
+            type: r.recordType || r.type,
+            name: r.recordName || r.name,
+            value: r.recordContent || r.value,
+            id: r.cfRecordId || r.id,
+          }))
+        : [];
+      setRecords(mappedRecords);
       setSource(data?.source || null);
       setActiveDomain(dom);
       setLoaded(true);
