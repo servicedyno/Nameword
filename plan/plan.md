@@ -1,101 +1,118 @@
-# Plan: Fix navigation for signed-in users ("lost sidebar / no clear way to manage the app")
+# Plan: Turn Nameword into an app-deployment platform (a "Railway for offshore/crypto")
 
-## The problem today
+## The short answer
+Yes, it is achievable — but "becoming Railway" is not one feature, it's a new product line.
+Railway is a developer platform where you connect a code repo and it builds and runs your
+app, with databases, logs, and usage billing. Nameword today sells the *ingredients*
+(domains, DNS, VPS, RDP, cPanel hosting) and a crypto wallet — it does not yet run
+customers' applications for them.
 
-The app currently has two completely different navigation frames, and a signed-in
-user gets dropped between them with no reliable way back:
+The fastest credible path is **not** to rebuild Railway from scratch. It is to add a
+"Deploy your app" product on top of the infrastructure Nameword already resells, using a
+proven deploy engine underneath, and wrap it in Nameword's own dashboard, wallet billing,
+and domains. That is the approach this plan recommends, and the first phase is scoped to be
+shippable rather than a multi-year platform build.
 
-1. **The "manage my account" frame** (with the left sidebar / icon rail) only appears
-   on these pages: Dashboard, Wallet, Orders, My services, Subscriptions, Payment
-   history, and Account settings.
+## What Railway offers that Nameword does not have today (the gap)
+- **Deploy from a Git repo** — connect GitHub, auto-detect the language, build a container, run it. (Core of Railway.)
+- **Managed databases in one click** — Postgres, MySQL, Redis, MongoDB, with automatic backups.
+- **Environment variables / secrets** managed per app and per environment.
+- **Automatic HTTPS + app URLs + custom domains** (Nameword has a head start here — see advantages).
+- **Live logs, metrics, deploy history, one-click rollback, health checks / zero-downtime deploys.**
+- **Background workers and scheduled (cron) jobs.**
+- **Persistent volumes** for apps that store files/data.
+- **Private networking** so a customer's services talk to each other securely.
+- **Preview environments** spun up per pull request and torn down on merge.
+- **Usage-based billing** (per-second CPU/RAM/storage/egress) plus a small flat plan.
+- **CLI, public API, and a template/marketplace** of one-click starter apps.
+- **Teams / roles** so multiple people manage the same project.
 
-2. **The "storefront" frame** (a simple top navbar) appears on the Home/landing page
-   and on all the product pages: Domains, DNS, Hosting, VPS, RDP, API, Pricing, and
-   Help. These pages have **no sidebar at all**.
+## What Nameword already has that makes this realistic (advantages)
+- **Domains + DNS** — Railway makes you bring or buy a domain elsewhere; Nameword can bundle a
+  free domain/subdomain and auto-wire it to the deployed app. This is a genuine edge.
+- **Crypto prepaid wallet + rewards/referrals** — billing rails already exist.
+- **VPS / RDP / cPanel supply** through the existing provider — the compute to run apps.
+- **Accounts, auth, dashboard, checkout** already built.
+- **Offshore / privacy-first / DMCA-resilient positioning** — a differentiated angle Railway
+  deliberately does not occupy.
 
-Concrete consequences a signed-in user hits:
+## Recommended approach (the main thing to approve)
+**Approach A — "Managed Deploy Box" (recommended for the first release).**
+When a customer buys a "Deploy" plan, Nameword provisions an isolated server for them (using
+the VPS supply it already resells) and installs a mature open-source deploy engine on it
+(**Coolify** — the leading open-source, permissively licensed Railway-style engine: Git deploy,
+auto-build, one-click databases, auto-HTTPS, logs). Nameword's own branded dashboard talks to
+that engine's API so the customer never sees the raw tooling; Nameword handles the wallet
+billing, plan tiers, and automatic domain/DNS wiring on top.
 
-- On the landing page or any product page, the only personal control is a small
-  name dropdown. That dropdown links to Account-settings sub-pages and Logout — it
-  has **no link to the Dashboard, Wallet, Orders, or anything else**. So from the
-  landing page there is effectively **no visible way to get into the app**; the user
-  has to know a URL.
-- Clicking the logo anywhere always goes to the public landing page, which throws a
-  signed-in user out of the app frame (and then, per the point above, they're stuck).
-- Even inside the app, on a normal laptop screen width (roughly 1024–1279px) the
-  sidebar and icon rail are hidden; navigation collapses to a hamburger menu and a
-  small bottom bar. On those screens it looks like the sidebar "disappeared."
-- Because product pages use the storefront frame, moving between "Dashboard" and
-  "Domains/Hosting" makes the whole left navigation appear and disappear, which reads
-  as losing the menu.
+- **Pros:** reuses Nameword's existing VPS + domains + wallet; ships in a reasonable timeframe;
+  each customer is fully isolated on their own box, which fits the offshore/privacy story well.
+- **Cons:** billing is per-box (a plan tier), not true per-second like Railway; each customer
+  needs a small dedicated server (there is a minimum size), so it is less "serverless" than Railway.
 
-## Goal
+**Approach B — In-house multi-tenant platform (deferred / long-term).**
+Build Nameword's own orchestration so many customers' apps share pooled capacity with true
+per-second metered billing, autoscaling, and private networking — i.e. a real Railway clone.
+This is a large, ongoing platform-engineering program and is proposed only as a later evolution,
+not the first release.
 
-A signed-in user always has a clear, consistent way to reach and manage every part
-of their account (Dashboard, Domains, DNS, Hosting, VPS, RDP, Wallet, Rewards,
-Orders, Services, Subscriptions, Billing, Settings, Help) — no matter which page
-they're on, and on any screen size.
+**Recommendation:** start with Approach A, keep Approach B as the long-term direction if the
+product gains traction. The decision to challenge here is A vs. B for the first release.
 
-## What will change (proposed)
+## Chosen engine (Approach A)
+**Coolify** is recommended over the alternatives:
+- *Dokploy* — good, but part of it is under a source-available license that needs a commercial
+  agreement for production resale; avoid for a paid product for now.
+- *CapRover* — stable and light, but a dated experience and weaker feature set.
+- *Coolify* — most Railway-like feature set (Git deploy, 280+ one-click services/databases,
+  auto-HTTPS, teams, API, S3 backups), permissive license suitable for resale.
 
-1. **Turn the name dropdown into a real account menu.** When signed in, the menu
-   (shown on both the storefront navbar and the in-app top bar) gains quick links to:
-   Dashboard, Domains, Wallet, Rewards, Orders, My services, Subscriptions, Payment
-   history — in addition to the existing Account settings items and Logout.
+## Proposed phases
+**Phase 1 — MVP: "Deploy from GitHub" (this is what approval unlocks first)**
+- Customer connects a GitHub repo; Nameword builds and runs it as a web service on their deploy box.
+- Automatic HTTPS and a free `*.nameword` app URL, or point one of their Nameword domains at it.
+- Environment variables/secrets, live build + run logs, redeploy and rollback.
+- One managed database (Postgres) attachable to the app.
+- Sold as fixed monthly plan tiers, paid from the existing crypto wallet.
 
-2. **Add a visible "Dashboard" entry to the storefront navbar for signed-in users.**
-   Instead of only "Sign in / Create account," a signed-in user sees a clear
-   "Dashboard" button (in both the desktop navbar and the mobile menu), so getting
-   back into the app is one obvious click from the landing page or any product page.
+**Phase 2 — Depth**
+- More managed databases (MySQL, Redis, MongoDB) with scheduled backups.
+- Custom domains at scale, background workers, cron jobs, persistent volumes.
+- Auto-deploy on every push, and inviting team members to a project.
 
-3. **Make the logo context-aware.** For a signed-in user the logo leads to the
-   Dashboard (the app), not the public landing page. A separate, clearly labelled
-   link (e.g. "View public site") remains available for anyone who wants the
-   marketing site.
+**Phase 3 — Platform polish**
+- Usage-based/metered billing, preview environments per pull request, private networking between
+  a project's services, a one-click template gallery, and a CLI + public API.
 
-4. **Keep the sidebar visible on laptop screens.** The persistent sidebar / icon rail
-   will appear starting at standard laptop width (~1024px) rather than only on large
-   desktops (~1280px), so laptop users stop losing the menu. Phones keep the current
-   drawer + bottom-bar behaviour.
+**Phase 4 — Optional, large**
+- In-house multi-tenant orchestrator (Approach B) for true per-second billing and pooled capacity.
 
-5. **Consistent management access on product pages.** So the menu never vanishes
-   while a signed-in user is browsing Domains/DNS/Hosting/VPS/RDP/Pricing, those pages
-   will keep an always-available way into account management (see the decision below
-   for how far this goes).
+## Pricing / billing decisions (please confirm)
+- **Phase 1 billing model:** fixed plan tiers (e.g. Starter / Pro / Scale) mapped to deploy-box
+  sizes, billed monthly from the crypto wallet, with current rewards/referrals still applying.
+  True metered/per-second billing is deferred to Phase 3.
+- **Margin note:** each deploy box has an underlying compute cost from the provider, so plan
+  prices must sit above that cost. Exact numbers to be set before launch.
 
-## Decisions to confirm
+## Positioning decision (please confirm)
+- Keep the **offshore / privacy-first / DMCA-resilient, crypto-native** identity as the wedge
+  against Railway, and bundle a **free domain or subdomain** with every deploy plan.
 
-**A. How far to unify the product pages (the main choice).**
-   - **Option 1 — Bridge only (recommended, lighter):** product/storefront pages keep
-     their current storefront look, but signed-in users always get the "Dashboard"
-     button + full account menu (items 1–3 above). Fastest, lowest risk, keeps the
-     marketing look of product pages.
-   - **Option 2 — Full wrap (more thorough, bigger change):** when signed in, the
-     product pages (Domains, DNS, Hosting, VPS, RDP, Pricing) are shown *inside* the
-     app frame with the same left sidebar as the Dashboard, so the sidebar literally
-     never disappears. This is the most seamless result but changes how those pages
-     look for logged-in users and is a larger change.
-   - Default if you don't say otherwise: **Option 1**.
+## Assumptions being made (challenge any of these)
+1. First release uses Approach A (managed deploy box + Coolify), not an in-house orchestrator.
+2. Engine is Coolify (permissive license, resale-friendly).
+3. Phase 1 is a single web service + one Postgres database per project — not the full Railway
+   feature set at once.
+4. Billing in Phase 1 is fixed plan tiers from the crypto wallet; metered billing comes later.
+5. GitHub is the first (and Phase-1-only) source for code; other Git providers/Docker images come later.
+6. Target customer is developers/small teams who want privacy-friendly, crypto-paid app hosting.
 
-**B. Logo destination for signed-in users.** Default: logo → Dashboard, with a
-   separate "View public site" link. Say if you'd rather the logo always go to the
-   public landing page.
+## Explicitly out of scope for the first release
+Metered per-second billing, multi-tenant pooled infrastructure, preview environments, CLI,
+public API, template marketplace, non-GitHub sources, and autoscaling.
 
-**C. Help visibility.** Help is currently reachable in most places; the account menu
-   will also include it. Confirm that's fine (no reason to expect otherwise).
-
-## Out of scope
-
-- No change to what the pages themselves do (search, checkout, DNS management, etc.).
-- No change to sign-in / sign-up, permissions, or which pages require login.
-- No new sections or features beyond navigation/menus.
-- No visual redesign of the pages other than the navigation/menu changes above.
-
-## Assumptions
-
-- The set of destinations that matter for "managing the app" is the list already
-  present in the in-app sidebar/rail (Dashboard, Domains, DNS, Hosting, VPS, RDP,
-  Wallet, Rewards, Orders, Services, Subscriptions, Payment history, Settings, Help).
-- Signed-out visitors see no change; this only affects the signed-in experience.
-- Wording of new menu items reuses existing labels and is available in English,
-  Spanish, and French.
+## What is required from you before/around launch
+- Confirmation of Approach A vs. B, and the positioning/pricing direction above.
+- A GitHub connection (OAuth app) so customers can link repositories — set up during the build.
+- Enough provider wallet balance / live provisioning enabled to actually create deploy boxes
+  (note: the underlying provider is currently in test mode; real deploys need live mode + funds).

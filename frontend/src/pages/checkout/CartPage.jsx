@@ -205,6 +205,9 @@ export default function CartPage() {
     (d) => !cart.hostingFor(d.domain) && d.ns_choice === "custom" && (d.nameservers || []).filter(Boolean).length < 2
   );
   const canPay = !!quote && !quoting && !paying && !hasProblems && !customNsIncomplete && shortfall <= 0 && cart.count > 0;
+  const walletShort = walletBalance != null && shortfall > 0;
+  const walletCovers = walletBalance != null && shortfall <= 0;
+  const cryptoDisabled = paying || quoting || hasProblems || customNsIncomplete || cart.count === 0;
 
   // Order summary passed into the crypto (Dyno Pay) checkout modal so buyers see
   // exactly what they're paying for, their wallet balance, and what remains.
@@ -359,33 +362,61 @@ export default function CartPage() {
                     <span className="font-semibold text-primary dark:text-white nw-mono" data-testid="cart-wallet-balance">{quoting && walletBalance == null ? "…" : money(walletBalance)}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-ink-soft dark:text-gray-400">After this order</span>
-                    <span className={`font-semibold nw-mono ${shortfall > 0 ? "text-red-600 dark:text-red-300" : "text-primary dark:text-white"}`} data-testid="cart-wallet-after">
-                      {walletBalance == null ? "…" : shortfall > 0 ? `− ${money(shortfall)} short` : money(Math.round((walletBalance - payable) * 100) / 100)}
+                    <span className="text-ink-soft dark:text-gray-400">{walletShort ? "Wallet is short by" : "Wallet after this order"}</span>
+                    <span className={`font-semibold nw-mono ${walletShort ? "text-red-600 dark:text-red-300" : "text-primary dark:text-white"}`} data-testid="cart-wallet-after">
+                      {walletBalance == null ? "…" : walletShort ? money(shortfall) : money(Math.round((walletBalance - payable) * 100) / 100)}
                     </span>
                   </div>
-                  {shortfall > 0 && (
-                    <p className="mt-3 text-xs text-ink-soft dark:text-gray-400" data-testid="cart-shortfall-hint">
-                      Not enough wallet balance — use <span className="font-medium text-primary dark:text-white">Pay with crypto</span> below to pay this order directly and earn reward points.
+                  {walletShort && (
+                    <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200" data-testid="cart-shortfall-hint">
+                      Your wallet ({money(walletBalance)}) does not cover the <span className="font-semibold nw-mono">{money(payable)}</span> due — it is <span className="font-semibold nw-mono">{money(shortfall)}</span> short. Pay the full amount in crypto below, or top up your wallet first.
                     </p>
                   )}
                 </div>
                 {payError && (
                   <p className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert" data-testid="cart-pay-error">{payError}</p>
                 )}
-                <button type="button" onClick={pay} disabled={!canPay} className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" data-testid="cart-pay-button">
-                  {paying ? "Processing…" : quoting ? "Updating prices…" : payable <= 0 ? `Pay with ${appliedPoints} points` : `Pay ${money(payable)} from wallet`}
-                </button>
-                {payable > 0 && (
-                  <button
-                    type="button"
-                    onClick={payWithCrypto}
-                    disabled={paying || quoting || hasProblems || customNsIncomplete || cart.count === 0}
-                    className="nw-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
-                    data-testid="cart-pay-crypto-button"
-                  >
-                    <FaBitcoin size={16} /> Pay {money(payable)} with crypto
-                  </button>
+                {walletCovers ? (
+                  <>
+                    {/* Wallet covers the total → wallet is the primary action */}
+                    <button type="button" onClick={pay} disabled={!canPay} className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" data-testid="cart-pay-button">
+                      {paying ? "Processing…" : quoting ? "Updating prices…" : payable <= 0 ? `Pay with ${appliedPoints} points` : `Pay ${money(payable)} from wallet`}
+                    </button>
+                    {payable > 0 && (
+                      <button
+                        type="button"
+                        onClick={payWithCrypto}
+                        disabled={cryptoDisabled}
+                        className="nw-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                        data-testid="cart-pay-crypto-button"
+                      >
+                        <FaBitcoin size={16} /> Pay {money(payable)} with crypto
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Wallet can't cover it → crypto is primary, top-up is the alternative.
+                        The misleading disabled "Pay from wallet" button is intentionally not shown. */}
+                    <button
+                      type="button"
+                      onClick={payWithCrypto}
+                      disabled={cryptoDisabled}
+                      className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                      data-testid="cart-pay-crypto-button"
+                    >
+                      <FaBitcoin size={16} /> Pay {money(payable)} with crypto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/wallet")}
+                      disabled={paying}
+                      className="nw-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                      data-testid="cart-topup-button"
+                    >
+                      <FiCreditCard size={16} /> Top up wallet
+                    </button>
+                  </>
                 )}
                 <button type="button" onClick={refreshQuote} disabled={quoting} className="inline-flex w-full items-center justify-center gap-2 text-xs text-ink-soft hover:text-primary dark:text-gray-400 dark:hover:text-white" data-testid="cart-refresh-quote">
                   <FiRefreshCw size={12} className={quoting ? "animate-spin" : ""} /> Prices are re-checked live at payment

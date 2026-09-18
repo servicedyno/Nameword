@@ -79,7 +79,10 @@ export default function MiniCartDrawer() {
   const pointsDiscount = round2(quote?.points_discount_usd ?? 0);
   const payable = round2(quote?.payable_usd ?? subtotal);
   const shortfall = walletBalance == null ? null : Math.max(0, round2(payable - walletBalance));
-  const canPayWallet = isAuthenticated && !!quote && !quoting && !paying && cart.count > 0 && shortfall != null && shortfall <= 0;
+  const walletCovers = shortfall != null && shortfall <= 0;
+  const walletShort = shortfall != null && shortfall > 0;
+  const canPayWallet = isAuthenticated && !!quote && !quoting && !paying && cart.count > 0 && walletCovers;
+  const walletLabel = payable <= 0 ? "Complete order" : `Pay ${money(payable)} from wallet`;
 
   const pay = async () => {
     setPaying(true);
@@ -125,6 +128,11 @@ export default function MiniCartDrawer() {
   const goFullCart = () => {
     close();
     navigate("/cart");
+  };
+
+  const goTopUp = () => {
+    close();
+    navigate("/wallet");
   };
 
   return (
@@ -202,16 +210,22 @@ export default function MiniCartDrawer() {
 
               {isAuthenticated ? (
                 <>
+                  {/* Explicit amount-due line so the number on the buttons is never a surprise */}
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-semibold text-primary dark:text-white">Amount due</span>
+                    <span className="text-base font-bold text-primary dark:text-white nw-mono" data-testid="mini-cart-amount-due">{money(payable)}</span>
+                  </div>
+
                   <div className="mb-3 flex items-center justify-between text-sm">
                     <span className="inline-flex items-center gap-1.5 text-ink-soft dark:text-gray-400"><FiCreditCard size={14} /> Wallet balance</span>
-                    <span className="font-semibold text-primary dark:text-white nw-mono" data-testid="mini-cart-wallet-balance">
+                    <span className={`font-semibold nw-mono ${walletShort ? "text-red-600 dark:text-red-300" : "text-primary dark:text-white"}`} data-testid="mini-cart-wallet-balance">
                       {quoting && walletBalance == null ? "…" : money(walletBalance)}
                     </span>
                   </div>
 
-                  {shortfall != null && shortfall > 0 && (
-                    <p className="mb-3 text-xs text-ink-soft dark:text-gray-400" data-testid="mini-cart-shortfall">
-                      Not enough balance — use <span className="font-medium text-primary dark:text-white">Pay with crypto</span> to fund your wallet and finish in one step.
+                  {walletShort && (
+                    <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200" data-testid="mini-cart-shortfall">
+                      Your wallet is <span className="font-semibold nw-mono">{money(shortfall)}</span> short of the <span className="font-semibold nw-mono">{money(payable)}</span> due. Pay the full amount in crypto below, or top up your wallet first.
                     </p>
                   )}
 
@@ -219,18 +233,48 @@ export default function MiniCartDrawer() {
                     <p className="mb-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300" role="alert" data-testid="mini-cart-error">{payError}</p>
                   )}
 
-                  <button type="button" onClick={pay} disabled={!canPayWallet} className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" data-testid="mini-cart-pay-button">
-                    {paying ? "Processing…" : quoting ? "Updating prices…" : `Pay ${money(payable)} from wallet`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={payWithCrypto}
-                    disabled={paying || quoting || cart.count === 0}
-                    className="nw-btn-secondary mt-2 w-full disabled:opacity-60 disabled:cursor-not-allowed"
-                    data-testid="mini-cart-pay-crypto-button"
-                  >
-                    <FaBitcoin size={16} /> Pay {money(payable)} with crypto
-                  </button>
+                  {walletCovers ? (
+                    <>
+                      {/* Wallet fully covers the order → wallet is the primary action */}
+                      <button type="button" onClick={pay} disabled={!canPayWallet} className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" data-testid="mini-cart-pay-button">
+                        {paying ? "Processing…" : quoting ? "Updating prices…" : walletLabel}
+                      </button>
+                      {payable > 0 && (
+                        <button
+                          type="button"
+                          onClick={payWithCrypto}
+                          disabled={paying || quoting || cart.count === 0}
+                          className="nw-btn-secondary mt-2 w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                          data-testid="mini-cart-pay-crypto-button"
+                        >
+                          <FaBitcoin size={16} /> Pay {money(payable)} with crypto
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {/* Wallet can't cover it → crypto is the primary action, top-up is the alternative.
+                          The misleading disabled "Pay from wallet" button is intentionally not shown. */}
+                      <button
+                        type="button"
+                        onClick={payWithCrypto}
+                        disabled={paying || quoting || cart.count === 0}
+                        className="nw-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                        data-testid="mini-cart-pay-crypto-button"
+                      >
+                        <FaBitcoin size={16} /> Pay {money(payable)} with crypto
+                      </button>
+                      <button
+                        type="button"
+                        onClick={goTopUp}
+                        disabled={paying}
+                        className="nw-btn-secondary mt-2 w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                        data-testid="mini-cart-topup-button"
+                      >
+                        <FiCreditCard size={16} /> Top up wallet
+                      </button>
+                    </>
+                  )}
                 </>
               ) : (
                 <button type="button" onClick={goFullCart} className="nw-btn-primary w-full" data-testid="mini-cart-guest-checkout">
