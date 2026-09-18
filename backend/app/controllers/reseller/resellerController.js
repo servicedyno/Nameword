@@ -444,11 +444,91 @@ const listHostingAddons = (req, res) =>
       note: "Test mode — addon domains are available once a live account is provisioned.",
     })
   );
+// Attach an addon domain to a live hosting plan, then — for domains the buyer
+// registered with Nameword — automatically point that domain's nameservers at
+// the hosting account's zone so the connected site actually resolves (mirrors
+// the bundled domain+hosting reconciliation in CheckoutController). External
+// (not-owned) domains still attach fine; we simply return the hosting
+// nameservers so the buyer can set them at their own registrar. dry_run stays a
+// no-op test_mode envelope. NS pointing is best-effort and never fails the attach.
 const addHostingAddon = (req, res) =>
   withOwnedHosting(
     req,
     res,
-    (u) => forward(res, nomadly.post(`/hosting/${enc(u)}/addons`, req.body || {})),
+    async (u) => {
+      const domain = String((req.body && req.body.domain) || "").trim().toLowerCase();
+
+      // 1. Attach the addon upstream. Relay any upstream error verbatim (same
+      //    contract the generic forwarder uses).
+      let attach;
+      try {
+        attach = await nomadly.post(`/hosting/${enc(u)}/addons`, req.body || {});
+      } catch (err) {
+        if (err.response) return res.status(err.response.status).json(err.response.data);
+        return res.status(502).json({
+          success: false,
+          error: "reseller_unreachable",
+          message: err.message || "Failed to reach the reseller API",
+        });
+      }
+
+      // 2. Resolve the hosting account's nameservers (deliverables → credentials).
+      let hostNs = [];
+      try {
+        const h = await nomadly.get(`/hosting/${enc(u)}`);
+        const d = h && h.data;
+        hostNs =
+          d?.result?.nameservers ||
+          d?.deliverables?.nameservers ||
+          d?.nameservers ||
+          [];
+        if (!Array.isArray(hostNs) || hostNs.length < 2) {
+          const c = await nomadly.get(`/hosting/${enc(u)}/credentials`);
+          hostNs = c?.data?.nameservers || c?.data?.result?.nameservers || hostNs;
+        }
+      } catch (_) {
+        /* best-effort — a missing NS read must not break the attach */
+      }
+      hostNs = Array.isArray(hostNs) ? hostNs.filter(Boolean) : [];
+
+      // 3. Is the domain registered with Nameword (and owned by this buyer)?
+      let owned = false;
+      try {
+        owned = !!(domain && (await ownership.findOwnedDomain(userId(req), domain)));
+      } catch (_) {
+        owned = false; // treat as external if the ownership lookup fails
+      }
+
+      // 4. Owned + we know the hosting NS (>=2) → auto-point (free, best-effort).
+      let nsPointed = false;
+      if (owned && hostNs.length >= 2) {
+        try {
+          await nomadly.put(`/dns/${enc(domain)}/nameservers`, { nameservers: hostNs });
+          nsPointed = true;
+        } catch (e) {
+          console.error("[addon] auto-point NS failed:", e?.message || e);
+        }
+      }
+
+      // 5. Connect summary the Manage UI renders after attach.
+      const connect = {
+        domain,
+        owned,
+        ns_pointed: nsPointed,
+        nameservers: hostNs,
+        note: nsPointed
+          ? "Connected — this domain's nameservers now point to your hosting account. Your site will go live shortly."
+          : hostNs.length
+          ? "Attached. Set these nameservers at your domain registrar to finish connecting your site."
+          : "Attached. We couldn't read the hosting nameservers automatically — check your plan's credentials.",
+      };
+
+      const body =
+        attach.data && typeof attach.data === "object"
+          ? attach.data
+          : { result: attach.data };
+      return res.status(attach.status).json({ ...body, connect });
+    },
     { mode: "dry_run", status: "test_mode", message: "Test mode — addon domains can be attached once a live account is provisioned." }
   );
 

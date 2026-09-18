@@ -102,6 +102,7 @@ export default function HostingNomadly() {
   const [manageBusy, setManageBusy] = useState(null); // 'upgrade' | 'addon' | 'captcha'
   const [manageTab, setManageTab] = useState("overview"); // 'overview' | 'advanced'
   const [addonInput, setAddonInput] = useState("");
+  const [addonResult, setAddonResult] = useState(null); // {domain, owned, ns_pointed, nameservers, note}
   const [upgradePlan, setUpgradePlan] = useState("");
 
   const loadPlans = useCallback(async () => {
@@ -268,6 +269,7 @@ export default function HostingNomadly() {
     setManageCaptcha(null);
     setUpgradePlan("");
     setAddonInput("");
+    setAddonResult(null);
     setManageLoading(true);
     try {
       const [details, addons] = await Promise.all([
@@ -316,9 +318,18 @@ export default function HostingNomadly() {
     const d = addonInput.trim().toLowerCase();
     if (!manage || !d) return;
     setManageBusy("addon");
+    setAddonResult(null);
     try {
-      await resellerAPI.addHostingAddon(manage.user, d);
-      showAlert(`Addon domain ${d} attached.`, { type: "success" });
+      const res = await resellerAPI.addHostingAddon(manage.user, d);
+      const connect = res?.connect || null;
+      setAddonResult(connect);
+      if (connect?.ns_pointed) {
+        showAlert(`Connected ${d} — nameservers now point to your hosting.`, { type: "success" });
+      } else if (connect?.nameservers?.length) {
+        showAlert(`Attached ${d}. Set the nameservers shown below at your registrar to finish.`, { type: "success" });
+      } else {
+        showAlert(`Addon domain ${d} attached.`, { type: "success" });
+      }
       setAddonInput("");
       setManageAddons(await resellerAPI.listHostingAddons(manage.user).catch(() => manageAddons));
     } catch (err) {
@@ -728,6 +739,20 @@ export default function HostingNomadly() {
                         {manageBusy === "addon" ? "…" : "Add"}
                       </button>
                     </div>
+                    {addonResult && (
+                      <div className={`mt-3 rounded-lg border px-3 py-2.5 text-xs ${addonResult.ns_pointed ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-900/20" : "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"}`} data-testid="hosting-addon-result">
+                        <p className={`font-medium ${addonResult.ns_pointed ? "text-green-700 dark:text-green-300" : "text-amber-800 dark:text-amber-200"}`}>
+                          {addonResult.ns_pointed ? "✓ " : ""}{addonResult.note}
+                        </p>
+                        {!addonResult.ns_pointed && Array.isArray(addonResult.nameservers) && addonResult.nameservers.length > 0 && (
+                          <ul className="mt-2 space-y-1" data-testid="hosting-addon-ns">
+                            {addonResult.nameservers.map((ns, i) => (
+                              <li key={i} className="flex items-center gap-2 font-mono text-secondary dark:text-gray-300"><FiGlobe size={12} /> {ns}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Visitor Captcha (Gold only) */}
