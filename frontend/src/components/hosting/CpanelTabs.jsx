@@ -11,6 +11,7 @@ import {
   FiMapPin,
   FiBarChart2,
   FiPower,
+  FiAward,
   FiRefreshCw,
   FiTrash2,
   FiPlus,
@@ -41,6 +42,36 @@ const Loading = () => (
   <p className="text-secondary dark:text-gray-400 flex items-center gap-2 text-sm py-4">
     <FiRefreshCw className="animate-spin" size={15} /> Loading…
   </p>
+);
+
+// Subtle "Upgrade to Golden" nudge shown on Gold-only features (Visitor Captcha,
+// JS challenge, Geo) for non-Gold plans, so 7-day / Premium buyers can unlock the
+// per-domain on/off. onUpgrade jumps to the Overview → Upgrade card (Golden preset).
+const GoldNudge = ({ onUpgrade, feature = "This feature" }) => (
+  <div
+    className="flex items-start gap-3 rounded-xl border border-amber-300/70 bg-gradient-to-br from-amber-50 to-yellow-50 px-4 py-3 dark:border-amber-500/30 dark:from-amber-500/10 dark:to-yellow-500/[0.04]"
+    data-testid="gold-upgrade-nudge"
+  >
+    <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-yellow-500 text-white shadow-sm">
+      <FiAward size={16} />
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">{feature} is a Golden feature</p>
+      <p className="mt-0.5 text-xs text-amber-800/80 dark:text-amber-200/70">
+        Upgrade to the Golden Anti-Red plan to switch it on or off per domain.
+      </p>
+    </div>
+    {onUpgrade && (
+      <button
+        type="button"
+        onClick={onUpgrade}
+        data-testid="gold-upgrade-nudge-btn"
+        className="inline-flex shrink-0 self-center items-center gap-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+      >
+        <FiAward size={13} /> Upgrade to Golden
+      </button>
+    )}
+  </div>
 );
 
 const Empty = ({ children }) => (
@@ -427,7 +458,7 @@ const Toggle = ({ on, onClick, disabled, testId }) => (
   </button>
 );
 
-const SecurityTab = ({ user, domain }) => {
+const SecurityTab = ({ user, domain, isGold, onUpgrade }) => {
   const status = useLoad(() => M.securityStatus(user), [user]);
   const js = useLoad(() => M.jsChallenge(user), [user]);
   const captcha = useLoad(() => M.visitorCaptcha(user), [user]);
@@ -437,6 +468,8 @@ const SecurityTab = ({ user, domain }) => {
   const s = status.data || {};
   const jsOn = !!(js.data?.jsChallengeEnabled ?? js.data?.enabled);
   const capOn = !!(captcha.data?.enabled ?? captcha.data?.visitor_captcha_enabled);
+  // Prefer the provider's authoritative is_gold when present; fall back to the plan hint.
+  const notGold = typeof s.is_gold === "boolean" ? !s.is_gold : !isGold;
 
   return (
     <div className="space-y-4" data-testid="cpanel-tab-security">
@@ -474,7 +507,7 @@ const SecurityTab = ({ user, domain }) => {
           <p className="font-medium text-primary dark:text-white">JS challenge</p>
           <p className="text-xs text-secondary dark:text-gray-400">Human verify-your-browser gate (Gold).</p>
         </div>
-        <Toggle on={jsOn} disabled={busy || js.loading} testId="security-js-toggle" onClick={async () => { await run(() => M.setJsChallenge(user, !jsOn), "JS challenge updated."); js.reload(); }} />
+        <Toggle on={jsOn} disabled={busy || js.loading || notGold} testId="security-js-toggle" onClick={async () => { await run(() => M.setJsChallenge(user, !jsOn), "JS challenge updated."); js.reload(); }} />
       </div>
 
       <div className="border-t border-lightgray dark:border-gray-800 pt-3 flex items-center justify-between">
@@ -482,46 +515,61 @@ const SecurityTab = ({ user, domain }) => {
           <p className="font-medium text-primary dark:text-white">Visitor Captcha</p>
           <p className="text-xs text-secondary dark:text-gray-400">Golden Anti-Red exclusive · domain on Cloudflare.</p>
         </div>
-        <Toggle on={capOn} disabled={busy || captcha.loading} testId="security-captcha-toggle" onClick={async () => { await run(() => M.setVisitorCaptcha(user, !capOn, domain), "Visitor Captcha updated."); captcha.reload(); }} />
+        <Toggle on={capOn} disabled={busy || captcha.loading || notGold} testId="security-captcha-toggle" onClick={async () => { await run(() => M.setVisitorCaptcha(user, !capOn, domain), "Visitor Captcha updated."); captcha.reload(); }} />
       </div>
+
+      {notGold && (
+        <div className="border-t border-lightgray dark:border-gray-800 pt-3">
+          <GoldNudge feature="Visitor Captcha & JS challenge" onUpgrade={onUpgrade} />
+        </div>
+      )}
     </div>
   );
 };
 
 /* -------------------------------- Geo -------------------------------- */
-const GeoTab = ({ user }) => {
+const GeoTab = ({ user, isGold, onUpgrade }) => {
   const { data, loading, reload } = useLoad(() => M.geo(user), [user]);
   const { run, busy } = useRunner();
   const [countries, setCountries] = useState("");
   const [mode, setMode] = useState("block");
   const rules = Array.isArray(data?.rules) ? data.rules : [];
+  // Geo is Gold-only; the provider returns a gold_only error for non-Gold plans.
+  const goldError = /gold/i.test(String(data?._error || ""));
+  const notGold = goldError || !isGold;
   return (
     <div className="space-y-3" data-testid="cpanel-tab-geo">
       <TestBanner data={data} feature="Geo firewall" />
       <SectionTitle icon={FiMapPin}>Geo firewall rules</SectionTitle>
-      {loading ? <Loading /> : rules.length ? (
-        <ul className="space-y-1 mb-2">
-          {rules.map((r, i) => (
-            <li key={i} className="flex items-center justify-between text-sm text-secondary dark:text-gray-300 border border-line dark:border-gray-800 rounded-lg px-3 py-2">
-              <span className="inline-flex items-center gap-2"><FiMapPin size={13} /> <span className="uppercase text-xs font-medium">{r.action}</span> <span className="text-xs">{r.expression || (Array.isArray(r.countries) ? r.countries.join(", ") : "")}</span></span>
-              <button onClick={async () => { await run(() => M.deleteGeoRule(user, r.id), "Rule removed."); reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Delete rule"><FiTrash2 size={14} /></button>
-            </li>
-          ))}
-        </ul>
-      ) : <Empty>No geo rules yet.</Empty>}
-      <div className="flex items-center gap-2">
-        <input value={countries} onChange={(e) => setCountries(e.target.value)} placeholder="CN, RU, KP" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="geo-countries-input" />
-        <select value={mode} onChange={(e) => setMode(e.target.value)} className="nw-input !py-2 !px-3 text-sm">
-          <option value="block">Block</option>
-          <option value="allow">Allow</option>
-        </select>
-        <button onClick={async () => {
-          const cs = countries.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean);
-          if (!cs.length) return;
-          await run(() => M.addGeoRule(user, { countries: cs, mode }), "Geo rule added.");
-          setCountries(""); reload();
-        }} disabled={busy || !countries.trim()} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"><FiPlus size={13} /> Add</button>
-      </div>
+      {notGold ? (
+        <GoldNudge feature="Geo firewall" onUpgrade={onUpgrade} />
+      ) : (
+        <>
+          {loading ? <Loading /> : rules.length ? (
+            <ul className="space-y-1 mb-2">
+              {rules.map((r, i) => (
+                <li key={i} className="flex items-center justify-between text-sm text-secondary dark:text-gray-300 border border-line dark:border-gray-800 rounded-lg px-3 py-2">
+                  <span className="inline-flex items-center gap-2"><FiMapPin size={13} /> <span className="uppercase text-xs font-medium">{r.action}</span> <span className="text-xs">{r.expression || (Array.isArray(r.countries) ? r.countries.join(", ") : "")}</span></span>
+                  <button onClick={async () => { await run(() => M.deleteGeoRule(user, r.id), "Rule removed."); reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Delete rule"><FiTrash2 size={14} /></button>
+                </li>
+              ))}
+            </ul>
+          ) : <Empty>No geo rules yet.</Empty>}
+          <div className="flex items-center gap-2">
+            <input value={countries} onChange={(e) => setCountries(e.target.value)} placeholder="CN, RU, KP" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="geo-countries-input" />
+            <select value={mode} onChange={(e) => setMode(e.target.value)} className="nw-input !py-2 !px-3 text-sm">
+              <option value="block">Block</option>
+              <option value="allow">Allow</option>
+            </select>
+            <button onClick={async () => {
+              const cs = countries.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean);
+              if (!cs.length) return;
+              await run(() => M.addGeoRule(user, { countries: cs, mode }), "Geo rule added.");
+              setCountries(""); reload();
+            }} disabled={busy || !countries.trim()} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"><FiPlus size={13} /> Add</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -596,7 +644,7 @@ const TABS = [
   { id: "site", label: "Site", icon: FiPower, Comp: SiteTab },
 ];
 
-export default function CpanelTabs({ user, domain }) {
+export default function CpanelTabs({ user, domain, isGold, onUpgrade }) {
   const [active, setActive] = useState("databases");
   const ActiveComp = (TABS.find((t) => t.id === active) || TABS[0]).Comp;
   return (
@@ -618,7 +666,7 @@ export default function CpanelTabs({ user, domain }) {
         ))}
       </div>
       <div className="min-h-[220px]">
-        <ActiveComp user={user} domain={domain} />
+        <ActiveComp user={user} domain={domain} isGold={isGold} onUpgrade={onUpgrade} />
       </div>
     </div>
   );

@@ -673,7 +673,21 @@ export default function HostingNomadly() {
             </div>
             {manageTab === "advanced" ? (
               <div className="px-6 py-5">
-                <CpanelTabs user={manage.user} domain={manage.domain} />
+                <CpanelTabs
+                  user={manage.user}
+                  domain={manage.domain}
+                  isGold={/gold/i.test(String(manageData?.plan || manage.plan_id || ""))}
+                  onUpgrade={() => {
+                    setManageTab("overview");
+                    const gp = plans.find(
+                      (p) =>
+                        String(p.tier || "").toLowerCase() === "gold" ||
+                        /gold/i.test(p.plan_id || "") ||
+                        /golden/i.test(p.name || "")
+                    );
+                    if (gp) setUpgradePlan(gp.plan_id);
+                  }}
+                />
               </div>
             ) : (
             <div className="px-6 py-5 space-y-5 text-sm">
