@@ -145,18 +145,25 @@ export default function DomainsNomadly() {
     setSearched(true);
     setExact(null);
     setSuggestions([]);
-    try {
-      const [ex, sg] = await Promise.allSettled([resellerAPI.searchDomain(q), resellerAPI.suggestDomains(q)]);
-      const exactDomain = ex.status === "fulfilled" ? String(ex.value?.domain || q).toLowerCase() : q;
-      if (ex.status === "fulfilled") setExact(ex.value || null);
-      if (sg.status === "fulfilled") {
-        setSuggestions((sg.value?.suggestions || []).filter((s) => String(s.domain || "").toLowerCase() !== exactDomain));
-      }
-    } catch (err) {
-      showAlert(err?.response?.data?.message || "Domain search failed.", { type: "fail" });
-    } finally {
-      setSearching(false);
-    }
+
+    // Exact availability is the PRIMARY result and controls the spinner — it must
+    // NOT be blocked behind the slower suggestions lookup (12 upstream TLD checks).
+    resellerAPI
+      .searchDomain(q)
+      .then((v) => setExact(v || { domain: q, available: false }))
+      .catch((err) => {
+        setExact({ domain: q, available: false, error: true });
+        showAlert(err?.response?.data?.message || "Domain search failed. Please try again.", { type: "fail" });
+      })
+      .finally(() => setSearching(false));
+
+    // Suggestions fill in independently; a slow/failed suggest never wedges the UI.
+    resellerAPI
+      .suggestDomains(q)
+      .then((sg) => {
+        setSuggestions((sg?.suggestions || []).filter((s) => String(s.domain || "").toLowerCase() !== q));
+      })
+      .catch(() => setSuggestions([]));
   };
 
   // Auto-run a search when arriving with ?value= / ?q=.

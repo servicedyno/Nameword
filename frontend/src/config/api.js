@@ -13,6 +13,9 @@ const RUNTIME_ORIGIN =
 
 export const API_CONFIG = {
   BASE_URL: `${RUNTIME_ORIGIN}/api/v1`,
+  // A hung upstream request must never wedge the UI (e.g. domain search stuck on
+  // "Searching…"). 30s is generous for the reseller/provider lookups.
+  TIMEOUT: 30000,
   API_KEY: import.meta.env.VITE_API_KEY || 'YOUR_API_KEY_HERE'
 };
 
