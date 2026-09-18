@@ -1,5 +1,70 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ⏳ LATEST SESSION (2026-09, pod 38812491) — login fix + NS/hosting + NEXT TASK
+Live pod URL: `https://38812491-fe02-4414-a6aa-043863e097bb.preview.emergentagent.com`
+(user's `5c680fc7…` URL was stale). `.env` rebuilt from user creds; supervisor backend repointed
+uvicorn→`node /app/backend/bin/www`; backend `yarn install` re-run; Railway Mongo connected; Nomadly
+LIVE-verified. Test buyer: `testbuyer1@example.com` / `TestPass12345`.
+
+DONE:
+1. **Login "nothing happens" — FIXED (frontend).** Root cause: `/sign-in` Login button gated by
+   Formik `!(isValid && dirty)`; browser autofill never sets `dirty` → button stuck disabled →
+   click did nothing. Fixed `frontend/src/pages/auth/SignIn.jsx` (ungated button; `attemptLogin()`
+   reads live DOM values; autofill listeners+polling sync into Formik; Enter-key) and
+   `frontend/src/pages/checkout/AccountGate.jsx` (submit reads live DOM values). Backend login = 200.
+   ⚠️ NOT yet frontend-tested (need auto_frontend_testing_agent: typed + autofilled login + bad-cred
+   error banner, on `/sign-in` AND `/checkout/account`).
+2. **Nameserver vs bundled hosting — FIXED + BACKEND-VERIFIED 5/5.** Domain bought WITH hosting for
+   the SAME domain now ignores the buyer's registrar/custom NS (→ `cloudflare`, `nameservers:[]`,
+   item `ns_managed_by:"hosting"`), and a live-mode reconciliation pass points the domain NS at the
+   hosting account's nameservers. Files: `backend/app/controllers/checkout/CheckoutController.js`
+   (`priceItems` marking, `provisionItem` `opts.skipCustomNs`, `processOrder` reconciliation),
+   `backend/app/models/Order.js` (`ns_managed_by`), `frontend/src/pages/checkout/CartPage.jsx`
+   (hides NS picker → "Nameservers are managed by your hosting plan"),
+   `frontend/src/utils/cartStore.js` (`toPayload` drops custom NS for bundled domains).
+   ⚠️ CartPage NS UI change NOT yet frontend-tested.
+
+### 🔜 NEXT TASK (user-requested) — "connect existing domain" end-to-end
+**(a) Auto-point NS on addon attach (live mode).** When a buyer attaches an OWNED domain as an addon
+to an existing hosting plan, automatically point that domain's nameservers at the hosting account's
+nameservers — mirroring the bundled fix above — so the connected site actually works, not just gets
+attached.
+
+Already partially built:
+- Backend `POST /api/v1/reseller/hosting/:user/addons` → `backend/app/controllers/reseller/resellerController.js`
+  `addHostingAddon` (~L447) currently just forwards `nomadly.post('/hosting/:user/addons', body)`.
+- Frontend `frontend/src/pages/HostingNomadly.jsx` Manage panel → "Addon domains" (`doAddAddon`).
+
+Implement in `addHostingAddon`, after a successful LIVE attach:
+1. Get hosting NS: `GET /hosting/:user` → `deliverables.nameservers` (or `/hosting/:user/credentials`
+   → `nameservers`).
+2. Owned in Nameword? `ownership.findOwnedDomain(userId, domain)`.
+3. If owned + live + NS≥2 → `PUT /dns/:domain/nameservers { nameservers }` (FREE, live), best-effort
+   try/catch. Mirror the CheckoutController reconciliation block ("point the domain at the HOSTING
+   zone") + `provisionItem` skipCustomNs.
+4. External (not owned) → don't write NS; return the hosting NS + UI note "set these NS at your
+   registrar". Optionally show `GET /hosting/:user/domains/ns-status?domain=`.
+5. dry_run → keep the current `test_mode` envelope (no-op). Ownership already enforced via
+   `withOwnedHosting`.
+
+Reseller contract: `POST /hosting/:user/addons {domain}`; `GET /hosting/:user`→deliverables.nameservers;
+`PUT /dns/:domain/nameservers {nameservers:[>=2]}` (free); `POST /hosting/:user/domains/set-primary
+{domain}` (400 needs_attach if not yet an addon); `GET /hosting/:user/domains/ns-status?domain=`.
+
+Acceptance: live → owned addon's NS become hosting NS (verify via `GET /api/v1/reseller/domains`);
+external → attach works + returns hosting NS + registrar note; dry_run → unchanged test_mode;
+frontend Manage shows resulting NS/status after attach.
+
+OPEN PRODUCT DECISIONS (ask user first):
+1. Attach as **addon** only, or also allow **set-primary** (make it the plan's primary domain)?
+2. **Nameword-owned** domains only (auto-point NS), or also **external** domains (user sets NS)?
+
+Reseller is currently **dry_run** (`/api/v1/reseller/health` mode=dry_run) → live NS writes can't be
+exercised here; assert the code branch + external-domain note instead.
+
+---
+
+
 ## ✅ THIS SESSION (2025-07, fresh pod 8975b378) — Re-setup (same proven pattern)
 - Fresh pod: both `.env` MISSING; backend `node_modules` present-but-EMPTY (0 entries → express not found on boot); frontend node_modules present; `.prod` present (prod build); supervisor reset to default `uvicorn server:app` template (WRONG — this is a NODE app).
 - REAL current pod URL = `https://domain-manager-46.preview.emergentagent.com` (from supervisor `preview_endpoint`). User's pasted `5c680fc7…` URL is STALE → kept only in CORS_ORIGIN (with real URL + localhost:3000). Used real URL for APP_URL/FRONTEND_URL/GOOGLE_REDIRECT_URL(`/auth/google/callback`)/GOOGLE_LINK_REDIRECT_URL(`/auth/google/link/callback`)/VITE_API_BASE_URL.
