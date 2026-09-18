@@ -5,7 +5,7 @@ import uuid
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://nameword-dev-5.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://domain-manager-46.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api/v1"
 
 BUYER_EMAIL = "buyer@nameword.local"
