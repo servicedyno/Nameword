@@ -32,8 +32,16 @@ const currentUser = async (req, res, next) => {
     try {
         const payload = jwt.verify(token, process.env.JWT_KEY);
         const user = await User.findById(payload?.id).select("-password");
-        const userSession = await UserSession.findById(payload?.sessionId);
 
+        // Valid signature but the account no longer exists → stale session.
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Your session is no longer valid. Please sign in again.",
+            });
+        }
+
+        const userSession = await UserSession.findById(payload?.sessionId);
         if (!userSession){
             throw new NotAuthorizedError();
         }
@@ -46,11 +54,21 @@ const currentUser = async (req, res, next) => {
         }
         req.user = sessionizeUser(user);
         req.user.sessionId = payload?.sessionId;
+        return next();
     } catch (err) {
-        console.log(err);
-        next(err);
+        // A malformed / invalid / expired bearer token is a CLIENT auth failure,
+        // not a server error → respond 401 instead of bubbling to the 500 handler.
+        // (jwt.TokenExpiredError / NotBeforeError both extend JsonWebTokenError.)
+        if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired session. Please sign in again.",
+            });
+        }
+        // Custom auth errors (NotAuthorizedError → 401 / ForbiddenError → 403) and
+        // any unexpected error are delegated to the global error handler unchanged.
+        return next(err);
     }
-    next();
 }
 
 module.exports = currentUser;
