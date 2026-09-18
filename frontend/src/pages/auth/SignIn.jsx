@@ -38,16 +38,44 @@ const SignIn = () => {
   const errorMessage = searchParams.get("error");
   const { showAlert } = useAlert();
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  // Autofill-proof submit: browser autofill (and some IME/paste paths) do not
+  // reliably fire React/Formik onChange, which previously left Formik "empty",
+  // kept the Login button disabled, and made clicking it do nothing. We resolve
+  // email/password from the live DOM first, fall back to Formik state, keep
+  // Formik in sync for inline UI, then authenticate directly.
+  const attemptLogin = async () => {
+    if (loading) return;
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const values = formikRef.current?.values || {};
+    const email = String(emailEl?.value || values.email || "").trim();
+    const password = String(passwordEl?.value || values.password || "");
+
+    formikRef.current?.setValues({ email, password });
+    formikRef.current?.setTouched({ email: true, password: true }, false);
+
+    if (!email || !password) return;
+
     setLoading(true);
     try {
-      const data = await login(values);
+      const data = await login({ email, password });
       showAlert(data?.message, { duration: 2500, type: "success" });
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
       setLoading(false);
-      setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = (_values, { setSubmitting }) => {
+    setSubmitting(false);
+    attemptLogin();
+  };
+
+  const onFieldKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      attemptLogin();
     }
   };
 
@@ -93,21 +121,32 @@ const SignIn = () => {
 
 
   useEffect(() => {
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
     const syncAutofill = () => {
-      const emailInput = document.getElementById("email");
-      const passwordInput = document.getElementById("password");
-      if (emailInput?.value && passwordInput?.value && formikRef.current) {
+      if (!formikRef.current) return;
+      const e = emailInput?.value || "";
+      const p = passwordInput?.value || "";
+      const cur = formikRef.current.values || {};
+      if ((e && e !== cur.email) || (p && p !== cur.password)) {
         formikRef.current.setValues({
-          email: emailInput.value,
-          password: passwordInput.value,
+          email: e || cur.email || "",
+          password: p || cur.password || "",
         });
       }
     };
-    const t1 = setTimeout(syncAutofill, 100);
-    const t2 = setTimeout(syncAutofill, 350);
+    emailInput?.addEventListener("input", syncAutofill);
+    passwordInput?.addEventListener("input", syncAutofill);
+    emailInput?.addEventListener("change", syncAutofill);
+    passwordInput?.addEventListener("change", syncAutofill);
+    // Browsers can autofill at various times; poll briefly after mount too.
+    const timers = [100, 350, 700, 1200, 2000].map((d) => setTimeout(syncAutofill, d));
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      emailInput?.removeEventListener("input", syncAutofill);
+      passwordInput?.removeEventListener("input", syncAutofill);
+      emailInput?.removeEventListener("change", syncAutofill);
+      passwordInput?.removeEventListener("change", syncAutofill);
+      timers.forEach(clearTimeout);
     };
   }, []);
 
@@ -156,8 +195,6 @@ const SignIn = () => {
             handleChange,
             handleBlur,
             isSubmitting,
-            isValid,
-            dirty,
           }) => (
             <Form className="gap-2.5 flex flex-col w-full">
               {/* Email */}
@@ -180,6 +217,7 @@ const SignIn = () => {
                     handleChange(e);
                     if (error) clearError();
                   }}
+                  onKeyDown={onFieldKeyDown}
                   onBlur={handleBlur}
                   disabled={loading}
                 />
@@ -220,6 +258,7 @@ const SignIn = () => {
                     handleChange(e);
                     if (error) clearError();
                   }}
+                  onKeyDown={onFieldKeyDown}
                   onBlur={handleBlur}
                   disabled={loading}
                 />
@@ -282,17 +321,10 @@ const SignIn = () => {
 
               {/* Submit Button */}
               <button
-                type="submit"
-                className={`add-to-cart max-w-full ${
-                  !(isValid && dirty) || loading
-                    ? "disable"
-                    : ""
-                }`}
-                disabled={
-                  loading ||
-                  isSubmitting ||
-                  !(isValid && dirty)
-                }
+                type="button"
+                onClick={attemptLogin}
+                className={`add-to-cart max-w-full ${loading ? "disable" : ""}`}
+                disabled={loading || isSubmitting}
               >
                 {t.auth.login || "Login"} <TbArrowRight size={18} />
               </button>

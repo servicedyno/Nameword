@@ -183,6 +183,25 @@ async function priceItems(rawItems) {
   }
   // Domains first so a bundled hosting account can attach to a registered name.
   out.sort((a, b) => (a.type === b.type ? 0 : a.type === "domain" ? -1 : 1));
+
+  // Mark domains bundled with a hosting plan (same domain) in this cart: their
+  // nameservers are dictated by the hosting account's Cloudflare / Anti-Red zone,
+  // so the buyer's registrar/custom NS choice is ignored here (normalised to
+  // cloudflare + no custom NS) and reconciled to the hosting zone after the
+  // hosting account is provisioned (live mode — see processOrder).
+  const bundledHostingDomains = new Set(
+    out.filter((i) => i.type === "hosting" && i.domain).map((i) => i.domain)
+  );
+  for (const i of out) {
+    if (i.type !== "domain") continue;
+    if (bundledHostingDomains.has(i.domain)) {
+      i.ns_managed_by = "hosting";
+      i.ns_choice = "cloudflare";
+      i.nameservers = [];
+    } else {
+      i.ns_managed_by = "user";
+    }
+  }
   return out;
 }
 
@@ -249,17 +268,34 @@ async function logPoints(userId, points, operationType) {
   await RewardPointLog.create({ userId, rewardPoints: p, operationType });
 }
 
-async function provisionItem(item, mode, email) {
+async function provisionItem(item, mode, email, opts = {}) {
   try {
     let r;
     if (item.type === "domain") {
-      const body = { domain: item.domain, ns_choice: item.ns_choice };
-      if (item.ns_choice === "custom" && Array.isArray(item.nameservers) && item.nameservers.length) {
+      // When this domain is bundled with a hosting plan in the SAME order, the
+      // hosting account dictates the nameservers (its Cloudflare / Anti-Red zone).
+      // Ignore the buyer's registrar/custom NS choice here so it can't override
+      // (break) the hosting provision — the domain's NS are reconciled to the
+      // hosting zone right after hosting is created (see processOrder pass).
+      const nsManagedByHosting = !!opts.skipCustomNs;
+      const nsChoice = nsManagedByHosting ? "cloudflare" : item.ns_choice;
+      const body = { domain: item.domain, ns_choice: nsChoice };
+      if (
+        !nsManagedByHosting &&
+        item.ns_choice === "custom" &&
+        Array.isArray(item.nameservers) &&
+        item.nameservers.length
+      ) {
         body.nameservers = item.nameservers;
       }
       r = await nomadly.post("/domains/register", body);
       // Best-effort (live only): ensure the custom nameservers are actually applied.
-      if (item.ns_choice === "custom" && r.data?.mode === "live" && item.nameservers?.length) {
+      if (
+        !nsManagedByHosting &&
+        item.ns_choice === "custom" &&
+        r.data?.mode === "live" &&
+        item.nameservers?.length
+      ) {
         try {
           await nomadly.put(`/dns/${encodeURIComponent(item.domain)}/nameservers`, { nameservers: item.nameservers });
         } catch (e) {
@@ -585,10 +621,21 @@ class CheckoutController {
       const email = user?.email;
       const tx = order.transactionId;
 
+      // Domains bought together with a hosting plan (same domain) in this order:
+      // their nameservers are owned by the hosting zone, not the buyer's pick.
+      const hostingDomains = new Set(
+        order.items
+          .filter((i) => i.type === "hosting" && i.domain)
+          .map((i) => String(i.domain).toLowerCase())
+      );
+
       for (const item of order.items) {
         if (item.status !== "pending") continue;
         item.attempts = (Number(item.attempts) || 0) + 1;
-        const result = await provisionItem(item, order.mode, email);
+        const nsManagedByHosting =
+          item.type === "domain" && hostingDomains.has(String(item.domain || "").toLowerCase());
+        if (nsManagedByHosting) item.ns_managed_by = "hosting";
+        const result = await provisionItem(item, order.mode, email, { skipCustomNs: nsManagedByHosting });
         item.status = result.status;
         item.message = result.message;
         item.upstream = result.upstream;
@@ -644,6 +691,37 @@ class CheckoutController {
         }
         order.markModified("items");
         await order.save(); // persist per-item progress so the status poll sees it
+      }
+
+      // --- Bundled domain + hosting: point the domain at the HOSTING zone ------
+      // The Anti-Red cPanel hosting serves the site through a Cloudflare zone and
+      // returns the exact nameservers the domain must use. For every domain bought
+      // together with a hosting plan in this order, override its NS with the
+      // hosting account's nameservers so the buyer's earlier NS choice can't break
+      // the hosting. Live-mode only + best-effort (never fails the order).
+      if (order.mode === "live") {
+        for (const h of order.items) {
+          if (h.type !== "hosting" || h.status !== "active" || !h.domain) continue;
+          const up = h.upstream || {};
+          const hostNs = up?.result?.nameservers || up?.deliverables?.nameservers || up?.nameservers;
+          if (!Array.isArray(hostNs) || hostNs.length < 2) continue;
+          const dom = order.items.find(
+            (d) =>
+              d.type === "domain" &&
+              d.status === "active" &&
+              String(d.domain || "").toLowerCase() === String(h.domain).toLowerCase()
+          );
+          if (!dom) continue;
+          try {
+            await nomadly.put(`/dns/${encodeURIComponent(dom.domain)}/nameservers`, { nameservers: hostNs });
+            dom.nameservers = hostNs;
+            dom.ns_managed_by = "hosting";
+            order.markModified("items");
+            await order.save();
+          } catch (e) {
+            console.error("[checkout] point domain NS to hosting failed:", e?.message || e);
+          }
+        }
       }
 
       await recomputeOrderFinancials(order);

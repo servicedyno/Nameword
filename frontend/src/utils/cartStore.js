@@ -127,8 +127,18 @@ export const cartStore = {
 
   // Server payload shape (prices are re-validated server-side).
   toPayload() {
-    return read().map((i) => {
+    const all = read();
+    const hostingDomains = new Set(
+      all.filter((i) => i.type === "hosting" && i.domain).map((i) => norm(i.domain))
+    );
+    return all.map((i) => {
       if (i.type === "domain") {
+        // A domain bundled with hosting has its nameservers managed by the
+        // hosting zone — never send the buyer's custom/registrar NS for it.
+        const managedByHosting = hostingDomains.has(norm(i.domain));
+        if (managedByHosting) {
+          return { type: "domain", domain: i.domain, ns_choice: "cloudflare" };
+        }
         return {
           type: "domain",
           domain: i.domain,

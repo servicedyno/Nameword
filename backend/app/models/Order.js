@@ -9,6 +9,11 @@ const orderItemSchema = new mongoose.Schema(
     duration_days: { type: Number },
     ns_choice: { type: String, enum: ["cloudflare", "registrar", "custom"], default: "cloudflare" },
     nameservers: { type: [String], default: [] },
+    // When a domain is bought together with a hosting plan in the same order, the
+    // hosting account's Cloudflare/Anti-Red zone dictates the nameservers. We flag
+    // such domains as "hosting" so the buyer's registrar/custom NS pick is not
+    // applied at registration and is reconciled to the hosting zone afterwards.
+    ns_managed_by: { type: String, enum: ["user", "hosting"], default: "user" },
     registrar: { type: String },
     // Server (vps/rdp) fields
     region: { type: String },

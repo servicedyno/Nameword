@@ -58,11 +58,20 @@ export default function AccountGate() {
 
   const submitLogin = async (e) => {
     e.preventDefault();
+    // Autofill-proof: read live DOM values (browser autofill may not update React state).
+    const emailVal = (document.getElementById("gate-email")?.value || email || "").trim();
+    const passwordVal = document.getElementById("gate-password")?.value || password || "";
+    setEmail(emailVal);
+    setPassword(passwordVal);
+    if (!emailVal || !passwordVal) {
+      setLocalError("Please enter your email and password.");
+      return;
+    }
     setBusy(true);
     setLocalError(null);
     try {
       localStorage.setItem("path", RETURN_PATH);
-      await login({ email: email.trim(), password });
+      await login({ email: emailVal, password: passwordVal });
     } catch {
       /* error surfaced via context */
     } finally {
@@ -72,7 +81,18 @@ export default function AccountGate() {
 
   const submitRegister = async (e) => {
     e.preventDefault();
-    if (password !== confirm) {
+    // Autofill-proof: read live DOM values (browser autofill may not update React state).
+    const emailVal = (document.getElementById("gate-email")?.value || email || "").trim();
+    const passwordVal = document.getElementById("gate-password")?.value || password || "";
+    const confirmVal = document.getElementById("gate-confirm")?.value || confirm || "";
+    setEmail(emailVal);
+    setPassword(passwordVal);
+    setConfirm(confirmVal);
+    if (!emailVal || !passwordVal) {
+      setLocalError("Please enter your email and password.");
+      return;
+    }
+    if (passwordVal !== confirmVal) {
       setLocalError("Passwords do not match.");
       return;
     }
@@ -80,7 +100,7 @@ export default function AccountGate() {
     setLocalError(null);
     try {
       localStorage.setItem("path", RETURN_PATH);
-      const res = await register({ email: email.trim(), password, passwordConfirmation: confirm });
+      const res = await register({ email: emailVal, password: passwordVal, passwordConfirmation: confirmVal });
       if (res?.token) navigate(RETURN_PATH, { replace: true });
       else navigate("/otp-code", { replace: true });
     } catch {

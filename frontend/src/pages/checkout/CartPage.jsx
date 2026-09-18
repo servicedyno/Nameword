@@ -27,33 +27,41 @@ function DomainLine({ item, hosting, problem, onRemove, onNsChange, onNsListChan
           <div className="min-w-0">
             <p className="text-lg font-semibold text-primary dark:text-white break-all">{item.domain}</p>
             <p className="text-sm text-ink-soft dark:text-gray-400">Domain registration · 1 year · WHOIS privacy included</p>
-            <label className="mt-3 block text-xs font-medium text-ink-soft dark:text-gray-400">
-              Nameservers
-              <select
-                value={item.ns_choice || "cloudflare"}
-                onChange={(e) => onNsChange(item.id, e.target.value)}
-                className="nw-input mt-1 !py-2 !px-3 text-sm max-w-xs"
-                data-testid={`cart-ns-select-${item.domain}`}
-              >
-                <option value="cloudflare">Cloudflare DNS (recommended, free)</option>
-                <option value="registrar">Registrar default</option>
-                <option value="custom">Custom nameservers</option>
-              </select>
-            </label>
-            {item.ns_choice === "custom" && (
-              <div className="mt-2 max-w-xs" data-testid={`cart-ns-custom-${item.domain}`}>
-                <textarea
-                  rows={2}
-                  value={(item.nameservers || []).join(", ")}
-                  onChange={(e) => onNsListChange(item.id, e.target.value.split(/[\s,]+/).map((x) => x.trim()).filter(Boolean))}
-                  placeholder="ns1.example.com, ns2.example.com"
-                  className="nw-input !py-2 !px-3 text-sm w-full"
-                  data-testid={`cart-ns-input-${item.domain}`}
-                />
-                <p className={`mt-1 text-xs ${nsIncomplete ? "text-red-600 dark:text-red-300" : "text-ink-soft dark:text-gray-400"}`}>
-                  {nsIncomplete ? "Enter at least two nameservers." : "Enter 2–4 nameserver hostnames, comma or space separated."}
-                </p>
-              </div>
+            {hosting ? (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-50/70 dark:bg-brand/10 px-3 py-2 text-xs font-medium text-brand-800 dark:text-brand-200" data-testid={`cart-ns-managed-${item.domain}`}>
+                <FiServer size={13} /> Nameservers are managed by your hosting plan
+              </p>
+            ) : (
+              <>
+                <label className="mt-3 block text-xs font-medium text-ink-soft dark:text-gray-400">
+                  Nameservers
+                  <select
+                    value={item.ns_choice || "cloudflare"}
+                    onChange={(e) => onNsChange(item.id, e.target.value)}
+                    className="nw-input mt-1 !py-2 !px-3 text-sm max-w-xs"
+                    data-testid={`cart-ns-select-${item.domain}`}
+                  >
+                    <option value="cloudflare">Cloudflare DNS (recommended, free)</option>
+                    <option value="registrar">Registrar default</option>
+                    <option value="custom">Custom nameservers</option>
+                  </select>
+                </label>
+                {item.ns_choice === "custom" && (
+                  <div className="mt-2 max-w-xs" data-testid={`cart-ns-custom-${item.domain}`}>
+                    <textarea
+                      rows={2}
+                      value={(item.nameservers || []).join(", ")}
+                      onChange={(e) => onNsListChange(item.id, e.target.value.split(/[\s,]+/).map((x) => x.trim()).filter(Boolean))}
+                      placeholder="ns1.example.com, ns2.example.com"
+                      className="nw-input !py-2 !px-3 text-sm w-full"
+                      data-testid={`cart-ns-input-${item.domain}`}
+                    />
+                    <p className={`mt-1 text-xs ${nsIncomplete ? "text-red-600 dark:text-red-300" : "text-ink-soft dark:text-gray-400"}`}>
+                      {nsIncomplete ? "Enter at least two nameservers." : "Enter 2–4 nameserver hostnames, comma or space separated."}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
             {problem && (
               <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-600 dark:text-red-300" data-testid={`cart-item-problem-${item.domain}`}>
@@ -194,7 +202,7 @@ export default function CartPage() {
   const shortfall = walletBalance == null ? 0 : Math.max(0, Math.round((payable - walletBalance) * 100) / 100);
   const hasProblems = Object.keys(problems).length > 0;
   const customNsIncomplete = cart.domains.some(
-    (d) => d.ns_choice === "custom" && (d.nameservers || []).filter(Boolean).length < 2
+    (d) => !cart.hostingFor(d.domain) && d.ns_choice === "custom" && (d.nameservers || []).filter(Boolean).length < 2
   );
   const canPay = !!quote && !quoting && !paying && !hasProblems && !customNsIncomplete && shortfall <= 0 && cart.count > 0;
 
