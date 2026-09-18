@@ -703,23 +703,56 @@ class CheckoutController {
         for (const h of order.items) {
           if (h.type !== "hosting" || h.status !== "active" || !h.domain) continue;
           const up = h.upstream || {};
-          const hostNs = up?.result?.nameservers || up?.deliverables?.nameservers || up?.nameservers;
+          let hostNs = up?.result?.nameservers || up?.deliverables?.nameservers || up?.nameservers;
+          // Fallback: the create response may omit the zone NS — read them from
+          // the provisioned hosting account (deliverables → credentials).
+          if ((!Array.isArray(hostNs) || hostNs.length < 2) && h.provider_username) {
+            try {
+              const info = await nomadly.get(`/hosting/${encodeURIComponent(h.provider_username)}`, { timeout: 10000 });
+              const hd = info?.data || {};
+              hostNs = hd?.result?.nameservers || hd?.deliverables?.nameservers || hd?.nameservers || hostNs;
+              if (!Array.isArray(hostNs) || hostNs.length < 2) {
+                const cred = await nomadly.get(`/hosting/${encodeURIComponent(h.provider_username)}/credentials`, { timeout: 10000 });
+                hostNs = cred?.data?.nameservers || cred?.data?.result?.nameservers || hostNs;
+              }
+            } catch (e) { /* best-effort */ }
+          }
           if (!Array.isArray(hostNs) || hostNs.length < 2) continue;
+
+          // (a) Domain bought in the SAME order → point its item NS at the hosting zone.
           const dom = order.items.find(
             (d) =>
               d.type === "domain" &&
               d.status === "active" &&
               String(d.domain || "").toLowerCase() === String(h.domain).toLowerCase()
           );
-          if (!dom) continue;
+          if (dom) {
+            try {
+              await nomadly.put(`/dns/${encodeURIComponent(dom.domain)}/nameservers`, { nameservers: hostNs });
+              dom.nameservers = hostNs;
+              dom.ns_managed_by = "hosting";
+              order.markModified("items");
+              await order.save();
+            } catch (e) {
+              console.error("[checkout] point domain NS to hosting failed:", e?.message || e);
+            }
+            continue;
+          }
+
+          // (b) EXISTING owned domain (BYO hosting attached to a domain the buyer
+          // already registered with us) → auto-connect it by pointing its NS at
+          // the hosting zone, mirroring the addon-attach flow. Best-effort.
           try {
-            await nomadly.put(`/dns/${encodeURIComponent(dom.domain)}/nameservers`, { nameservers: hostNs });
-            dom.nameservers = hostNs;
-            dom.ns_managed_by = "hosting";
-            order.markModified("items");
-            await order.save();
+            const owned = await ownership.findOwnedDomain(order.userId, h.domain);
+            if (owned) {
+              await nomadly.put(`/dns/${encodeURIComponent(h.domain)}/nameservers`, { nameservers: hostNs });
+              h.connected_ns = hostNs;
+              h.ns_managed_by = "hosting";
+              order.markModified("items");
+              await order.save();
+            }
           } catch (e) {
-            console.error("[checkout] point domain NS to hosting failed:", e?.message || e);
+            console.error("[checkout] connect owned domain NS to hosting failed:", e?.message || e);
           }
         }
       }
