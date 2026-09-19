@@ -1,5 +1,37 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ⏳ LATEST SESSION (2025-07, pod 1f970365) — DNS Manager redesign (modern control panel)
+SCOPE: presentation + interaction redesign of the DNS screen (same records + same DNS source).
+DONE (code complete, lint clean, PROD build OK). File fully rewritten:
+`frontend/src/pages/DnsManagerNomadly.jsx` (no backend changes; uses existing reseller.js DNS methods).
+Features shipped:
+- DOMAIN PICKER: dropdown of owned domains (resellerAPI.listDomains) + "enter manually" fallback
+  (data-testid dns-domain-select / dns-domain-manual-input / dns-toggle-manual). Keeps ?domain= query sync.
+- CURRENT NAMESERVERS card (chips w/ copy) from owned-domain entry.nameservers or NS records;
+  "Replace nameservers" in a <details> (dns-ns-input / dns-ns-save, >=2, "DNS free" note).
+- RECORDS control panel: add-record bar at TOP of the table (dns-add-toggle → dns-add-panel), EDIT IN
+  PLACE (row expands to a full-width RecordForm; dns-edit-<id> → dns-edit-save/dns-edit-cancel), type-aware
+  fields + light validation + hints per type (A=IPv4, AAAA=IPv6, CNAME/NS=host, MX=priority+host,
+  TXT=multiline, SRV=priority/weight/port/target composed into value "weight port target"), friendly TTL
+  presets (Auto=1/1min/5min/30min/1hr/1day + Custom seconds; dns-add-ttl / dns-add-ttl-custom),
+  colored type BADGES, full record name via fqdn(name,domain), value COPY button (dns-copy-<id>) + truncation,
+  DELETE CONFIRM modal (dns-delete-<id> → dns-delete-dialog → dns-delete-confirm/dns-delete-cancel).
+- SEARCH (dns-search) + TYPE FILTER (dns-type-filter) + SORTABLE columns (dns-sort-type/name/value/ttl) +
+  visible count (dns-record-count). Loading skeletons (dns-loading), empty states, MOBILE cards (md:hidden,
+  dns-card-<id>) vs desktop table (md:block). Dark-mode uses existing app classes (nw-card/nw-hero/etc).
+DATA CONTRACT NOTES (kept): records mapped defensively from provider shape
+  {recordType,recordName,recordContent,cfRecordId} → {type,name,value,id} while PRESERVING the original
+  fields (spread) so update (PUT wraps {record}) and delete (DELETE data:{record}) echo the full record back.
+  addDns payload {type,name,value,ttl,priority?}. SRV value composed/parsed. TTL "Auto"→1.
+STATUS: NOT yet frontend-UI-tested (protocol: ask user before auto_frontend_testing_agent). Self-screenshot
+  login via the raw screenshot tool was flaky (Formik floating-label inputs + tool's async quirk) — NOT an
+  app bug; backend login returns 200 and prior sessions confirmed /sign-in works (autofill fix already in).
+  Recommend: run auto_frontend_testing_agent logged in as moxxcompany@gmail.com / Onlygod123@ →
+  /dns-manager?domain=namewords.sbs (DNS is Cloudflare-backed, unaffected by the cPanel outage) to verify
+  picker, add/edit-in-place/delete-confirm, search/filter/sort, TTL presets, nameservers, mobile cards.
+⚠️ Frontend is a Vite PROD build → after ANY frontend edit run `sudo supervisorctl restart frontend` (~15s).
+
+
 ## ⏳ LATEST SESSION (2025-07, pod 1f970365) — dup-hosting fix + File Manager rebuild
 TASK: (1) account showed TWO hosting plans for the same site; (2) rebuild cPanel manager (full-screen)
 with real upload/unzip/zip/rename/copy/move.

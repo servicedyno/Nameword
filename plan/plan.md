@@ -1,84 +1,74 @@
-# Plan — Fix duplicate hosting + rebuild the cPanel manager (with real file upload / unzip)
+# Plan — Redesign the DNS management screen to feel like a modern DNS platform
 
-Two separate problems on the hosting area of the account `moxxcompany@gmail.com`.
+## The problem
+The DNS management screen works, but it doesn't look or behave like the DNS managers people
+are used to on other platforms:
 
----
+- You have to **type the domain by hand** to load its records — there's no list of the
+  domains you own to pick from.
+- Records sit in a **plain table**, with a **separate "Add a record" form** lower down and a
+  **pop-up window** for edits — instead of managing everything in one place.
+- **TTL is shown as raw seconds** (e.g. 3600) rather than friendly choices like "1 hour".
+- **Delete happens instantly** with no confirmation — easy to remove the wrong record.
+- There's **no search, no filtering by record type, and no sorting**, so a busy zone is hard
+  to scan.
+- The add/edit fields are the **same for every record type**, with little guidance, where
+  other platforms tailor the fields (e.g. priority for MX, multi-line for TXT) and validate
+  the value before saving.
 
-## Problem 1 — The account shows two hosting plans (confusing)
+## What will change
 
-### What's happening
-"Your hosting accounts" is built from the buyer's own purchase records. When the same
-website has more than one record behind it — for example the earlier crypto attempt that
-failed and was auto-refunded, plus the one that actually got provisioned, or an old
-test-mode record — the list shows both as if they were two separate live accounts. Only
-one of them is a real, working hosting account (the provisioned one).
+**A. Pick the domain instead of typing it**
+- A **dropdown of the domains you own** to choose from, with a manual-entry option kept as a
+  fallback. Selecting a domain loads its records.
+- Show the domain's **current nameservers** and where the records are served from, so it's
+  clear what you're editing.
 
-### What will change
-- The list will collapse to **one entry per real hosting account**. When several records
-  point at the same website, the genuinely provisioned/active one wins and the others are
-  hidden.
-- Records that were **refunded, failed, cancelled or superseded** will no longer appear as
-  "accounts."
-- The specific stale record on `moxxcompany@gmail.com` will be corrected so this account
-  shows a single, correct hosting plan.
-- Nothing is deleted from the real provider; this only affects what the list shows and a
-  one-time cleanup of the bad record.
+**B. A records area that feels like a real control panel**
+- An **"add record" row at the top of the table** (not a separate form far below).
+- **Edit records in place** (click to edit the row, Save/Cancel) rather than in a pop-up.
+- **Type-aware fields with light validation and short hints** per record type — A (IPv4),
+  AAAA (IPv6), CNAME/NS (target host), MX (priority + mail host), TXT (multi-line value),
+  SRV (its fields). Bad values are caught before saving.
+- **Friendly TTL choices** (Auto, 1 min, 5 min, 30 min, 1 hour, 1 day) with a "custom
+  seconds" option still available.
+- Clearer rows: the **full record name** (e.g. `www.mysite.com`), a **copy button** on the
+  value, sensible truncation for long values, and the **record type shown as a labelled
+  badge**.
+- **Delete asks for confirmation** first.
 
-### Decision worth confirming
-- **Default chosen:** hide the leftover/duplicate entirely so only the working account
-  shows. (Alternative: keep showing it but clearly labelled "refunded / not active."
-  This is more cluttered and is not recommended.)
+**C. Find records fast**
+- A **search box**, **filter by record type**, **sortable columns**, and a visible
+  **record count**.
 
----
+**D. Nameservers, restyled**
+- Show the **current nameservers**, and present the "replace nameservers" tool more clearly
+  (at least two entries), keeping the note that **DNS changes are free**.
 
-## Problem 2 — The cPanel manager looks small and it's unclear how to upload / unzip files
+**E. Polish**
+- Loading placeholders, a clearer empty state, success/error messages, a **mobile-friendly**
+  layout (records become cards on small screens), and the same overall look and dark-mode
+  styling the rest of the app already uses.
 
-### What's happening
-The management panel opens in a small pop-up. It can browse folders, edit a text file,
-create a folder and delete — but it has **no Upload button and no Unzip**, even though the
-underlying hosting service fully supports uploading, unzipping, zipping, renaming, copying
-and moving files. So the most common tasks (put my site files up, unzip an archive) are
-effectively missing.
+## Decisions worth confirming (a default is chosen for each)
+1. **Editing style — default: edit in place** (like Cloudflare). Alternative: keep the
+   current pop-up editor.
+2. **Domain selection — default: dropdown of your owned domains + manual-entry fallback.**
+   Alternative: keep manual typing only.
+3. **TTL — default: friendly presets with a custom option.** Alternative: keep raw seconds.
+4. **Delete — default: ask for confirmation.** Alternative: keep instant delete.
+5. **Reference look — default: a clean, modern Cloudflare-style table.** Say if you'd prefer
+   the Namecheap/GoDaddy style instead.
 
-### What will change
+## Out of scope (unless requested)
+- A Cloudflare-style **"proxy" (orange cloud) on/off toggle** per record — the connected DNS
+  API doesn't expose a per-record proxy flag to set.
+- **DNS record history / one-click restore** — not supported by the connected DNS API.
+- **DNSSEC**, email-deliverability wizards, and traffic analytics.
+- Any change to **how DNS is priced** (it stays free) or how nameservers work upstream.
 
-**A. A bigger, clearer management experience**
-- The manager becomes a spacious, full-screen layout instead of the small pop-up, so every
-  section has room to breathe. All existing sections stay (Databases, Subdomains, Domains,
-  SSL, Files, Security, Geo, Analytics, Site status) plus the account overview, upgrade and
-  addon-domain tools that already exist.
-
-**B. A real File Manager** (the main ask), with:
-- **Upload files** — drag-and-drop or a file picker, with a visible progress bar. Large
-  files upload reliably in chunks so they don't get cut off. Multiple files at once.
-- **Unzip / Extract** — for `.zip` and common archives, extract into the current folder.
-- **Compress / Zip** — select files/folders and zip them on the server.
-- **Rename**, **Copy**, **Move** — plus the existing New folder, Delete and in-browser
-  text editing.
-- **Nicer browsing** — breadcrumb path you can click, clearer file/folder icons, file
-  sizes and types, a taller list, and select-multiple for bulk delete/zip/move.
-
-**C. Proof it works**
-- On this account's live hosting, the following will be exercised end-to-end and confirmed
-  working: upload a file, unzip an archive, create/rename/move/delete, zip a selection, and
-  edit + save a text file.
-
-### Decisions worth confirming
-- **Layout — default chosen:** full-screen manager (feels like a real control panel).
-  Alternative: keep it as a pop-up but much larger. Full-screen is recommended.
-- **File-manager scope — default chosen:** include upload, unzip, zip, rename, copy, move,
-  new folder, delete and edit (the complete set the service supports). Say so if you'd
-  rather ship only upload + unzip first.
-
----
-
-## Out of scope (unless you ask)
-- Email/webmail management (intentionally excluded from this panel).
-- Changing hosting prices, plans, or how checkout/provisioning works.
-- Anything that requires provider-side credentials that aren't currently connected.
-
-## Note
-- Exact behaviour of the duplicate-hosting fix will be verified against this account's real
-  purchase records during the work; the outcome above (one correct plan shown) is the goal.
-- Gold-only security features (Visitor Captcha, JS challenge, Geo) remain gated to the Gold
-  plan as they are today — unchanged by this work.
+## Notes
+- This is a presentation and interaction redesign plus a domain picker and search — it uses
+  the same records and the same DNS source as today.
+- The supported record types stay the same (A, AAAA, CNAME, MX, TXT, NS, SRV). Whether a live
+  change takes effect still depends on the domain being on the connected DNS, exactly as now.
