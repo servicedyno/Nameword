@@ -52,6 +52,8 @@ export const resellerAPI = {
     (await apiClient.delete(`${R}/dns/${encodeURIComponent(domain)}/records`, { data: { record } })).data,
   setNameservers: async (domain, nameservers) =>
     (await apiClient.put(`${R}/dns/${encodeURIComponent(domain)}/nameservers`, { nameservers })).data,
+  resetNameservers: async (domain) =>
+    (await apiClient.put(`${R}/dns/${encodeURIComponent(domain)}/nameservers`, { mode: "default" })).data,
 
   // cPanel Hosting
   getHostingPlans: async () => (await apiClient.get(`${R}/hosting/plans`)).data,

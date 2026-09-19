@@ -76,6 +76,9 @@ const fqdn = (name, domain) => {
   return `${n}.${domain}`;
 };
 
+// True for a Cloudflare nameserver hostname (used to show "default" vs "custom").
+const isCloudflareNs = (h) => /cloudflare\.com\.?$/i.test(String(h || "").trim());
+
 const blankForm = () => ({
   type: "A",
   name: "@",
@@ -297,6 +300,8 @@ export default function DnsManagerNomadly() {
 
   const [ns, setNs] = useState("");
   const [savingNs, setSavingNs] = useState(false);
+  const [nsCustomOpen, setNsCustomOpen] = useState(false);
+  const [confirmResetNs, setConfirmResetNs] = useState(false);
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -336,6 +341,9 @@ export default function DnsManagerNomadly() {
       const owned = ownedDomains.find((x) => String(x.domain).toLowerCase() === dom);
       const nsFromRecords = mapped.filter((r) => String(r.type).toUpperCase() === "NS").map((r) => r.value);
       setNameservers(owned?.nameservers?.length ? owned.nameservers : nsFromRecords);
+      setNsCustomOpen(false);
+      setConfirmResetNs(false);
+      setNs("");
       setLoaded(true);
     } catch (err) {
       setRecords([]);
@@ -423,10 +431,27 @@ export default function DnsManagerNomadly() {
     try {
       await resellerAPI.setNameservers(activeDomain, list);
       showAlert("Nameservers updated.", { type: "success" });
-      setNameservers(list);
       setNs("");
+      setNsCustomOpen(false);
+      loadRecords(activeDomain);
     } catch (err) {
       showAlert(err?.response?.data?.message || "Could not update nameservers.", { type: "fail" });
+    } finally {
+      setSavingNs(false);
+    }
+  };
+
+  // Switch the domain back to its default (Cloudflare) nameservers.
+  const resetToDefault = async () => {
+    setSavingNs(true);
+    try {
+      await resellerAPI.resetNameservers(activeDomain);
+      showAlert("Nameservers reset to the Cloudflare default.", { type: "success" });
+      setConfirmResetNs(false);
+      setNsCustomOpen(false);
+      loadRecords(activeDomain);
+    } catch (err) {
+      showAlert(err?.response?.data?.message || "Could not reset nameservers.", { type: "fail" });
     } finally {
       setSavingNs(false);
     }
@@ -456,6 +481,10 @@ export default function DnsManagerNomadly() {
   );
 
   const keyFor = (r, i) => r.id || `${r.type}-${r.name}-${i}`;
+
+  // Are the current nameservers the default Cloudflare ones?
+  const onCloudflareDefault =
+    nameservers.length > 0 && nameservers.every(isCloudflareNs);
 
   return (
     <ProductShell>
@@ -534,7 +563,21 @@ export default function DnsManagerNomadly() {
             <div className="nw-card !p-5 mb-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-primary dark:text-white flex items-center gap-1.5 mb-2"><FiServer size={15} /> Current nameservers</h3>
+                  <h3 className="text-sm font-semibold text-primary dark:text-white flex items-center gap-1.5 mb-2">
+                    <FiServer size={15} /> Current nameservers
+                    {nameservers.length > 0 && (
+                      <span
+                        data-testid="dns-ns-mode-badge"
+                        className={`ml-1 inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold ${
+                          onCloudflareDefault
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                            : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                        }`}
+                      >
+                        {onCloudflareDefault ? "Cloudflare · default" : "Custom"}
+                      </span>
+                    )}
+                  </h3>
                   {nameservers.length ? (
                     <div className="flex flex-wrap gap-2" data-testid="dns-current-ns">
                       {nameservers.map((n, i) => (
@@ -545,15 +588,66 @@ export default function DnsManagerNomadly() {
                     <p className="text-xs text-secondary dark:text-gray-400">Not available for this domain.</p>
                   )}
                 </div>
+
+                {/* Default / Custom switch */}
+                <div className="inline-flex shrink-0 rounded-lg border border-line dark:border-gray-700 p-0.5 bg-lightgray-200/60 dark:bg-gray-800/60">
+                  <button
+                    type="button"
+                    onClick={() => { setNsCustomOpen(false); }}
+                    data-testid="dns-ns-mode-default"
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!nsCustomOpen ? "bg-white dark:bg-gray-900 text-primary dark:text-white shadow-sm" : "text-ink-soft dark:text-gray-400 hover:text-primary dark:hover:text-gray-200"}`}
+                  >
+                    Default (Cloudflare)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setNsCustomOpen(true); setConfirmResetNs(false); }}
+                    data-testid="dns-ns-mode-custom"
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${nsCustomOpen ? "bg-white dark:bg-gray-900 text-primary dark:text-white shadow-sm" : "text-ink-soft dark:text-gray-400 hover:text-primary dark:hover:text-gray-200"}`}
+                  >
+                    Custom
+                  </button>
+                </div>
               </div>
-              <details className="mt-4 group">
-                <summary className="cursor-pointer text-xs font-medium text-brand dark:text-brand-400 select-none">Replace nameservers</summary>
-                <form onSubmit={saveNameservers} className="mt-3 flex flex-col gap-2 sm:flex-row">
-                  <textarea value={ns} onChange={(e) => setNs(e.target.value)} rows={2} placeholder="ns1.example.com, ns2.example.com" data-testid="dns-ns-input" className="flex-1 rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
-                  <button type="submit" disabled={savingNs} className="nw-btn-primary sm:self-start disabled:opacity-60 inline-flex items-center gap-1.5" data-testid="dns-ns-save"><FiSave size={15} /> {savingNs ? "Saving…" : "Save"}</button>
-                </form>
-                <p className="mt-1.5 text-[11px] text-ink-soft dark:text-gray-500">Provide at least two nameservers. DNS changes are free.</p>
-              </details>
+
+              {/* Default (Cloudflare) panel */}
+              {!nsCustomOpen && (
+                <div className="mt-4" data-testid="dns-ns-default-panel">
+                  {onCloudflareDefault ? (
+                    <p className="text-xs text-secondary dark:text-gray-400 inline-flex items-center gap-1.5">
+                      <FiCheck size={13} className="text-emerald-500" /> This domain already uses the default Cloudflare nameservers, so records here take effect automatically.
+                    </p>
+                  ) : !confirmResetNs ? (
+                    <div className="flex flex-col gap-1.5">
+                      <button type="button" onClick={() => setConfirmResetNs(true)} disabled={savingNs} className="nw-btn-primary nw-btn-sm self-start disabled:opacity-60 inline-flex items-center gap-1.5" data-testid="dns-ns-reset">
+                        <FiRefreshCw size={14} /> Use Cloudflare default nameservers
+                      </button>
+                      <p className="text-[11px] text-ink-soft dark:text-gray-500">Points this domain back to the Cloudflare nameservers we manage, so the records here take effect. DNS changes are free.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 rounded-lg border border-line dark:border-gray-700 p-3" data-testid="dns-ns-reset-confirm-box">
+                      <p className="text-xs text-primary dark:text-white">Switch <span className="font-semibold break-all">{activeDomain}</span> back to the default Cloudflare nameservers?</p>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={resetToDefault} disabled={savingNs} className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-60 inline-flex items-center gap-1.5" data-testid="dns-ns-reset-confirm">
+                          <FiSave size={14} /> {savingNs ? "Applying…" : "Yes, use default"}
+                        </button>
+                        <button type="button" onClick={() => setConfirmResetNs(false)} disabled={savingNs} className="px-4 py-2 rounded-lg border border-line dark:border-gray-700 text-primary dark:text-white text-sm font-medium" data-testid="dns-ns-reset-cancel">Cancel</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Custom nameservers panel */}
+              {nsCustomOpen && (
+                <div className="mt-4">
+                  <form onSubmit={saveNameservers} className="flex flex-col gap-2 sm:flex-row">
+                    <textarea value={ns} onChange={(e) => setNs(e.target.value)} rows={2} placeholder="ns1.example.com, ns2.example.com" data-testid="dns-ns-input" className="flex-1 rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" />
+                    <button type="submit" disabled={savingNs} className="nw-btn-primary sm:self-start disabled:opacity-60 inline-flex items-center gap-1.5" data-testid="dns-ns-save"><FiSave size={15} /> {savingNs ? "Saving…" : "Save"}</button>
+                  </form>
+                  <p className="mt-1.5 text-[11px] text-ink-soft dark:text-gray-500">Provide at least two nameservers. Point them at another DNS provider or registrar. DNS changes are free.</p>
+                </div>
+              )}
             </div>
 
             {/* Toolbar */}

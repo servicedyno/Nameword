@@ -292,10 +292,83 @@ const deleteDnsRecord = (req, res) =>
   withOwnedDomain(req, res, () =>
     forward(res, nomadly.delete(`/dns/${enc(req.params.domain)}/records`, { data: req.body || {} }))
   );
+// True for a Cloudflare nameserver hostname (e.g. "leanna.ns.cloudflare.com").
+const isCloudflareNs = (h) =>
+  /cloudflare\.com\.?$/i.test(String(h || "").trim().replace(/\.$/, ""));
+
+// Resolve a domain's default (Cloudflare-assigned) nameservers so the buyer can
+// switch a domain that is currently on CUSTOM nameservers back to the default.
+// Source 1: the provider domain list (nameserver_type/nameservers). Source 2 (a
+// fallback that works even when the registrar points elsewhere): the Cloudflare
+// zone's own NS records, which the provider still manages.
+async function resolveCloudflareNameservers(domain) {
+  try {
+    const r = await nomadly.get(`/domains`);
+    const list = (r.data && r.data.domains) || [];
+    const d = list.find(
+      (x) => String(x.domain).toLowerCase() === String(domain).toLowerCase()
+    );
+    if (d && Array.isArray(d.nameservers)) {
+      const cf = [...new Set(d.nameservers.filter(isCloudflareNs))];
+      if (cf.length >= 2) return cf;
+    }
+  } catch (e) {
+    /* fall through to the DNS-records source */
+  }
+  try {
+    const r = await nomadly.get(`/dns/${enc(domain)}/records`);
+    const recs = (r.data && r.data.records) || [];
+    const cf = [
+      ...new Set(
+        recs
+          .filter((x) => String(x.recordType || x.type).toUpperCase() === "NS")
+          .map((x) => String(x.recordContent || x.value || "").trim().replace(/\.$/, ""))
+          .filter(isCloudflareNs)
+      ),
+    ];
+    if (cf.length >= 2) return cf;
+  } catch (e) {
+    /* no-op */
+  }
+  return [];
+}
+
+// Replace nameservers. Two modes:
+//   - custom:  body = { nameservers: ["ns1.x","ns2.x", ...] }  (>= 2)
+//   - default: body = { mode: "default" } | { ns_choice: "cloudflare" } | { default: true }
+//              -> resolve and set this domain's Cloudflare-assigned nameservers.
 const setNameservers = (req, res) =>
-  withOwnedDomain(req, res, () =>
-    forward(res, nomadly.put(`/dns/${enc(req.params.domain)}/nameservers`, req.body || {}))
-  );
+  withOwnedDomain(req, res, async () => {
+    const body = req.body || {};
+    const wantsDefault =
+      body.mode === "default" ||
+      body.default === true ||
+      String(body.ns_choice || "").toLowerCase() === "cloudflare";
+    if (wantsDefault) {
+      const cf = await resolveCloudflareNameservers(req.params.domain);
+      if (cf.length < 2) {
+        return res.status(400).json({
+          success: false,
+          error: "cloudflare_ns_unavailable",
+          message:
+            "Couldn't determine this domain's default Cloudflare nameservers. Enter them manually, or try again shortly.",
+        });
+      }
+      return forward(
+        res,
+        nomadly
+          .put(`/dns/${enc(req.params.domain)}/nameservers`, { nameservers: cf })
+          .then((up) => ({
+            status: up.status,
+            data: { ...(up.data || {}), ns_choice: "cloudflare", reset_to_default: true },
+          }))
+      );
+    }
+    return forward(
+      res,
+      nomadly.put(`/dns/${enc(req.params.domain)}/nameservers`, body)
+    );
+  });
 
 // ---------- cPanel Hosting ----------
 const getHostingPlans = (req, res) => forward(res, nomadly.get("/hosting/plans"));
