@@ -1,5 +1,33 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ⏳ LATEST SESSION (2025-07, pod 1f970365) — dup-hosting fix + File Manager rebuild
+TASK: (1) account showed TWO hosting plans for the same site; (2) rebuild cPanel manager (full-screen)
+with real upload/unzip/zip/rename/copy/move.
+PROBLEM 1 ✅ FIXED + VERIFIED. Root cause: `ownership.ownedList` counted `pending` items from UNPAID
+(`awaiting_payment`) orders and used differing hosting dedupe keys (provider_username vs domain), so
+moxxcompany@gmail.com's real account (order NW-MU76E3UGXQBJ, active, cPanel `namea3a5`) AND an abandoned
+crypto attempt (order NW-MU75DOFYKYK5, awaiting_payment/pending, no username) both showed for the same
+site namewords.sbs. Fix in `backend/app/services/ownership.js`: skip items from orders not in
+[paid,partial,failed]; skip refunded non-active items; dedupe hosting by WEBSITE(domain) keeping the
+highest `ownScore` (active+provider handle wins). One-time idempotent cleanup
+`scripts/cleanup_superseded_hosting.js` settled NW-MU75DOFYKYK5 (item+order→failed). Verified via
+`scripts/verify_dedupe.js` AND deep_testing_backend_v2: GET /api/v1/reseller/hosting → exactly 1 account.
+PROBLEM 2 ✅ BUILT (code complete), ⚠️ live proof BLOCKED by provider. Backend: raised
+`express.json/urlencoded` limit 100kb→25mb in `app.js` (base64 uploads/chunks). File Manager proxy routes
+already existed in resellerController HOSTING_MGMT_ROUTES. Frontend: rebuilt `FilesTab` in
+`components/hosting/CpanelTabs.jsx` (clickable breadcrumb, drag-drop + picker upload with progress via
+512KB chunked upload, Unzip/Extract, Zip/compress, Rename, Copy, Move, multi-select bulk zip/delete,
+inline action form, New folder, text editor, graceful `files-load-error` + Retry state); added
+`api/reseller.js` hostingManage.{extractFile,compressFiles,copyFile,moveFile,uploadChunk,cancelUploadChunk};
+made the Manage modal FULL-SCREEN in `pages/HostingNomadly.jsx` (w-full h-full / sm:h-[94vh] max-w-6xl,
+fixed header+tabs, scrollable body). Frontend NOT yet UI-tested (awaiting user OK).
+⚠️ PROVIDER-SIDE OUTAGE: every cPanel-SESSION op for namea3a5 (File Manager, /ssl, /stats disk usage)
+returns CPANEL_AUTH_FAILURE ({errors:['<!DOCTYPE html>'],httpStatus:401}) — the provider's WHM→cPanel
+login returns an HTML login page. WHM/Cloudflare ops (site-status, security/status, hosting details) work
+LIVE with the same key. NOT our bug. Needs the provider (Nomadly/HostBay, Telegram @onarrival1) to fix
+cPanel auth for this server/account, then the File Manager works with no code change.
+
+
 ## ⏳ LATEST SESSION (2025-07, pod 1f970365) — fresh re-setup from user creds (VERIFIED live)
 REAL pod URL = `https://1f970365-86f5-4171-b2ea-24cd40e8d04f.preview.emergentagent.com` (from supervisor
 APP_URL/preview_endpoint). User's pasted `5c680fc7…` URL is STALE → kept in CORS_ORIGIN only.

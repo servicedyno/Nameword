@@ -17,6 +17,23 @@ const Order = require("../models/Order");
 // Items in these statuses represent something the buyer paid for and owns.
 const OWNED_STATUSES = ["active", "test_mode", "pending"];
 
+// Order-level statuses that represent a real, paid purchase. An order still
+// "awaiting_payment" (e.g. a crypto checkout whose coins never arrived) has NOT
+// been paid for, so none of its items are owned yet — they must never surface as
+// live accounts/domains/servers. Everything else (paid / partial / failed) may
+// still carry provisioned items, which the per-item status filter handles.
+const PAID_ORDER_STATUSES = ["paid", "partial", "failed"];
+
+// How "real" an owned record is, used to pick a single winner when several
+// records collapse onto the same resource (e.g. an abandoned unpaid attempt plus
+// the account that actually got provisioned). Active + a real provider handle
+// beats a still-pending / test-mode placeholder.
+function ownScore(item) {
+  const base = { active: 100, test_mode: 50, pending: 10 }[item.status] || 0;
+  const hasHandle = item.provider_username || item.provider_id;
+  return base + (hasHandle ? 5 : 0);
+}
+
 const norm = (s) => String(s || "").trim().toLowerCase();
 
 // Stable identifier used as the list `id` the frontend sends back on actions.
@@ -28,10 +45,12 @@ function refFor(order, item, idx) {
 }
 
 // Dedupe key so the same domain/account/server bought or re-recorded twice is
-// listed once (newest order wins because we iterate newest-first).
+// listed once. For hosting we key by the WEBSITE (domain) so that an abandoned
+// unpaid attempt and the account that actually got provisioned for the same
+// domain collapse into a single entry (the provisioned one wins on ownScore).
 function dedupeKey(item, ref) {
   if (item.type === "domain") return `domain:${norm(item.domain)}`;
-  if (item.type === "hosting") return `hosting:${item.provider_username || item.domain || ref}`;
+  if (item.type === "hosting") return `hosting:${norm(item.domain) || item.provider_username || ref}`;
   return `${item.type}:${ref}`;
 }
 
@@ -39,28 +58,37 @@ function dedupeKey(item, ref) {
 // Each entry: { ref, order_id, idx, item, mode, createdAt }.
 async function ownedList(userId, type) {
   const orders = await Order.find({ userId }).sort({ createdAt: -1 }).lean();
-  const out = [];
-  const seen = new Set();
+  const byKey = new Map(); // dedupeKey -> winning entry
   for (const order of orders) {
+    // An unpaid checkout owns nothing yet.
+    if (order.status && !PAID_ORDER_STATUSES.includes(order.status)) continue;
     const items = Array.isArray(order.items) ? order.items : [];
     items.forEach((item, idx) => {
       if (item.type !== type) return;
       if (!OWNED_STATUSES.includes(item.status)) return;
+      // A refunded item that is no longer active was reversed — not owned.
+      if ((item.refunded_usd || 0) > 0 && item.status !== "active") return;
       const ref = refFor(order, item, idx);
       const key = dedupeKey(item, ref);
-      if (seen.has(key)) return;
-      seen.add(key);
-      out.push({
+      const entry = {
         ref,
         order_id: String(order._id),
         idx,
         item,
         mode: order.mode,
         createdAt: order.createdAt,
-      });
+      };
+      const existing = byKey.get(key);
+      // Keep the "more real" record. Iterating newest-first means an equal-score
+      // tie keeps the newer entry already stored.
+      if (!existing || ownScore(item) > ownScore(existing.item)) {
+        byKey.set(key, entry);
+      }
     });
   }
-  return out;
+  return Array.from(byKey.values()).sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 }
 
 // Resolve a requested server id to the buyer's owned entry (or null).

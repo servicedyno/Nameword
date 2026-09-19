@@ -21,6 +21,14 @@ import {
   FiEdit2,
   FiSave,
   FiX,
+  FiUpload,
+  FiArchive,
+  FiCopy,
+  FiScissors,
+  FiHome,
+  FiCheckSquare,
+  FiSquare,
+  FiCornerUpLeft,
 } from "react-icons/fi";
 
 const M = resellerAPI.hostingManage;
@@ -320,6 +328,25 @@ const SslTab = ({ user }) => {
 /* ---------------------------- File Manager --------------------------- */
 const TEXT_EDITABLE = /\.(txt|md|html?|htm|css|scss|less|js|mjs|cjs|jsx|ts|tsx|json|xml|ya?ml|env|ini|conf|cfg|htaccess|log|php|py|rb|sh|bash|sql|csv|tsv|svg|vue|toml|gitignore)$/i;
 const isEditable = (name) => TEXT_EDITABLE.test(name) || !/\.[a-z0-9]+$/i.test(name); // known text ext or no ext
+const ARCHIVE_RE = /\.(zip|tar|tgz|gz|tar\.gz|bz2|tar\.bz2|7z|rar)$/i;
+const isArchive = (name) => ARCHIVE_RE.test(name);
+
+// Split a big file into base64 chunks small enough to clear proxy body limits.
+const CHUNK_BYTES = 512 * 1024; // 512 KB raw -> ~699 KB base64
+const blobToB64 = (blob) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+
+const fmtSize = (n) => {
+  if (n == null || isNaN(n)) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+};
 
 const FilesTab = ({ user }) => {
   const [dir, setDir] = useState("/public_html");
@@ -327,15 +354,47 @@ const FilesTab = ({ user }) => {
   const { run, busy } = useRunner();
   const { showAlert } = useAlert();
   const [newFolder, setNewFolder] = useState("");
-  // Inline editor: { file, content, original, loading, test }
-  const [editor, setEditor] = useState(null);
+  const [editor, setEditor] = useState(null); // { file, content, original, loading, test }
+  const [selected, setSelected] = useState(() => new Set());
+  const [dragOver, setDragOver] = useState(false);
+  const [upload, setUpload] = useState(null); // { name, pct, index, total }
+  const [action, setAction] = useState(null); // { kind:'rename'|'copy'|'move'|'zip', name, value }
+  const fileInputRef = React.useRef(null);
+
   const list = Array.isArray(data?.data) ? data.data : [];
-  const goUp = () => {
-    if (dir === "/" || !dir.includes("/")) return;
-    const parts = dir.replace(/\/+$/, "").split("/");
-    parts.pop();
-    setDir(parts.join("/") || "/");
-  };
+  const normDir = dir.replace(/\/+$/, "") || "/";
+  // The provider relays cPanel-session failures as {status:0, code:'CPANEL_AUTH_FAILURE'}
+  // (and useLoad stores thrown errors as {_error}). Surface these clearly instead
+  // of a misleading "empty folder".
+  const loadError = data && (data._error || data.status === 0 || !!data.code)
+    ? (data.code === "CPANEL_AUTH_FAILURE"
+        ? "cPanel is temporarily unavailable (provider authentication). Please try again shortly."
+        : (data.message || data._error || data.code || "Could not load files."))
+    : null;
+
+  // reset transient UI when the folder changes
+  useEffect(() => {
+    setSelected(new Set());
+    setAction(null);
+  }, [dir]);
+
+  const crumbs = (() => {
+    const parts = normDir.split("/").filter(Boolean);
+    const out = [{ label: "root", path: "/" }];
+    let acc = "";
+    for (const p of parts) {
+      acc += `/${p}`;
+      out.push({ label: p, path: acc });
+    }
+    return out;
+  })();
+
+  const toggleSel = (name) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      n.has(name) ? n.delete(name) : n.add(name);
+      return n;
+    });
 
   const openFile = async (name) => {
     setEditor({ file: name, content: "", original: "", loading: true, test: false });
@@ -358,44 +417,244 @@ const FilesTab = ({ user }) => {
     const res = await run(() => M.saveFile(user, dir, editor.file, editor.content), "File saved.");
     if (res) setEditor((e) => (e ? { ...e, original: e.content } : e));
   };
-
   const dirty = editor && editor.content !== editor.original;
+
+  // ---- Upload (chunked, with progress) ----
+  const uploadOne = async (file) => {
+    if (file.size <= CHUNK_BYTES) {
+      setUpload({ name: file.name, pct: 10, index: 1, total: 1 });
+      const b64 = await blobToB64(file);
+      const res = await M.uploadFile(user, dir, file.name, b64);
+      setUpload({ name: file.name, pct: 100, index: 1, total: 1 });
+      return res;
+    }
+    const uploadId = `up_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const total = Math.ceil(file.size / CHUNK_BYTES);
+    let res;
+    for (let i = 0; i < total; i++) {
+      const b64 = await blobToB64(file.slice(i * CHUNK_BYTES, (i + 1) * CHUNK_BYTES));
+      res = await M.uploadChunk(user, {
+        uploadId, chunkIndex: i, totalChunks: total, fileName: file.name, dir, content_base64: b64,
+      });
+      setUpload({ name: file.name, pct: Math.round(((i + 1) / total) * 100), index: i + 1, total });
+    }
+    return res;
+  };
+
+  const doUpload = async (files) => {
+    const arr = Array.from(files || []);
+    if (!arr.length) return;
+    let ok = 0;
+    for (const f of arr) {
+      try {
+        const res = await uploadOne(f);
+        if (isTest(res)) showAlert(res.note || "Test mode — upload applies once your account is live.", { type: "success" });
+        ok++;
+      } catch (e) {
+        showAlert(`${f.name}: ${e?.response?.data?.message || "upload failed"}`, { type: "fail" });
+      }
+    }
+    setUpload(null);
+    if (ok) showAlert(`Uploaded ${ok} file${ok > 1 ? "s" : ""}.`, { type: "success" });
+    reload();
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer?.files?.length) doUpload(e.dataTransfer.files);
+  };
+
+  // ---- Row actions ----
+  const submitAction = async () => {
+    if (!action) return;
+    const val = (action.value || "").trim();
+    const { kind, name } = action;
+    let fn, okMsg;
+    if (kind === "rename") {
+      if (!val) return;
+      fn = () => M.renameFile(user, dir, name, val); okMsg = "Renamed.";
+    } else if (kind === "copy") {
+      fn = () => M.copyFile(user, normDir, name, val || normDir); okMsg = "Copied.";
+    } else if (kind === "move") {
+      if (!val) return;
+      fn = () => M.moveFile(user, normDir, name, val); okMsg = "Moved.";
+    } else if (kind === "zip") {
+      if (!val) return;
+      const files = Array.from(selected);
+      fn = () => M.compressFiles(user, normDir, files, val); okMsg = "Compressed.";
+    }
+    const res = await run(fn, okMsg);
+    if (res) {
+      setAction(null);
+      if (kind === "zip") setSelected(new Set());
+      if (editor && (kind === "rename" || kind === "move") && editor.file === name) setEditor(null);
+      reload();
+    }
+  };
+
+  const startAction = (kind, name) => {
+    const preset =
+      kind === "rename" ? name
+      : kind === "zip" ? `archive-${Date.now()}.zip`
+      : normDir; // copy/move default to current dir
+    setAction({ kind, name, value: preset });
+  };
+
+  const doExtract = async (name) => {
+    await run(() => M.extractFile(user, dir, name), "Extracted.");
+    reload();
+  };
+  const doDelete = async (name, isDir) => {
+    await run(() => M.deleteFile(user, dir, name, isDir), "Deleted.");
+    if (editor?.file === name) setEditor(null);
+    setSelected((s) => { const n = new Set(s); n.delete(name); return n; });
+    reload();
+  };
+  const bulkDelete = async () => {
+    const names = Array.from(selected);
+    let ok = 0;
+    for (const name of names) {
+      const f = list.find((x) => (x.file || x.name) === name);
+      const isDir = f && (f.type === "dir" || f.type === "directory" || f.isDirectory);
+      try { await M.deleteFile(user, dir, name, isDir); ok++; } catch { /* ignore */ }
+    }
+    showAlert(`Deleted ${ok} item${ok !== 1 ? "s" : ""}.`, { type: ok ? "success" : "fail" });
+    setSelected(new Set());
+    reload();
+  };
 
   return (
     <div className="space-y-3" data-testid="cpanel-tab-files">
       <TestBanner data={data} feature="File Manager" />
-      <div className="flex items-center gap-2 text-sm">
-        <FiFolder size={15} className="text-secondary dark:text-gray-400" />
-        <input value={dir} onChange={(e) => setDir(e.target.value)} className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="files-dir-input" />
-        <button onClick={goUp} className="nw-btn-secondary nw-btn-sm">Up</button>
-        <button onClick={reload} disabled={busy} className="nw-btn-secondary nw-btn-sm disabled:opacity-50"><FiRefreshCw size={13} /></button>
+
+      {/* Breadcrumb + refresh + up */}
+      <div className="flex flex-wrap items-center gap-1.5 text-sm">
+        {crumbs.map((c, i) => (
+          <span key={c.path} className="inline-flex items-center gap-1.5">
+            {i > 0 && <FiChevronRight size={13} className="text-secondary/60" />}
+            <button
+              onClick={() => setDir(c.path)}
+              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-lightgray dark:hover:bg-gray-800 ${i === crumbs.length - 1 ? "text-primary dark:text-white font-medium" : "text-secondary dark:text-gray-400"}`}
+              data-testid={`files-crumb-${i}`}
+            >
+              {i === 0 ? <FiHome size={13} /> : null}{c.label}
+            </button>
+          </span>
+        ))}
+        <span className="flex-1" />
+        <button onClick={() => { const p = crumbs[crumbs.length - 2]; if (p) setDir(p.path); }} disabled={crumbs.length < 2} className="nw-btn-secondary nw-btn-sm disabled:opacity-40 inline-flex items-center gap-1" title="Up one level"><FiCornerUpLeft size={13} /> Up</button>
+        <button onClick={reload} disabled={busy} className="nw-btn-secondary nw-btn-sm disabled:opacity-50" title="Refresh"><FiRefreshCw size={13} /></button>
       </div>
-      {loading ? <Loading /> : list.length ? (
-        <ul className="space-y-1 max-h-56 overflow-y-auto">
+
+      {/* Path input (kept for precise navigation / testability) */}
+      <div className="flex items-center gap-2">
+        <input value={dir} onChange={(e) => setDir(e.target.value)} className="nw-input !py-2 !px-3 text-sm flex-1 font-mono" data-testid="files-dir-input" aria-label="Directory path" />
+      </div>
+
+      {/* Upload dropzone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        className={`rounded-xl border border-dashed px-4 py-4 text-center transition-colors ${dragOver ? "border-brand-500 bg-brand-50/60 dark:bg-brand-500/10" : "border-line dark:border-gray-700"}`}
+        data-testid="files-dropzone"
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          data-testid="files-upload-input"
+          onChange={(e) => { doUpload(e.target.files); e.target.value = ""; }}
+        />
+        {upload ? (
+          <div className="space-y-1.5" data-testid="files-upload-progress">
+            <p className="text-xs text-secondary dark:text-gray-300 truncate">Uploading <span className="font-medium">{upload.name}</span>{upload.total > 1 ? ` (chunk ${upload.index}/${upload.total})` : ""} — {upload.pct}%</p>
+            <div className="h-2 rounded-full bg-lightgray dark:bg-gray-800 overflow-hidden">
+              <div className="h-full nw-grad-brand transition-all" style={{ width: `${upload.pct}%` }} />
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+            <p className="text-xs text-secondary dark:text-gray-400 inline-flex items-center gap-1.5"><FiUpload size={14} /> Drag &amp; drop files here, or</p>
+            <button onClick={() => fileInputRef.current?.click()} disabled={busy} className="nw-btn-primary nw-btn-sm inline-flex items-center gap-1 disabled:opacity-50" data-testid="files-upload-btn"><FiUpload size={13} /> Choose files</button>
+          </div>
+        )}
+      </div>
+
+      {/* Bulk toolbar */}
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-lightgray/60 dark:bg-gray-800/60 px-3 py-2" data-testid="files-bulk-toolbar">
+          <span className="text-xs text-secondary dark:text-gray-300">{selected.size} selected</span>
+          <span className="flex-1" />
+          <button onClick={() => startAction("zip")} disabled={busy} className="nw-btn-secondary nw-btn-sm inline-flex items-center gap-1 disabled:opacity-50" data-testid="files-zip-selected-btn"><FiArchive size={13} /> Zip</button>
+          <button onClick={bulkDelete} disabled={busy} className="nw-btn-sm inline-flex items-center gap-1 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 disabled:opacity-50" data-testid="files-delete-selected-btn"><FiTrash2 size={13} /> Delete</button>
+          <button onClick={() => setSelected(new Set())} className="nw-btn-secondary nw-btn-sm">Clear</button>
+        </div>
+      )}
+
+      {/* Inline action form (rename / copy / move / zip) */}
+      {action && (
+        <div className="rounded-xl border border-brand-300/60 dark:border-brand-500/30 bg-brand-50/50 dark:bg-brand-500/[0.06] px-3 py-3 space-y-2" data-testid="files-action-form">
+          <p className="text-xs font-medium text-primary dark:text-white capitalize">
+            {action.kind === "zip" ? `Zip ${selected.size} item(s) → archive name` : `${action.kind} "${action.name}"${action.kind === "copy" || action.kind === "move" ? " → destination folder" : ""}`}
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              autoFocus
+              value={action.value}
+              onChange={(e) => setAction((a) => ({ ...a, value: e.target.value }))}
+              onKeyDown={(e) => { if (e.key === "Enter") submitAction(); if (e.key === "Escape") setAction(null); }}
+              className="nw-input !py-2 !px-3 text-sm flex-1 font-mono"
+              placeholder={action.kind === "zip" ? "archive.zip" : action.kind === "rename" ? "new name" : "/public_html/target"}
+              data-testid="files-action-input"
+            />
+            <button onClick={submitAction} disabled={busy} className="nw-btn-primary nw-btn-sm disabled:opacity-50" data-testid="files-action-confirm">OK</button>
+            <button onClick={() => setAction(null)} className="nw-btn-secondary nw-btn-sm">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Listing */}
+      {loading ? <Loading /> : loadError ? (
+        <div className="rounded-xl border border-amber-400/50 bg-amber-50 dark:bg-amber-500/10 px-4 py-4 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2" data-testid="files-load-error">
+          <FiAlertTriangle className="mt-0.5 shrink-0" size={16} />
+          <div className="min-w-0">
+            <p className="font-medium">Could not load files</p>
+            <p className="text-xs mt-0.5 break-words">{loadError}</p>
+            <button onClick={reload} className="nw-btn-secondary nw-btn-sm mt-2 inline-flex items-center gap-1"><FiRefreshCw size={13} /> Retry</button>
+          </div>
+        </div>
+      ) : list.length ? (
+        <ul className="space-y-0.5 max-h-[46vh] overflow-y-auto rounded-lg border border-line dark:border-gray-800 divide-y divide-line/60 dark:divide-gray-800/60">
           {list.map((f, i) => {
             const name = f.file || f.name || String(f);
             const isDir = f.type === "dir" || f.type === "directory" || f.isDirectory;
             const canEdit = !isDir && isEditable(name);
+            const sel = selected.has(name);
             return (
-              <li key={i} className="flex items-center justify-between text-sm text-secondary dark:text-gray-300">
+              <li key={i} className="flex items-center gap-2 px-2.5 py-2 text-sm text-secondary dark:text-gray-300 hover:bg-lightgray/50 dark:hover:bg-gray-800/40">
+                <button onClick={() => toggleSel(name)} className="shrink-0 text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white" aria-label={sel ? "Deselect" : "Select"} data-testid={`files-select-${name}`}>
+                  {sel ? <FiCheckSquare size={15} className="text-brand-600 dark:text-brand-400" /> : <FiSquare size={15} />}
+                </button>
                 <button
-                  className={`inline-flex items-center gap-2 min-w-0 text-left ${isDir || canEdit ? "hover:text-primary dark:hover:text-white" : "cursor-default"}`}
-                  onClick={() => {
-                    if (isDir) setDir(`${dir.replace(/\/+$/, "")}/${name}`);
-                    else if (canEdit) openFile(name);
-                  }}
-                  title={isDir ? "Open folder" : canEdit ? "Open & edit" : "Not editable here"}
+                  className={`inline-flex items-center gap-2 min-w-0 flex-1 text-left ${isDir || canEdit ? "hover:text-primary dark:hover:text-white" : "cursor-default"}`}
+                  onClick={() => { if (isDir) setDir(`${normDir}/${name}`.replace(/\/+/g, "/")); else if (canEdit) openFile(name); }}
+                  title={isDir ? "Open folder" : canEdit ? "Open & edit" : name}
                   data-testid={isDir ? `files-dir-${name}` : `files-file-${name}`}
                 >
-                  {isDir ? <FiFolder size={13} className="shrink-0" /> : <FiFile size={13} className="shrink-0" />}
+                  {isDir ? <FiFolder size={14} className="shrink-0 text-brand-500" /> : <FiFile size={14} className="shrink-0 text-secondary/70" />}
                   <span className="truncate">{name}</span>
-                  {!isDir && f.size != null && <span className="text-xs text-secondary/70 shrink-0">({Math.round(f.size / 1024)} KB)</span>}
+                  {!isDir && f.size != null && <span className="text-[11px] text-secondary/60 shrink-0">{fmtSize(f.size)}</span>}
                 </button>
-                <span className="flex items-center gap-3 shrink-0">
-                  {canEdit && (
-                    <button onClick={() => openFile(name)} disabled={busy} className="text-brand-600 dark:text-brand-400 hover:opacity-80 disabled:opacity-50" aria-label={`Edit ${name}`} data-testid={`files-edit-${name}`}><FiEdit2 size={14} /></button>
-                  )}
-                  <button onClick={async () => { await run(() => M.deleteFile(user, dir, name, isDir), "Deleted."); if (editor?.file === name) setEditor(null); reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Delete"><FiTrash2 size={14} /></button>
+                <span className="flex items-center gap-2 shrink-0 text-secondary dark:text-gray-400">
+                  {canEdit && <button onClick={() => openFile(name)} disabled={busy} className="hover:text-brand-600 dark:hover:text-brand-400 disabled:opacity-50" title="Edit" data-testid={`files-edit-${name}`}><FiEdit2 size={14} /></button>}
+                  {!isDir && isArchive(name) && <button onClick={() => doExtract(name)} disabled={busy} className="hover:text-brand-600 dark:hover:text-brand-400 disabled:opacity-50" title="Extract / Unzip" data-testid={`files-unzip-${name}`}><FiArchive size={14} /></button>}
+                  <button onClick={() => startAction("rename", name)} disabled={busy} className="hover:text-primary dark:hover:text-white disabled:opacity-50" title="Rename" data-testid={`files-rename-${name}`}><FiEdit2 size={13} className="opacity-70" /></button>
+                  <button onClick={() => startAction("copy", name)} disabled={busy} className="hover:text-primary dark:hover:text-white disabled:opacity-50" title="Copy" data-testid={`files-copy-${name}`}><FiCopy size={14} /></button>
+                  <button onClick={() => startAction("move", name)} disabled={busy} className="hover:text-primary dark:hover:text-white disabled:opacity-50" title="Move" data-testid={`files-move-${name}`}><FiScissors size={14} /></button>
+                  <button onClick={() => doDelete(name, isDir)} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" title="Delete" data-testid={`files-delete-${name}`}><FiTrash2 size={14} /></button>
                 </span>
               </li>
             );
@@ -403,6 +662,7 @@ const FilesTab = ({ user }) => {
         </ul>
       ) : <Empty>Empty folder.</Empty>}
 
+      {/* Inline text editor */}
       {editor && (
         <div className="rounded-xl border border-line dark:border-gray-800 overflow-hidden" data-testid="file-editor">
           <div className="flex items-center justify-between px-3 py-2 bg-lightgray/60 dark:bg-gray-800/60">
@@ -426,7 +686,7 @@ const FilesTab = ({ user }) => {
               value={editor.content}
               onChange={(e) => setEditor((ed) => ({ ...ed, content: e.target.value }))}
               spellCheck={false}
-              rows={14}
+              rows={16}
               className="w-full resize-y bg-white dark:bg-gray-900 text-primary dark:text-gray-100 font-mono text-xs leading-relaxed p-3 outline-none border-0 focus:ring-0"
               placeholder="File is empty. Start typing…"
               data-testid="file-editor-textarea"
@@ -435,9 +695,10 @@ const FilesTab = ({ user }) => {
         </div>
       )}
 
+      {/* New folder */}
       <div className="flex items-center gap-2 border-t border-lightgray dark:border-gray-800 pt-3">
-        <input value={newFolder} onChange={(e) => setNewFolder(e.target.value)} placeholder="new folder name" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="files-mkdir-input" />
-        <button onClick={async () => { if (!newFolder.trim()) return; await run(() => M.mkdir(user, dir, newFolder.trim()), "Folder created."); setNewFolder(""); reload(); }} disabled={busy || !newFolder.trim()} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"><FiPlus size={13} /> New folder</button>
+        <input value={newFolder} onChange={(e) => setNewFolder(e.target.value)} placeholder="new folder name" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="files-mkdir-input" onKeyDown={(e) => { if (e.key === "Enter" && newFolder.trim()) { run(() => M.mkdir(user, dir, newFolder.trim()), "Folder created.").then((r) => { if (r) { setNewFolder(""); reload(); } }); } }} />
+        <button onClick={async () => { if (!newFolder.trim()) return; const r = await run(() => M.mkdir(user, dir, newFolder.trim()), "Folder created."); if (r) { setNewFolder(""); reload(); } }} disabled={busy || !newFolder.trim()} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"><FiPlus size={13} /> New folder</button>
       </div>
     </div>
   );

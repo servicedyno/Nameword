@@ -1,912 +1,662 @@
 #!/usr/bin/env python3
 """
-Backend test suite for Nomadly Reseller API proxy endpoints.
-Tests all public endpoints with generous timeout for external API calls.
+Backend Test Suite for Nameword Platform
+Tests two backend fixes:
+1. Duplicate hosting accounts fix (ownership.js)
+2. cPanel File Manager operations (body-limit bump + proxy routes)
 """
 
 import requests
 import json
-import sys
-from typing import Dict, Any, Tuple
+import base64
+import time
+from typing import Dict, Any, Optional
 
-# Base URL from frontend/.env
-BASE_URL = "https://reseller-portal-41.preview.emergentagent.com/api/v1/reseller"
+# Base URL from frontend .env
+BASE_URL = "https://1f970365-86f5-4171-b2ea-24cd40e8d04f.preview.emergentagent.com"
+API_BASE = f"{BASE_URL}/api/v1"
 
-# Generous timeout for external API proxy (30 seconds)
-TIMEOUT = 30
+# Test credentials from test_credentials.md
+PRIMARY_ACCOUNT = {
+    "email": "moxxcompany@gmail.com",
+    "password": "Onlygod123@"
+}
+
+REGRESSION_ACCOUNT = {
+    "email": "buyer@nameword.local",
+    "password": "Buyer@12345"
+}
 
 class Colors:
     GREEN = '\033[92m'
     RED = '\033[91m'
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
-    END = '\033[0m'
+    RESET = '\033[0m'
 
-def print_test(test_num: int, description: str):
-    """Print test header"""
-    print(f"\n{Colors.BLUE}{'='*80}{Colors.END}")
-    print(f"{Colors.BLUE}TEST {test_num}: {description}{Colors.END}")
-    print(f"{Colors.BLUE}{'='*80}{Colors.END}")
+def log_test(message: str, status: str = "info"):
+    """Log test messages with color coding"""
+    if status == "pass":
+        print(f"{Colors.GREEN}✅ {message}{Colors.RESET}")
+    elif status == "fail":
+        print(f"{Colors.RED}❌ {message}{Colors.RESET}")
+    elif status == "warn":
+        print(f"{Colors.YELLOW}⚠️  {message}{Colors.RESET}")
+    else:
+        print(f"{Colors.BLUE}ℹ️  {message}{Colors.RESET}")
 
-def print_pass(message: str):
-    """Print pass message"""
-    print(f"{Colors.GREEN}✓ PASS: {message}{Colors.END}")
-
-def print_fail(message: str):
-    """Print fail message"""
-    print(f"{Colors.RED}✗ FAIL: {message}{Colors.END}")
-
-def print_info(message: str):
-    """Print info message"""
-    print(f"{Colors.YELLOW}ℹ INFO: {message}{Colors.END}")
-
-def make_request(method: str, endpoint: str, **kwargs) -> Tuple[int, Dict[Any, Any], str]:
-    """
-    Make HTTP request and return status, json data, and error message
-    """
-    url = f"{BASE_URL}{endpoint}"
-    print_info(f"{method} {url}")
-    
+def login(email: str, password: str) -> Optional[str]:
+    """Login and return JWT token"""
+    log_test(f"Logging in as {email}...")
     try:
-        if method == "GET":
-            response = requests.get(url, timeout=TIMEOUT, **kwargs)
-        elif method == "POST":
-            response = requests.post(url, timeout=TIMEOUT, **kwargs)
-        elif method == "DELETE":
-            response = requests.delete(url, timeout=TIMEOUT, **kwargs)
-        else:
-            return 0, {}, f"Unsupported method: {method}"
+        response = requests.post(
+            f"{API_BASE}/auth/login",
+            json={"email": email, "password": password},
+            timeout=30
+        )
         
-        print_info(f"Status: {response.status_code}")
-        
-        try:
+        if response.status_code == 200:
             data = response.json()
-            print_info(f"Response: {json.dumps(data, indent=2)[:500]}...")
-            return response.status_code, data, ""
-        except:
-            print_info(f"Response (non-JSON): {response.text[:500]}")
-            return response.status_code, {}, "Response is not JSON"
+            token = data.get("token")
+            if token:
+                log_test(f"Login successful for {email}", "pass")
+                return token
+            else:
+                log_test(f"Login response missing token: {data}", "fail")
+                return None
+        else:
+            log_test(f"Login failed: {response.status_code} - {response.text}", "fail")
+            return None
+    except Exception as e:
+        log_test(f"Login exception: {str(e)}", "fail")
+        return None
+
+def test_problem_1_duplicate_hosting_fix():
+    """
+    PROBLEM 1: Duplicate hosting accounts fix
+    Test that moxxcompany@gmail.com sees EXACTLY ONE hosting account
+    """
+    print("\n" + "="*80)
+    print("PROBLEM 1: DUPLICATE HOSTING ACCOUNTS FIX")
+    print("="*80)
+    
+    # Step 1: Login as moxxcompany@gmail.com
+    token = login(PRIMARY_ACCOUNT["email"], PRIMARY_ACCOUNT["password"])
+    if not token:
+        log_test("Cannot proceed with Problem 1 - login failed", "fail")
+        return False
+    
+    # Step 2: GET /api/v1/reseller/hosting
+    log_test("Fetching hosting accounts list...")
+    try:
+        response = requests.get(
+            f"{API_BASE}/reseller/hosting",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=30
+        )
+        
+        log_test(f"Response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            log_test(f"Expected 200, got {response.status_code}: {response.text}", "fail")
+            return False
+        
+        data = response.json()
+        log_test(f"Response body: {json.dumps(data, indent=2)}")
+        
+        # Step 3: Verify EXACTLY ONE account
+        accounts = data.get("accounts", [])
+        count = data.get("count", 0)
+        
+        log_test(f"Found {len(accounts)} account(s) in 'accounts' array")
+        log_test(f"Count field: {count}")
+        
+        if len(accounts) != 1:
+            log_test(f"FAIL: Expected EXACTLY 1 account, found {len(accounts)}", "fail")
+            log_test(f"Accounts: {json.dumps(accounts, indent=2)}", "fail")
+            return False
+        
+        if count != 1:
+            log_test(f"FAIL: Expected count=1, got count={count}", "fail")
+            return False
+        
+        # Step 4: Verify the account details
+        account = accounts[0]
+        username = account.get("username")
+        domain = account.get("domain")
+        status = account.get("status")
+        
+        log_test(f"Account details: username={username}, domain={domain}, status={status}")
+        
+        if username != "namea3a5":
+            log_test(f"FAIL: Expected username='namea3a5', got '{username}'", "fail")
+            return False
+        
+        if domain != "namewords.sbs":
+            log_test(f"FAIL: Expected domain='namewords.sbs', got '{domain}'", "fail")
+            return False
+        
+        if status not in ["active", "not-suspended"]:
+            log_test(f"WARN: Status is '{status}', expected 'active' or 'not-suspended'", "warn")
+        
+        log_test("PROBLEM 1 PASSED: Exactly ONE hosting account found with correct details", "pass")
+        return True
+        
+    except Exception as e:
+        log_test(f"Exception during hosting list fetch: {str(e)}", "fail")
+        return False
+
+def test_problem_1_regression():
+    """
+    PROBLEM 1 REGRESSION: Test buyer account endpoints don't error
+    """
+    print("\n" + "="*80)
+    print("PROBLEM 1 REGRESSION: BUYER ACCOUNT ENDPOINTS")
+    print("="*80)
+    
+    # Login as buyer
+    token = login(REGRESSION_ACCOUNT["email"], REGRESSION_ACCOUNT["password"])
+    if not token:
+        log_test("Cannot proceed with regression - login failed", "fail")
+        return False
+    
+    endpoints = [
+        "/reseller/hosting",
+        "/reseller/domains",
+        "/reseller/vps",
+        "/reseller/rdp"
+    ]
+    
+    all_passed = True
+    for endpoint in endpoints:
+        log_test(f"Testing GET {endpoint}...")
+        try:
+            response = requests.get(
+                f"{API_BASE}{endpoint}",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=30
+            )
             
-    except requests.exceptions.Timeout:
-        return 0, {}, f"Request timeout after {TIMEOUT}s"
-    except requests.exceptions.RequestException as e:
-        return 0, {}, f"Request failed: {str(e)}"
-
-def test_1_health():
-    """Test 1: GET /reseller/health"""
-    print_test(1, "GET /reseller/health - Health check endpoint")
+            if response.status_code == 200:
+                data = response.json()
+                log_test(f"GET {endpoint}: 200 OK - {json.dumps(data)[:100]}...", "pass")
+            else:
+                log_test(f"GET {endpoint}: {response.status_code} - {response.text[:200]}", "fail")
+                all_passed = False
+        except Exception as e:
+            log_test(f"GET {endpoint}: Exception - {str(e)}", "fail")
+            all_passed = False
     
-    status, data, error = make_request("GET", "/health")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    # Check for required fields
-    if "ok" not in data:
-        print_fail("Response missing 'ok' field")
-        return False
-    
-    if data.get("ok") != True:
-        print_fail(f"Expected ok=true, got ok={data.get('ok')}")
-        return False
-    
-    print_pass(f"ok field is true")
-    
-    if "mode" not in data:
-        print_fail("Response missing 'mode' field")
-        return False
-    
-    print_pass(f"mode field present: {data.get('mode')}")
-    
-    if data.get("mode") == "dry_run":
-        print_pass("Provider is in dry_run mode (expected)")
+    if all_passed:
+        log_test("REGRESSION PASSED: All buyer endpoints returned 200", "pass")
     else:
-        print_info(f"Provider mode: {data.get('mode')}")
+        log_test("REGRESSION FAILED: Some endpoints returned errors", "fail")
     
-    if "products" in data and isinstance(data["products"], list):
-        print_pass(f"products array present with {len(data['products'])} items")
-        if "vps" in data["products"] and "rdp" in data["products"]:
-            print_pass("products includes 'vps' and 'rdp'")
+    return all_passed
+
+def test_problem_2_file_manager():
+    """
+    PROBLEM 2: cPanel File Manager full lifecycle test
+    Test all 12 file operations on username namea3a5
+    """
+    print("\n" + "="*80)
+    print("PROBLEM 2: CPANEL FILE MANAGER OPERATIONS")
+    print("="*80)
+    
+    # Login as moxxcompany@gmail.com (owns namea3a5)
+    token = login(PRIMARY_ACCOUNT["email"], PRIMARY_ACCOUNT["password"])
+    if not token:
+        log_test("Cannot proceed with Problem 2 - login failed", "fail")
+        return False
+    
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    username = "namea3a5"
+    working_dir = "/public_html"
+    
+    results = {}
+    
+    # Step 1: List files in /public_html
+    log_test("STEP 1: GET files list...")
+    try:
+        response = requests.get(
+            f"{API_BASE}/reseller/hosting/{username}/files",
+            params={"dir": working_dir},
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1 and isinstance(data.get("data"), list):
+                log_test(f"STEP 1 PASSED: Got file list with {len(data['data'])} items", "pass")
+                results["step1_list"] = True
+            else:
+                log_test(f"STEP 1 FAILED: Unexpected response format: {data}", "fail")
+                results["step1_list"] = False
         else:
-            print_info(f"products: {data['products']}")
-    
-    return True
-
-def test_2_account():
-    """Test 2: GET /reseller/account"""
-    print_test(2, "GET /reseller/account - Account info endpoint")
-    
-    status, data, error = make_request("GET", "/account")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "wallet_balance_usd" not in data:
-        print_fail("Response missing 'wallet_balance_usd' field")
-        return False
-    
-    wallet_balance = data.get("wallet_balance_usd")
-    if not isinstance(wallet_balance, (int, float)):
-        print_fail(f"wallet_balance_usd should be a number, got {type(wallet_balance)}")
-        return False
-    
-    print_pass(f"wallet_balance_usd is a number: {wallet_balance}")
-    
-    if "mode" in data:
-        print_pass(f"mode field present: {data.get('mode')}")
-    
-    return True
-
-def test_3_vps_plans_eu():
-    """Test 3: GET /reseller/vps/plans?region=EU"""
-    print_test(3, "GET /reseller/vps/plans?region=EU - VPS plans for EU region")
-    
-    status, data, error = make_request("GET", "/vps/plans", params={"region": "EU"})
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "plans" not in data:
-        print_fail("Response missing 'plans' field")
-        return False
-    
-    plans = data.get("plans")
-    if not isinstance(plans, list):
-        print_fail(f"plans should be an array, got {type(plans)}")
-        return False
-    
-    if len(plans) == 0:
-        print_fail("plans array is empty (expected non-empty for EU region)")
-        return False
-    
-    print_pass(f"plans array is non-empty with {len(plans)} plans")
-    
-    # Check first plan structure
-    first_plan = plans[0]
-    required_fields = ["plan_id", "ram_gb", "disk_gb", "price_usd"]
-    
-    for field in required_fields:
-        if field not in first_plan:
-            print_fail(f"First plan missing '{field}' field")
-            return False
-    
-    print_pass(f"First plan has all required fields: {required_fields}")
-    
-    if not isinstance(first_plan.get("price_usd"), (int, float)):
-        print_fail(f"price_usd should be a number, got {type(first_plan.get('price_usd'))}")
-        return False
-    
-    print_pass(f"price_usd is a number: {first_plan.get('price_usd')}")
-    print_info(f"Sample plan: {json.dumps(first_plan, indent=2)}")
-    
-    return True
-
-def test_4_vps_plans_sg():
-    """Test 4: GET /reseller/vps/plans?region=SG"""
-    print_test(4, "GET /reseller/vps/plans?region=SG - VPS plans for SG region")
-    
-    status, data, error = make_request("GET", "/vps/plans", params={"region": "SG"})
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "plans" not in data:
-        print_fail("Response missing 'plans' field")
-        return False
-    
-    plans = data.get("plans")
-    if not isinstance(plans, list):
-        print_fail(f"plans should be an array, got {type(plans)}")
-        return False
-    
-    if len(plans) == 0:
-        print_fail("plans array is empty (expected non-empty for SG region)")
-        return False
-    
-    print_pass(f"plans array is non-empty with {len(plans)} plans")
-    
-    return True
-
-def test_5_vps_plans_unknown():
-    """Test 5: GET /reseller/vps/plans?region=ZZ (unknown region)"""
-    print_test(5, "GET /reseller/vps/plans?region=ZZ - Unknown region handling")
-    
-    status, data, error = make_request("GET", "/vps/plans", params={"region": "ZZ"})
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status} (should not error on unknown region)")
-    
-    if "plans" not in data:
-        print_fail("Response missing 'plans' field")
-        return False
-    
-    plans = data.get("plans")
-    if not isinstance(plans, list):
-        print_fail(f"plans should be an array, got {type(plans)}")
-        return False
-    
-    print_pass(f"plans is an array (likely empty): {len(plans)} plans")
-    
-    return True
-
-def test_6_vps_create_dry_run():
-    """Test 6: POST /reseller/vps - Create VPS in dry_run mode"""
-    print_test(6, "POST /reseller/vps - Create VPS (dry_run mode)")
-    
-    # Get initial wallet balance
-    _, account_data, _ = make_request("GET", "/account")
-    initial_balance = account_data.get("wallet_balance_usd", 0)
-    print_info(f"Initial wallet balance: ${initial_balance}")
-    
-    payload = {
-        "plan_id": "s-1vcpu-1gb",
-        "region": "EU",
-        "hostname": "test-01"
-    }
-    
-    status, data, error = make_request("POST", "/vps", json=payload)
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "mode" not in data:
-        print_fail("Response missing 'mode' field")
-        return False
-    
-    if data.get("mode") != "dry_run":
-        print_fail(f"Expected mode='dry_run', got mode='{data.get('mode')}'")
-        return False
-    
-    print_pass(f"mode is 'dry_run' (no real resource created)")
-    
-    if "price_usd" not in data:
-        print_fail("Response missing 'price_usd' field")
-        return False
-    
-    print_pass(f"price_usd present: ${data.get('price_usd')}")
-    
-    if "would_provision" not in data:
-        print_fail("Response missing 'would_provision' field")
-        return False
-    
-    print_pass(f"would_provision field present (dry_run preview)")
-    
-    # Verify wallet balance unchanged
-    _, account_data_after, _ = make_request("GET", "/account")
-    final_balance = account_data_after.get("wallet_balance_usd", 0)
-    
-    if initial_balance == final_balance:
-        print_pass(f"Wallet balance unchanged: ${final_balance} (no charge in dry_run)")
-    else:
-        print_fail(f"Wallet balance changed from ${initial_balance} to ${final_balance} (should not charge in dry_run)")
-        return False
-    
-    return True
-
-def test_7_vps_list():
-    """Test 7: GET /reseller/vps - List VPS instances"""
-    print_test(7, "GET /reseller/vps - List VPS instances")
-    
-    status, data, error = make_request("GET", "/vps")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "vps" not in data:
-        print_fail("Response missing 'vps' field")
-        return False
-    
-    vps_list = data.get("vps")
-    if not isinstance(vps_list, list):
-        print_fail(f"vps should be an array, got {type(vps_list)}")
-        return False
-    
-    print_pass(f"vps is an array with {len(vps_list)} instances")
-    
-    if len(vps_list) == 0:
-        print_pass("vps array is empty (expected in dry_run mode)")
-    else:
-        print_info(f"Found {len(vps_list)} VPS instances")
-    
-    return True
-
-def test_8_rdp_plans_eu():
-    """Test 8: GET /reseller/rdp/plans?region=EU"""
-    print_test(8, "GET /reseller/rdp/plans?region=EU - RDP plans for EU region")
-    
-    status, data, error = make_request("GET", "/rdp/plans", params={"region": "EU"})
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "plans" not in data:
-        print_fail("Response missing 'plans' field")
-        return False
-    
-    plans = data.get("plans")
-    if not isinstance(plans, list):
-        print_fail(f"plans should be an array, got {type(plans)}")
-        return False
-    
-    if len(plans) == 0:
-        print_fail("plans array is empty (expected non-empty for EU region)")
-        return False
-    
-    print_pass(f"plans array is non-empty with {len(plans)} plans")
-    
-    if len(plans) == 6:
-        print_pass("Found 6 RDP plans (expected Contabo plans)")
-    else:
-        print_info(f"Found {len(plans)} RDP plans")
-    
-    return True
-
-def test_9_rdp_create_dry_run():
-    """Test 9: POST /reseller/rdp - Create RDP in dry_run mode"""
-    print_test(9, "POST /reseller/rdp - Create RDP (dry_run mode)")
-    
-    payload = {
-        "plan_id": "V91",
-        "region": "EU"
-    }
-    
-    status, data, error = make_request("POST", "/rdp", json=payload)
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "mode" not in data:
-        print_fail("Response missing 'mode' field")
-        return False
-    
-    if data.get("mode") != "dry_run":
-        print_fail(f"Expected mode='dry_run', got mode='{data.get('mode')}'")
-        return False
-    
-    print_pass(f"mode is 'dry_run' (no real resource created)")
-    
-    if "price_usd" not in data:
-        print_fail("Response missing 'price_usd' field")
-        return False
-    
-    print_pass(f"price_usd present: ${data.get('price_usd')}")
-    
-    return True
-
-def test_10_domain_search():
-    """Test 10: GET /reseller/domains/search?domain=coolstartup2026.com"""
-    print_test(10, "GET /reseller/domains/search?domain=coolstartup2026.com - Domain search")
-    
-    status, data, error = make_request("GET", "/domains/search", params={"domain": "coolstartup2026.com"})
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    if "available" not in data:
-        print_fail("Response missing 'available' field")
-        return False
-    
-    print_pass(f"'available' field present: {data.get('available')}")
-    
-    # Check for price information
-    if "price_usd" in data or "price" in data or "registration_price" in data:
-        price_field = "price_usd" if "price_usd" in data else ("price" if "price" in data else "registration_price")
-        print_pass(f"Price information present: {price_field}={data.get(price_field)}")
-    else:
-        print_info(f"Response: {json.dumps(data, indent=2)}")
-    
-    return True
-
-def test_11_error_passthrough():
-    """Test 11: GET /reseller/vps/nonexistent-id-123 - Error passthrough"""
-    print_test(11, "GET /reseller/vps/nonexistent-id-123 - Error status passthrough")
-    
-    status, data, error = make_request("GET", "/vps/nonexistent-id-123")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status == 200:
-        print_fail(f"Expected error status (e.g., 404), got 200")
-        return False
-    
-    print_pass(f"Received error status: {status} (not 200)")
-    
-    if status == 404:
-        print_pass("Status is 404 (expected for nonexistent resource)")
-    else:
-        print_info(f"Status is {status} (expected some error status)")
-    
-    # Check that response has error information
-    if isinstance(data, dict):
-        if "error" in data or "message" in data:
-            print_pass(f"Response contains error information: {json.dumps(data, indent=2)}")
+            log_test(f"STEP 1 FAILED: {response.status_code}", "fail")
+            results["step1_list"] = False
+    except Exception as e:
+        log_test(f"STEP 1 EXCEPTION: {str(e)}", "fail")
+        results["step1_list"] = False
+    
+    # Step 2: Save a text file
+    log_test("STEP 2: POST files/save (create nw_test_readme.txt)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/save",
+            json={
+                "dir": working_dir,
+                "file": "nw_test_readme.txt",
+                "content": "hello from backend test"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 2 PASSED: File saved successfully", "pass")
+                results["step2_save"] = True
+            else:
+                log_test(f"STEP 2 FAILED: {data}", "fail")
+                results["step2_save"] = False
         else:
-            print_info(f"Response body: {json.dumps(data, indent=2)}")
-    else:
-        print_info(f"Response is not JSON dict: {data}")
+            log_test(f"STEP 2 FAILED: {response.status_code}", "fail")
+            results["step2_save"] = False
+    except Exception as e:
+        log_test(f"STEP 2 EXCEPTION: {str(e)}", "fail")
+        results["step2_save"] = False
     
-    return True
-
-def test_12_hosting_plans():
-    """Test 12: GET /reseller/hosting/plans - cPanel hosting plans"""
-    print_test(12, "GET /reseller/hosting/plans - cPanel hosting plans")
-    
-    status, data, error = make_request("GET", "/hosting/plans")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    # Check for platform field
-    if "platform" not in data:
-        print_fail("Response missing 'platform' field")
-        return False
-    
-    print_pass(f"'platform' field present")
-    
-    # Check for plans array
-    if "plans" not in data:
-        print_fail("Response missing 'plans' field")
-        return False
-    
-    plans = data.get("plans")
-    if not isinstance(plans, list):
-        print_fail(f"plans should be an array, got {type(plans)}")
-        return False
-    
-    print_pass(f"plans is an array with {len(plans)} plans")
-    
-    if len(plans) == 0:
-        print_fail("plans array is empty (expected 3 plans)")
-        return False
-    
-    if len(plans) == 3:
-        print_pass("Found 3 hosting plans (expected)")
-    else:
-        print_info(f"Found {len(plans)} hosting plans (expected 3)")
-    
-    # Check first plan structure
-    first_plan = plans[0]
-    required_fields = ["plan_id", "name", "tier", "price_usd", "duration_days", "addon_domains", "visitor_captcha_available", "features"]
-    
-    for field in required_fields:
-        if field not in first_plan:
-            print_fail(f"First plan missing '{field}' field")
-            return False
-    
-    print_pass(f"First plan has all required fields: {required_fields}")
-    
-    # Validate field types
-    if not isinstance(first_plan.get("price_usd"), (int, float)):
-        print_fail(f"price_usd should be a number, got {type(first_plan.get('price_usd'))}")
-        return False
-    
-    print_pass(f"price_usd is a number")
-    
-    if not isinstance(first_plan.get("duration_days"), (int, float)):
-        print_fail(f"duration_days should be a number, got {type(first_plan.get('duration_days'))}")
-        return False
-    
-    print_pass(f"duration_days is a number")
-    
-    # addon_domains can be number or "unlimited"
-    addon_domains = first_plan.get("addon_domains")
-    if not isinstance(addon_domains, (int, float)) and addon_domains != "unlimited":
-        print_fail(f"addon_domains should be a number or 'unlimited', got {addon_domains}")
-        return False
-    
-    print_pass(f"addon_domains is valid: {addon_domains}")
-    
-    if not isinstance(first_plan.get("visitor_captcha_available"), bool):
-        print_fail(f"visitor_captcha_available should be a boolean, got {type(first_plan.get('visitor_captcha_available'))}")
-        return False
-    
-    print_pass(f"visitor_captcha_available is a boolean")
-    
-    if not isinstance(first_plan.get("features"), list):
-        print_fail(f"features should be an array, got {type(first_plan.get('features'))}")
-        return False
-    
-    print_pass(f"features is an array")
-    
-    # Check for golden-monthly plan with tier "gold" and visitor_captcha_available true
-    golden_plan = next((p for p in plans if p.get("plan_id") == "golden-monthly"), None)
-    if golden_plan:
-        if golden_plan.get("tier") == "gold":
-            print_pass("golden-monthly plan has tier 'gold'")
+    # Step 3: Get file content
+    log_test("STEP 3: GET files/content (read nw_test_readme.txt)...")
+    try:
+        response = requests.get(
+            f"{API_BASE}/reseller/hosting/{username}/files/content",
+            params={"dir": working_dir, "file": "nw_test_readme.txt"},
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            content = data.get("content", "")
+            if "hello from backend test" in content:
+                log_test("STEP 3 PASSED: File content matches", "pass")
+                results["step3_content"] = True
+            else:
+                log_test(f"STEP 3 FAILED: Content mismatch: {content}", "fail")
+                results["step3_content"] = False
         else:
-            print_fail(f"golden-monthly plan tier should be 'gold', got '{golden_plan.get('tier')}'")
-            return False
+            log_test(f"STEP 3 FAILED: {response.status_code}", "fail")
+            results["step3_content"] = False
+    except Exception as e:
+        log_test(f"STEP 3 EXCEPTION: {str(e)}", "fail")
+        results["step3_content"] = False
+    
+    # Step 4: Upload a file (base64)
+    log_test("STEP 4: POST files/upload (upload nw_test_upload.txt)...")
+    try:
+        upload_content = "uploaded bytes"
+        content_base64 = base64.b64encode(upload_content.encode()).decode()
         
-        if golden_plan.get("visitor_captcha_available") == True:
-            print_pass("golden-monthly plan has visitor_captcha_available true")
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/upload",
+            json={
+                "dir": working_dir,
+                "fileName": "nw_test_upload.txt",
+                "content_base64": content_base64
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 4 PASSED: File uploaded successfully", "pass")
+                results["step4_upload"] = True
+            else:
+                log_test(f"STEP 4 FAILED: {data}", "fail")
+                results["step4_upload"] = False
         else:
-            print_fail(f"golden-monthly plan visitor_captcha_available should be true, got {golden_plan.get('visitor_captcha_available')}")
-            return False
-    else:
-        print_info("golden-monthly plan not found in plans array")
+            log_test(f"STEP 4 FAILED: {response.status_code}", "fail")
+            results["step4_upload"] = False
+    except Exception as e:
+        log_test(f"STEP 4 EXCEPTION: {str(e)}", "fail")
+        results["step4_upload"] = False
     
-    print_info(f"Sample plan: {json.dumps(first_plan, indent=2)[:500]}")
-    
-    return True
-
-def test_13_hosting_list():
-    """Test 13: GET /reseller/hosting - List hosting accounts"""
-    print_test(13, "GET /reseller/hosting - List hosting accounts")
-    
-    status, data, error = make_request("GET", "/hosting")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    # Check for required fields
-    required_fields = ["panel_url", "server_ip", "accounts"]
-    for field in required_fields:
-        if field not in data:
-            print_fail(f"Response missing '{field}' field")
-            return False
-    
-    print_pass(f"Response has all required fields: {required_fields}")
-    
-    accounts = data.get("accounts")
-    if not isinstance(accounts, list):
-        print_fail(f"accounts should be an array, got {type(accounts)}")
-        return False
-    
-    print_pass(f"accounts is an array with {len(accounts)} accounts")
-    
-    # Check if real accounts exist (e.g., username "nbaykkd4zh")
-    if len(accounts) > 0:
-        print_pass(f"Real accounts exist (found {len(accounts)} accounts)")
+    # Step 5: Create directory
+    log_test("STEP 5: POST files/mkdir (create nw_test_dir)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/mkdir",
+            json={
+                "dir": working_dir,
+                "name": "nw_test_dir"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
         
-        # Check if nbaykkd4zh exists
-        nbaykkd4zh_account = next((a for a in accounts if a.get("username") == "nbaykkd4zh"), None)
-        if nbaykkd4zh_account:
-            print_pass("Found account with username 'nbaykkd4zh'")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 5 PASSED: Directory created successfully", "pass")
+                results["step5_mkdir"] = True
+            else:
+                log_test(f"STEP 5 FAILED: {data}", "fail")
+                results["step5_mkdir"] = False
         else:
-            print_info("Account 'nbaykkd4zh' not found, but other accounts exist")
-    else:
-        print_info("No accounts found (empty array)")
+            log_test(f"STEP 5 FAILED: {response.status_code}", "fail")
+            results["step5_mkdir"] = False
+    except Exception as e:
+        log_test(f"STEP 5 EXCEPTION: {str(e)}", "fail")
+        results["step5_mkdir"] = False
     
-    print_info(f"panel_url: {data.get('panel_url')}")
-    print_info(f"server_ip: {data.get('server_ip')}")
-    
-    return True
-
-def test_14_hosting_login():
-    """Test 14: GET /reseller/hosting/nbaykkd4zh/login - Hosting login (dry_run)"""
-    print_test(14, "GET /reseller/hosting/nbaykkd4zh/login - Hosting login (dry_run)")
-    
-    status, data, error = make_request("GET", "/hosting/nbaykkd4zh/login")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status}")
-    
-    # In dry_run mode, expect mode field and a note (no login_url)
-    if "mode" not in data:
-        print_fail("Response missing 'mode' field")
-        return False
-    
-    if data.get("mode") == "dry_run":
-        print_pass("mode is 'dry_run' (expected)")
-    else:
-        print_info(f"mode: {data.get('mode')}")
-    
-    # Check for note field
-    if "note" in data or "message" in data:
-        print_pass("Response contains note/message (expected in dry_run)")
-    else:
-        print_info("No note/message field found")
-    
-    # In dry_run, login_url should not be present
-    if "login_url" not in data:
-        print_pass("login_url not present (expected in dry_run)")
-    else:
-        print_info(f"login_url present: {data.get('login_url')}")
-    
-    print_info(f"Response: {json.dumps(data, indent=2)}")
-    
-    return True
-
-def test_15_hosting_credentials():
-    """Test 15: GET /reseller/hosting/nbaykkd4zh/credentials - Hosting credentials (NEW route)"""
-    print_test(15, "GET /reseller/hosting/nbaykkd4zh/credentials - Hosting credentials (NEW route)")
-    
-    status, data, error = make_request("GET", "/hosting/nbaykkd4zh/credentials")
-    
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
-    
-    if status == 404:
-        print_fail("Route returns 404 - NEW route not implemented or account doesn't exist")
-        return False
-    
-    if status != 200:
-        print_fail(f"Expected status 200, got {status}")
-        return False
-    
-    print_pass(f"Status code: {status} (NEW route is working!)")
-    
-    # Check for required fields
-    required_fields = ["username", "panel_url", "server_ip", "nameservers", "mode"]
-    for field in required_fields:
-        if field not in data:
-            print_fail(f"Response missing '{field}' field")
-            return False
-    
-    print_pass(f"Response has all required fields: {required_fields}")
-    
-    # In dry_run mode, panel_pin should be null
-    if data.get("mode") == "dry_run":
-        print_pass("mode is 'dry_run' (expected)")
+    # Step 6: Rename file
+    log_test("STEP 6: POST files/rename (rename nw_test_readme.txt -> nw_test_renamed.txt)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/rename",
+            json={
+                "dir": working_dir,
+                "oldName": "nw_test_readme.txt",
+                "newName": "nw_test_renamed.txt"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
         
-        if data.get("panel_pin") is None or data.get("panel_pin") == "":
-            print_pass("panel_pin is null/empty (expected in dry_run)")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 6 PASSED: File renamed successfully", "pass")
+                results["step6_rename"] = True
+            else:
+                log_test(f"STEP 6 FAILED: {data}", "fail")
+                results["step6_rename"] = False
         else:
-            print_info(f"panel_pin: {data.get('panel_pin')}")
+            log_test(f"STEP 6 FAILED: {response.status_code}", "fail")
+            results["step6_rename"] = False
+    except Exception as e:
+        log_test(f"STEP 6 EXCEPTION: {str(e)}", "fail")
+        results["step6_rename"] = False
     
-    # Check for note field
-    if "note" in data or "message" in data:
-        print_pass("Response contains note/message (expected in dry_run)")
+    # Step 7: Copy file
+    log_test("STEP 7: POST files/copy (copy nw_test_renamed.txt to nw_test_dir)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/copy",
+            json={
+                "sourceDir": working_dir,
+                "fileName": "nw_test_renamed.txt",
+                "destDir": f"{working_dir}/nw_test_dir"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 7 PASSED: File copied successfully", "pass")
+                results["step7_copy"] = True
+            else:
+                log_test(f"STEP 7 FAILED: {data}", "fail")
+                results["step7_copy"] = False
+        else:
+            log_test(f"STEP 7 FAILED: {response.status_code}", "fail")
+            results["step7_copy"] = False
+    except Exception as e:
+        log_test(f"STEP 7 EXCEPTION: {str(e)}", "fail")
+        results["step7_copy"] = False
     
-    print_info(f"username: {data.get('username')}")
-    print_info(f"panel_url: {data.get('panel_url')}")
-    print_info(f"server_ip: {data.get('server_ip')}")
-    print_info(f"nameservers: {data.get('nameservers')}")
+    # Step 8: Move file
+    log_test("STEP 8: POST files/move (move nw_test_upload.txt to nw_test_dir)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/move",
+            json={
+                "sourceDir": working_dir,
+                "fileName": "nw_test_upload.txt",
+                "destDir": f"{working_dir}/nw_test_dir"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 8 PASSED: File moved successfully", "pass")
+                results["step8_move"] = True
+            else:
+                log_test(f"STEP 8 FAILED: {data}", "fail")
+                results["step8_move"] = False
+        else:
+            log_test(f"STEP 8 FAILED: {response.status_code}", "fail")
+            results["step8_move"] = False
+    except Exception as e:
+        log_test(f"STEP 8 EXCEPTION: {str(e)}", "fail")
+        results["step8_move"] = False
     
-    return True
-
-def test_16_hosting_create_dry_run():
-    """Test 16: POST /reseller/hosting - Create hosting (dry_run or 402)"""
-    print_test(16, "POST /reseller/hosting - Create hosting (dry_run or 402 insufficient_wallet_balance)")
+    # Step 9: Compress file
+    log_test("STEP 9: POST files/compress (create nw_test_archive.zip)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/compress",
+            json={
+                "dir": working_dir,
+                "files": ["nw_test_renamed.txt"],
+                "destFile": "nw_test_archive.zip"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 9 PASSED: Archive created successfully", "pass")
+                results["step9_compress"] = True
+            else:
+                log_test(f"STEP 9 FAILED: {data}", "fail")
+                results["step9_compress"] = False
+        else:
+            log_test(f"STEP 9 FAILED: {response.status_code}", "fail")
+            results["step9_compress"] = False
+    except Exception as e:
+        log_test(f"STEP 9 EXCEPTION: {str(e)}", "fail")
+        results["step9_compress"] = False
     
-    # Get initial wallet balance
-    _, account_data, _ = make_request("GET", "/account")
-    initial_balance = account_data.get("wallet_balance_usd", 0)
-    print_info(f"Initial wallet balance: ${initial_balance}")
+    # Step 10: Extract archive
+    log_test("STEP 10: POST files/extract (extract nw_test_archive.zip)...")
+    try:
+        response = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/extract",
+            json={
+                "dir": working_dir,
+                "file": "nw_test_archive.zip"
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == 1:
+                log_test("STEP 10 PASSED: Archive extracted successfully", "pass")
+                results["step10_extract"] = True
+            else:
+                log_test(f"STEP 10 FAILED: {data}", "fail")
+                results["step10_extract"] = False
+        else:
+            log_test(f"STEP 10 FAILED: {response.status_code}", "fail")
+            results["step10_extract"] = False
+    except Exception as e:
+        log_test(f"STEP 10 EXCEPTION: {str(e)}", "fail")
+        results["step10_extract"] = False
     
-    payload = {
-        "plan_id": "golden-monthly",
-        "domain": "probe-nameword.com",
-        "domain_mode": "byo",
-        "visitor_captcha": True
-    }
+    # Step 11: Chunked upload
+    log_test("STEP 11: POST files/upload-chunk (2 chunks)...")
+    try:
+        upload_id = "nwtestchunk1"
+        chunk1_content = base64.b64encode(b"chunk part 1 ").decode()
+        chunk2_content = base64.b64encode(b"chunk part 2").decode()
+        
+        # Chunk 0
+        response1 = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/upload-chunk",
+            json={
+                "uploadId": upload_id,
+                "chunkIndex": 0,
+                "totalChunks": 2,
+                "fileName": "nw_chunk.txt",
+                "dir": working_dir,
+                "content_base64": chunk1_content
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Chunk 0 response: {response1.status_code} - {response1.text[:500]}")
+        
+        # Chunk 1
+        response2 = requests.post(
+            f"{API_BASE}/reseller/hosting/{username}/files/upload-chunk",
+            json={
+                "uploadId": upload_id,
+                "chunkIndex": 1,
+                "totalChunks": 2,
+                "fileName": "nw_chunk.txt",
+                "dir": working_dir,
+                "content_base64": chunk2_content
+            },
+            headers=headers,
+            timeout=30
+        )
+        log_test(f"Chunk 1 response: {response2.status_code} - {response2.text[:500]}")
+        
+        if response1.status_code == 200 and response2.status_code == 200:
+            data1 = response1.json()
+            data2 = response2.json()
+            # Chunk 0 should return status:"chunk-received"
+            # Chunk 1 (final) should return status:"complete" with cpanelStatus:1
+            if data1.get("status") == "chunk-received" and (data2.get("status") == "complete" or data2.get("cpanelStatus") == 1):
+                log_test("STEP 11 PASSED: Chunked upload completed successfully", "pass")
+                results["step11_chunked"] = True
+            else:
+                log_test(f"STEP 11 FAILED: Unexpected response: {data1}, {data2}", "fail")
+                results["step11_chunked"] = False
+        else:
+            log_test(f"STEP 11 FAILED: HTTP errors", "fail")
+            results["step11_chunked"] = False
+    except Exception as e:
+        log_test(f"STEP 11 EXCEPTION: {str(e)}", "fail")
+        results["step11_chunked"] = False
     
-    status, data, error = make_request("POST", "/hosting", json=payload)
+    # Step 12: Cleanup
+    log_test("STEP 12: DELETE files (cleanup)...")
+    cleanup_items = [
+        {"file": "nw_test_renamed.txt", "isDirectory": False},
+        {"file": "nw_test_archive.zip", "isDirectory": False},
+        {"file": "nw_chunk.txt", "isDirectory": False},
+        {"file": "nw_test_dir", "isDirectory": True}
+    ]
     
-    if error:
-        print_fail(f"Request failed: {error}")
-        return False
+    cleanup_results = []
+    for item in cleanup_items:
+        try:
+            response = requests.delete(
+                f"{API_BASE}/reseller/hosting/{username}/files",
+                json={
+                    "dir": working_dir,
+                    "file": item["file"],
+                    "isDirectory": item.get("isDirectory", False)
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                log_test(f"Deleted {item['file']}: OK", "pass")
+                cleanup_results.append(True)
+            else:
+                log_test(f"Delete {item['file']}: {response.status_code} - {response.text[:200]}", "warn")
+                cleanup_results.append(False)
+        except Exception as e:
+            log_test(f"Delete {item['file']}: Exception - {str(e)}", "warn")
+            cleanup_results.append(False)
     
-    # ACCEPTABLE outcomes: EITHER 200 with dry_run preview OR 402 with insufficient_wallet_balance
-    if status == 200:
-        print_pass(f"Status code: 200 (dry_run priced preview)")
-        
-        # Check for dry_run preview fields
-        if "mode" not in data:
-            print_fail("Response missing 'mode' field")
-            return False
-        
-        if data.get("mode") != "dry_run":
-            print_fail(f"Expected mode='dry_run', got mode='{data.get('mode')}'")
-            return False
-        
-        print_pass(f"mode is 'dry_run' (no real provisioning)")
-        
-        if "would_provision" in data:
-            print_pass("would_provision field present (dry_run preview)")
-        
-        if "price_usd" in data:
-            print_pass(f"price_usd present: ${data.get('price_usd')}")
-        
-    elif status == 402:
-        print_pass(f"Status code: 402 (insufficient_wallet_balance - EXPECTED)")
-        
-        # Check for error field
-        if "error" not in data:
-            print_fail("Response missing 'error' field")
-            return False
-        
-        if data.get("error") != "insufficient_wallet_balance":
-            print_fail(f"Expected error='insufficient_wallet_balance', got error='{data.get('error')}'")
-            return False
-        
-        print_pass(f"error is 'insufficient_wallet_balance' (expected)")
-        
-        # Check for required fields in 402 response
-        required_fields = ["price_usd", "shortfall_usd", "wallet_balance_usd", "mode"]
-        for field in required_fields:
-            if field not in data:
-                print_fail(f"Response missing '{field}' field")
-                return False
-        
-        print_pass(f"Response has all required fields for 402: {required_fields}")
-        
-        if data.get("mode") == "dry_run":
-            print_pass("mode is 'dry_run' (no charge/provisioning)")
-        
-        print_info(f"price_usd: ${data.get('price_usd')}")
-        print_info(f"shortfall_usd: ${data.get('shortfall_usd')}")
-        print_info(f"wallet_balance_usd: ${data.get('wallet_balance_usd')}")
-        
+    results["step12_cleanup"] = all(cleanup_results)
+    if results["step12_cleanup"]:
+        log_test("STEP 12 PASSED: All cleanup operations succeeded", "pass")
     else:
-        print_fail(f"Expected status 200 or 402, got {status}")
-        return False
+        log_test("STEP 12 PARTIAL: Some cleanup operations failed (best-effort)", "warn")
     
-    # Verify wallet balance unchanged (no charge)
-    _, account_data_after, _ = make_request("GET", "/account")
-    final_balance = account_data_after.get("wallet_balance_usd", 0)
+    # Summary
+    print("\n" + "="*80)
+    print("PROBLEM 2 SUMMARY")
+    print("="*80)
+    passed = sum(1 for v in results.values() if v)
+    total = len(results)
+    log_test(f"File Manager Operations: {passed}/{total} passed")
     
-    if initial_balance == final_balance:
-        print_pass(f"Wallet balance unchanged: ${final_balance} (no charge in dry_run)")
-    else:
-        print_fail(f"Wallet balance changed from ${initial_balance} to ${final_balance} (should not charge in dry_run)")
-        return False
+    for step, result in results.items():
+        status = "pass" if result else "fail"
+        log_test(f"{step}: {'PASSED' if result else 'FAILED'}", status)
     
-    # Verify nothing was provisioned (check hosting list)
-    _, hosting_data, _ = make_request("GET", "/hosting")
-    accounts_after = hosting_data.get("accounts", [])
-    
-    # Check if probe-nameword.com was NOT added
-    probe_account = next((a for a in accounts_after if "probe-nameword.com" in str(a.get("domain", ""))), None)
-    if probe_account is None:
-        print_pass("No new account provisioned (expected in dry_run)")
-    else:
-        print_fail("New account was provisioned (should not happen in dry_run)")
-        return False
-    
-    return True
+    return passed == total
 
 def main():
     """Run all tests"""
-    print(f"\n{Colors.BLUE}{'='*80}{Colors.END}")
-    print(f"{Colors.BLUE}NOMADLY RESELLER API PROXY - BACKEND TEST SUITE{Colors.END}")
-    print(f"{Colors.BLUE}Base URL: {BASE_URL}{Colors.END}")
-    print(f"{Colors.BLUE}Timeout: {TIMEOUT}s (generous for external API){Colors.END}")
-    print(f"{Colors.BLUE}{'='*80}{Colors.END}")
+    print("\n" + "="*80)
+    print("NAMEWORD BACKEND TEST SUITE")
+    print("Testing two backend fixes:")
+    print("1. Duplicate hosting accounts fix (ownership.js)")
+    print("2. cPanel File Manager operations (body-limit + proxy routes)")
+    print("="*80)
     
-    tests = [
-        test_1_health,
-        test_2_account,
-        test_3_vps_plans_eu,
-        test_4_vps_plans_sg,
-        test_5_vps_plans_unknown,
-        test_6_vps_create_dry_run,
-        test_7_vps_list,
-        test_8_rdp_plans_eu,
-        test_9_rdp_create_dry_run,
-        test_10_domain_search,
-        test_11_error_passthrough,
-        test_12_hosting_plans,
-        test_13_hosting_list,
-        test_14_hosting_login,
-        test_15_hosting_credentials,
-        test_16_hosting_create_dry_run,
-    ]
+    results = {}
     
-    results = []
-    for test_func in tests:
-        try:
-            result = test_func()
-            results.append((test_func.__name__, result))
-        except Exception as e:
-            print_fail(f"Test crashed: {str(e)}")
-            results.append((test_func.__name__, False))
+    # Test Problem 1
+    results["problem1_duplicate_fix"] = test_problem_1_duplicate_hosting_fix()
+    results["problem1_regression"] = test_problem_1_regression()
     
-    # Summary
-    print(f"\n{Colors.BLUE}{'='*80}{Colors.END}")
-    print(f"{Colors.BLUE}TEST SUMMARY{Colors.END}")
-    print(f"{Colors.BLUE}{'='*80}{Colors.END}")
+    # Test Problem 2
+    results["problem2_file_manager"] = test_problem_2_file_manager()
     
-    passed = sum(1 for _, result in results if result)
+    # Final Summary
+    print("\n" + "="*80)
+    print("FINAL TEST SUMMARY")
+    print("="*80)
+    
+    for test_name, result in results.items():
+        status = "pass" if result else "fail"
+        log_test(f"{test_name}: {'PASSED' if result else 'FAILED'}", status)
+    
+    passed = sum(1 for v in results.values() if v)
     total = len(results)
     
-    for test_name, result in results:
-        status_icon = "✓" if result else "✗"
-        status_color = Colors.GREEN if result else Colors.RED
-        print(f"{status_color}{status_icon} {test_name}{Colors.END}")
-    
-    print(f"\n{Colors.BLUE}Total: {passed}/{total} tests passed{Colors.END}")
-    
+    print("\n" + "="*80)
     if passed == total:
-        print(f"{Colors.GREEN}ALL TESTS PASSED!{Colors.END}\n")
+        log_test(f"ALL TESTS PASSED ({passed}/{total})", "pass")
+        print("="*80)
         return 0
     else:
-        print(f"{Colors.RED}SOME TESTS FAILED!{Colors.END}\n")
+        log_test(f"SOME TESTS FAILED ({passed}/{total} passed)", "fail")
+        print("="*80)
         return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit(main())

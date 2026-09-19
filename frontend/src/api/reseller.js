@@ -133,6 +133,16 @@ export const resellerAPI = {
     renameFile: async (u, dir, oldName, newName) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/rename`, { dir, oldName, newName })).data,
     deleteFile: async (u, dir, file, isDirectory = false) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/files`, { data: { dir, file, isDirectory } })).data,
     uploadFile: async (u, dir, fileName, content_base64) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/upload`, { dir, fileName, content_base64 })).data,
+    // Extract an archive (.zip/.tar/.gz) into destDir (defaults to the current dir upstream).
+    extractFile: async (u, dir, file, destDir) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/extract`, destDir ? { dir, file, destDir } : { dir, file })).data,
+    // Zip a selection of files/folders in `dir` into destFile.
+    compressFiles: async (u, dir, files, destFile) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/compress`, { dir, files, destFile })).data,
+    copyFile: async (u, sourceDir, fileName, destDir) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/copy`, { sourceDir, fileName, destDir })).data,
+    moveFile: async (u, sourceDir, fileName, destDir) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/move`, { sourceDir, fileName, destDir })).data,
+    // Large-file upload: send base64 chunks sharing one uploadId; the provider
+    // assembles once the final chunk arrives.
+    uploadChunk: async (u, payload) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/upload-chunk`, payload)).data,
+    cancelUploadChunk: async (u, uploadId) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/upload-chunk/cancel`, { uploadId })).data,
 
     // Security / Anti-Red / Cloudflare
     securityStatus: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/security/status`)).data,

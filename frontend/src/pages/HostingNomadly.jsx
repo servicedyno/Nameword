@@ -660,17 +660,21 @@ export default function HostingNomadly() {
 
       {/* Manage modal (4d): details/usage, upgrade, addon domains, Visitor Captcha */}
       {manage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeManage}>
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="hosting-manage-modal">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
-              <h3 className="text-lg font-semibold text-primary dark:text-white">Manage {manage.domain || manage.user}</h3>
-              <button onClick={closeManage} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
+        <div className="fixed inset-0 z-[60] flex bg-black/60" onClick={closeManage}>
+          <div className="w-full h-full sm:h-[94vh] sm:max-w-6xl sm:m-auto sm:rounded-2xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="hosting-manage-modal">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800 shrink-0">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-primary dark:text-white truncate">Manage {manage.domain || manage.user}</h3>
+                <p className="text-xs text-secondary dark:text-gray-400 truncate">cPanel account: {manage.user}</p>
+              </div>
+              <button onClick={closeManage} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close" data-testid="hosting-manage-close"><FiX size={22} /></button>
             </div>
             {/* Overview / Advanced switch */}
-            <div className="flex items-center gap-2 px-6 pt-4">
+            <div className="flex items-center gap-2 px-6 pt-4 shrink-0">
               <button onClick={() => setManageTab("overview")} data-testid="manage-tab-overview" className={`rounded-lg px-3 py-1.5 text-sm font-medium ${manageTab === "overview" ? "bg-brand-600 text-white dark:bg-brand-500" : "text-secondary dark:text-gray-400 hover:bg-lightgray dark:hover:bg-gray-800"}`}>Overview</button>
               <button onClick={() => setManageTab("advanced")} data-testid="manage-tab-advanced" className={`rounded-lg px-3 py-1.5 text-sm font-medium ${manageTab === "advanced" ? "bg-brand-600 text-white dark:bg-brand-500" : "text-secondary dark:text-gray-400 hover:bg-lightgray dark:hover:bg-gray-800"}`}>Advanced cPanel</button>
             </div>
+            <div className="flex-1 overflow-y-auto">
             {manageTab === "advanced" ? (
               <div className="px-6 py-5">
                 <CpanelTabs
@@ -795,6 +799,7 @@ export default function HostingNomadly() {
               )}
             </div>
             )}
+            </div>
           </div>
         </div>
       )}
