@@ -23,12 +23,12 @@ DATA CONTRACT NOTES (kept): records mapped defensively from provider shape
   {recordType,recordName,recordContent,cfRecordId} → {type,name,value,id} while PRESERVING the original
   fields (spread) so update (PUT wraps {record}) and delete (DELETE data:{record}) echo the full record back.
   addDns payload {type,name,value,ttl,priority?}. SRV value composed/parsed. TTL "Auto"→1.
-STATUS: NOT yet frontend-UI-tested (protocol: ask user before auto_frontend_testing_agent). Self-screenshot
-  login via the raw screenshot tool was flaky (Formik floating-label inputs + tool's async quirk) — NOT an
-  app bug; backend login returns 200 and prior sessions confirmed /sign-in works (autofill fix already in).
-  Recommend: run auto_frontend_testing_agent logged in as moxxcompany@gmail.com / Onlygod123@ →
-  /dns-manager?domain=namewords.sbs (DNS is Cloudflare-backed, unaffected by the cPanel outage) to verify
-  picker, add/edit-in-place/delete-confirm, search/filter/sort, TTL presets, nameservers, mobile cards.
+STATUS: ✅ FRONTEND-UI-TESTED & VERIFIED (auto_frontend_testing_agent, 8/8 features PASS, 2025-07). Logged in
+  as moxxcompany@gmail.com and exercised namewords.sbs: domain picker + manual toggle, current NS chips +
+  copy, search/type-filter/sortable columns + live count, type-aware add with validation (A blocks non-IP;
+  MX priority; SRV weight/port/target; TTL presets + custom), add TXT → edit-in-place → delete-confirm all
+  worked LIVE against Cloudflare, colored badges, friendly TTL labels, value copy, and mobile cards at 390px
+  (no horizontal scroll). No JS errors / white screens. Production-ready.
 ⚠️ Frontend is a Vite PROD build → after ANY frontend edit run `sudo supervisorctl restart frontend` (~15s).
 
 
