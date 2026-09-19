@@ -13,7 +13,7 @@ import time
 from typing import Dict, Any, Optional
 
 # Base URL from frontend .env
-BASE_URL = "https://1f970365-86f5-4171-b2ea-24cd40e8d04f.preview.emergentagent.com"
+BASE_URL = "https://nameword-staging-2.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 
 # Test credentials from test_credentials.md
