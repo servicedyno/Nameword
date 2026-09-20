@@ -219,11 +219,11 @@ frontend:
 
   - task: "DNS Manager page - redesigned end-to-end (domain picker, nameservers, toolbar, add/edit/delete records, mobile view)"
     implemented: true
-    working: true
-    file: "/app/frontend/src/pages/DnsManagerNomadly.jsx, /app/frontend/src/api/reseller.js"
+    working: false
+    file: "/app/frontend/src/pages/DnsManagerNomadly.jsx, /app/frontend/src/api/reseller.js, /app/backend/app/controllers/reseller/resellerController.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -231,6 +231,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ DNS MANAGER END-TO-END TEST - ALL 8 FEATURES PASSED (8/8, 100% SUCCESS RATE). Tested comprehensive DNS Manager redesign with account moxxcompany@gmail.com / Onlygod123@ for domain namewords.sbs (Cloudflare-backed DNS). RESULTS: ✅ FEATURE 1 (DOMAIN PICKER): Domain select dropdown found with namewords.sbs selected. Toggle to manual input works (dns-domain-manual-input appears). Toggle back to dropdown works. ✅ FEATURE 2 (CURRENT NAMESERVERS): Nameservers displayed correctly (leanna.ns.cloudflare.com, anderson.ns.cloudflare.com) with copy buttons (dns-copy-ns-0 works). 'Replace nameservers' expandable opens with textarea (dns-ns-input) and Save button (dns-ns-save) - NOT submitted per safety requirement. ✅ FEATURE 3 (TOOLBAR): Record count shows '3 shown' (dns-record-count). Search input (dns-search) filters records correctly. Type filter (dns-type-filter) narrows by record type (tested TXT). Sort columns (dns-sort-type/name/value/ttl) all work with chevron indicators. ✅ FEATURE 4 (ADD RECORD - TYPE-AWARE + VALIDATION): Add panel (dns-add-panel) opens at top of table. Validation works: invalid A record value ('not-an-ip') disables Add button. MX type shows Priority field (dns-add-priority). SRV type shows weight/port/target fields (dns-add-srv-weight/port/target). TTL dropdown has presets (Auto, 1 min, 5 min, etc.) and Custom option reveals seconds input (dns-add-ttl-custom). Minor issue: value input became detached from DOM when switching between types during test, but all validation and type-aware features confirmed working. ✅ FEATURE 5 (EDIT IN PLACE): Found 3 edit buttons (dns-edit-<id>). Clicking edit opens inline editor (NOT a modal) with Save (dns-edit-save) and Cancel (dns-edit-cancel) buttons. Cancel closes editor without saving. ✅ FEATURE 6 (DELETE WITH CONFIRMATION): Found 3 delete buttons (dns-delete-<id>). Clicking delete opens confirmation dialog (dns-delete-dialog) with Cancel (dns-delete-cancel) and Delete (dns-delete-confirm) buttons. Delete is NOT instant - requires confirmation. Cancel works correctly. ✅ FEATURE 7 (VISUALS): Found 6 colored type badges (NS=fuchsia, TXT=amber). Full domain names displayed (namewords.sbs, _nw-verify.namewords.sbs). TTL shows friendly labels ('Auto', '5 min') not raw seconds. Found 8 copy buttons on values (dns-copy-<id>). ✅ FEATURE 8 (MOBILE VIEW): Viewport set to 390x844. Found 3 DNS record cards (dns-card-<id>) in mobile view. Table is hidden (not visible). No horizontal scroll detected (scrollWidth 390 = clientWidth 390). CRITICAL VERIFICATION: (1) All data-testid attributes present and working as documented. (2) Domain picker toggle works bidirectionally. (3) Nameservers display with copy functionality. (4) Toolbar search/filter/sort all functional. (5) Add record panel shows type-aware fields (MX priority, SRV weight/port/target, TTL custom). (6) Validation blocks invalid inputs (disabled button). (7) Edit opens inline (not modal). (8) Delete requires confirmation (not instant). (9) Visuals use colored badges and friendly labels. (10) Mobile view uses cards, no horizontal scroll. (11) DNS operations are LIVE (Cloudflare via Nomadly). CONSOLE LOGS: Only non-critical warnings (preload resource, clipboard permission in automation, aborted requests during navigation). NO JavaScript errors, NO white screens, NO network failures. Screenshots captured: dns_initial_load.png (desktop), dns_after_add.png (add panel open), dns_desktop_full.png (full desktop view), dns_mobile_full.png (mobile cards view). NO ISSUES FOUND. DNS Manager redesign is FULLY WORKING and production-ready. All 8 features tested successfully with LIVE DNS operations against namewords.sbs domain."
+      - working: false
+        agent: "testing"
+        comment: "❌ NAMESERVER CONTROL FEATURE TEST - CRITICAL API FAILURE (STEP 2 FAILED). Tested NEW nameserver control feature (Default/Custom switch) on LIVE domain namewords.sbs per user-approved round-trip test. RESULTS: ✅ STEP 1 (INITIAL STATE - 4/4 PASS): Badge shows 'Cloudflare · default' with green/emerald color (data-testid dns-ns-mode-badge). Both segmented switch buttons present (dns-ns-mode-default, dns-ns-mode-custom). Default panel (dns-ns-default-panel) shows 'already uses the default Cloudflare nameservers' message. Current NS chips (dns-current-ns) show 2 Cloudflare nameservers (leanna.ns.cloudflare.com, anderson.ns.cloudflare.com). ❌ STEP 2 (SWITCH TO CUSTOM - FAILED): Clicked Custom button (dns-ns-mode-custom) - textarea (dns-ns-input) and Save button (dns-ns-save) appeared correctly. Entered 'ns1.dnsimple.com, ns2.dnsimple.com' in textarea. Clicked Save button - button changed to 'Saving...' (savingNs state set to true, confirming onClick handler triggered). CRITICAL FAILURE: NO success toast appeared within 15 seconds. Badge still shows 'Cloudflare · default' instead of 'Custom' (amber). NS chips still show cloudflare.com nameservers instead of dnsimple.com. The API call PUT /api/v1/reseller/dns/namewords.sbs/nameservers with body {nameservers: ['ns1.dnsimple.com', 'ns2.dnsimple.com']} either: (1) is hanging/timing out (>15s but <30s timeout), (2) failing silently without error toast, or (3) not being made at all. ⊘ STEP 3-5 (BLOCKED): Cannot test reset to default, final verification, or mobile view because domain is still on Cloudflare default (Step 2 failed). CRITICAL SAFETY: Domain namewords.sbs remains on Cloudflare default nameservers (no changes were applied). ROOT CAUSE ANALYSIS: Frontend UI is implemented correctly - all testids present, button states working, form submission triggered. The issue is in the backend API endpoint PUT /api/v1/reseller/dns/:domain/nameservers (backend route: /app/backend/routes/api/reseller.js line 46, controller: /app/backend/app/controllers/reseller/resellerController.js setNameservers function line 340). The backend forwards the request to Nomadly PUT /dns/:domain/nameservers. Backend logs show no recent nameserver-related errors. RECOMMENDATION: Main agent must investigate why the setNameservers API call is not completing: (1) Check if Nomadly API is responding, (2) Add timeout handling and error logging to backend controller, (3) Test the API endpoint directly with curl/Postman, (4) Check if there are any rate limits or authentication issues with Nomadly. Screenshots captured: step1_initial_state.png (Cloudflare default confirmed), step2_before_save.png (custom NS entered), step2_after_custom_save.png (button shows 'Saving...' but no change), error_state.png (test timeout). IMPACT: The NEW nameserver control feature (Default/Custom switch) is NOT WORKING due to backend API failure. Users cannot switch domains between Cloudflare default and custom nameservers."
 
   - task: "Login form: password visibility toggle (eye icon) + clearer 'Incorrect email or password' error"
     implemented: true
@@ -1509,4 +1512,41 @@ agent_communication:
     message: "Backend change to test: setNameservers now supports mode:'default' (reset to the domain's Cloudflare nameservers) in addition to the existing custom {nameservers:[...]} path. Please run ONLY the SAFE checks in the task above (A: mode:'default' on namewords.sbs as moxxcompany -> 200 with the two cloudflare NS; B: ownership 403 as buyer@nameword.local / Test@12345; C: empty-body 4xx). namewords.sbs is a REAL live domain — DO NOT set custom/bogus nameservers on it. Credentials in /app/memory/test_credentials.md."
   - agent: "testing"
     message: "✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (4/4, 100% SUCCESS). Tested PUT /api/v1/reseller/dns/:domain/nameservers endpoint with the new mode:'default' reset functionality. RESULTS: (A) Reset-to-default happy path: moxxcompany@gmail.com PUT {mode:'default'} on namewords.sbs -> 200 with nameservers=['anderson.ns.cloudflare.com', 'leanna.ns.cloudflare.com'], updated=true, ns_choice='cloudflare', reset_to_default=true ✓. (B) Ownership enforcement: buyer@nameword.local PUT {mode:'default'} on namewords.sbs -> 403 forbidden ✓. (C) Invalid/empty body: moxxcompany PUT {} on namewords.sbs -> 400 invalid_nameservers ✓. (D) Read-only sanity: GET /dns/namewords.sbs/records -> 200 with source='cloudflare' ✓. SAFETY CONFIRMED: Only tested mode:'default' (idempotent) on namewords.sbs. NO custom/bogus nameservers were set on this REAL live domain. The DNS nameserver reset-to-default functionality is FULLY WORKING and production-ready. Main agent can summarize and finish."
+
+
+
+## ================= SESSION 2026-09 (continuation): Nameserver toggle — FRONTEND UI =================
+frontend:
+  - task: "DNS Manager: Default(Cloudflare) vs Custom nameserver control (UI)"
+    implemented: true
+    working: "NA"
+    file: "src/pages/DnsManagerNomadly.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "New nameserver control on the DNS Manager 'Current nameservers' card. A Default(Cloudflare)|Custom segmented switch (dns-ns-mode-default / dns-ns-mode-custom), a state badge (dns-ns-mode-badge: 'Cloudflare · default' green or 'Custom' amber), a default panel (dns-ns-default-panel) with a 'Use Cloudflare default nameservers' button (dns-ns-reset) -> confirm box (dns-ns-reset-confirm / dns-ns-reset-cancel), and the custom editor (dns-ns-input + dns-ns-save). USER APPROVED a full safe round-trip on the REAL domain namewords.sbs that ENDS back on Cloudflare default. Self-verified render + toggle already."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.3"
+  test_sequence: 3
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "DNS Manager: Default(Cloudflare) vs Custom nameserver control (UI)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+
+agent_communication:
+  - agent: "testing"
+    message: "CRITICAL ISSUE FOUND: NEW nameserver control feature (Default/Custom switch) is NOT WORKING. The frontend UI is implemented correctly with all required testids and functionality, but the backend API endpoint PUT /api/v1/reseller/dns/:domain/nameservers is failing. When attempting to save custom nameservers (ns1.dnsimple.com, ns2.dnsimple.com) for domain namewords.sbs, the API call hangs for >15 seconds without returning success or error. The Save button changes to 'Saving...' (confirming the frontend onClick handler is triggered), but no toast appears and the nameservers are not updated. Backend route exists at /app/backend/routes/api/reseller.js line 46, controller at /app/backend/app/controllers/reseller/resellerController.js line 340 (setNameservers function). The backend forwards the request to Nomadly PUT /dns/:domain/nameservers. SAFETY: Domain namewords.sbs remains on Cloudflare default nameservers (no changes were applied). RECOMMENDATION: Investigate why the Nomadly API call is hanging or failing. Check: (1) Nomadly API response time and errors, (2) Backend timeout handling, (3) Authentication/rate limits with Nomadly, (4) Add error logging to the setNameservers controller. This is a HIGH PRIORITY issue as the entire nameserver control feature is blocked."
+    message: "Run the frontend UI test for the new nameserver Default/Custom control on /dns-manager. User approved a full custom -> reset-to-default round-trip on namewords.sbs (must END back on Cloudflare default). Steps + testids in the task above. Login moxxcompany@gmail.com / Onlygod123@."
 
