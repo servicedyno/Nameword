@@ -12,7 +12,7 @@ import json
 import sys
 
 # Backend URL - using the preview URL from frontend/.env
-BASE_URL = "https://c76a8288-4cb2-49f6-8e76-be96135eeb5a.preview.emergentagent.com"
+BASE_URL = "https://nameword-test-1.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api/v1"
 
 # Test credentials from /app/memory/test_credentials.md
