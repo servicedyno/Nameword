@@ -360,6 +360,7 @@ const FilesTab = ({ user }) => {
   const [upload, setUpload] = useState(null); // { name, pct, index, total }
   const [action, setAction] = useState(null); // { kind:'rename'|'copy'|'move'|'zip', name, value }
   const fileInputRef = React.useRef(null);
+  const zipInputRef = React.useRef(null);
 
   const list = Array.isArray(data?.data) ? data.data : [];
   const normDir = dir.replace(/\/+$/, "") || "/";
@@ -465,6 +466,45 @@ const FilesTab = ({ user }) => {
     if (e.dataTransfer?.files?.length) doUpload(e.dataTransfer.files);
   };
 
+  // ---- One-tap upload & unzip ----
+  // Upload an archive and extract it in a single call (/files/unzip). For archives
+  // too big for one request body, fall back to chunked upload + extract + cleanup.
+  const doUploadUnzip = async (files) => {
+    const arr = Array.from(files || []);
+    if (!arr.length) return;
+    const f = arr[0];
+    if (!isArchive(f.name)) {
+      showAlert("Choose a .zip / .tar / .tar.gz archive to unzip.", { type: "fail" });
+      return;
+    }
+    const ONE_SHOT_MAX = 18 * 1024 * 1024; // ~18 MB raw -> ~24 MB base64 (under body limit)
+    try {
+      if (f.size <= ONE_SHOT_MAX) {
+        setUpload({ name: f.name, pct: 20, index: 1, total: 1 });
+        const b64 = await blobToB64(f);
+        setUpload({ name: f.name, pct: 70, index: 1, total: 1 });
+        const res = await M.unzip(user, dir, f.name, b64, { removeArchive: true });
+        setUpload({ name: f.name, pct: 100, index: 1, total: 1 });
+        if (isTest(res)) {
+          showAlert(res.note || "Test mode — unzip applies once your account is live.", { type: "success" });
+        } else {
+          const added = Array.isArray(res?.added) ? res.added.length : null;
+          showAlert(added != null ? `Unzipped — ${added} item${added === 1 ? "" : "s"} added.` : "Archive unzipped.", { type: "success" });
+        }
+      } else {
+        await uploadOne(f);
+        await M.extractFile(user, dir, f.name);
+        await M.deleteFile(user, dir, f.name, false);
+        showAlert("Archive uploaded and unzipped.", { type: "success" });
+      }
+    } catch (e) {
+      showAlert(`${f.name}: ${e?.response?.data?.message || "unzip failed"}`, { type: "fail" });
+    } finally {
+      setUpload(null);
+      reload();
+    }
+  };
+
   // ---- Row actions ----
   const submitAction = async () => {
     if (!action) return;
@@ -568,6 +608,14 @@ const FilesTab = ({ user }) => {
           data-testid="files-upload-input"
           onChange={(e) => { doUpload(e.target.files); e.target.value = ""; }}
         />
+        <input
+          ref={zipInputRef}
+          type="file"
+          accept=".zip,.tar,.gz,.tgz,.bz2,.7z,.rar"
+          className="hidden"
+          data-testid="files-unzip-input"
+          onChange={(e) => { doUploadUnzip(e.target.files); e.target.value = ""; }}
+        />
         {upload ? (
           <div className="space-y-1.5" data-testid="files-upload-progress">
             <p className="text-xs text-secondary dark:text-gray-300 truncate">Uploading <span className="font-medium">{upload.name}</span>{upload.total > 1 ? ` (chunk ${upload.index}/${upload.total})` : ""} — {upload.pct}%</p>
@@ -579,6 +627,7 @@ const FilesTab = ({ user }) => {
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             <p className="text-xs text-secondary dark:text-gray-400 inline-flex items-center gap-1.5"><FiUpload size={14} /> Drag &amp; drop files here, or</p>
             <button onClick={() => fileInputRef.current?.click()} disabled={busy} className="nw-btn-primary nw-btn-sm inline-flex items-center gap-1 disabled:opacity-50" data-testid="files-upload-btn"><FiUpload size={13} /> Choose files</button>
+            <button onClick={() => zipInputRef.current?.click()} disabled={busy} className="nw-btn-secondary nw-btn-sm inline-flex items-center gap-1 disabled:opacity-50" data-testid="files-upload-unzip-btn"><FiArchive size={13} /> Upload &amp; unzip</button>
           </div>
         )}
       </div>

@@ -729,6 +729,9 @@ const HOSTING_MGMT_ROUTES = [
   ["post", "/files/move", "File Manager"],
   ["delete", "/files", "File Manager"],
   ["post", "/files/upload", "File Manager"],
+  // One-tap unzip: upload a base64 archive + extract + return listing in a single
+  // call (destDir defaults to dir; removeArchive deletes the archive afterwards).
+  ["post", "/files/unzip", "File Manager"],
   ["post", "/files/upload-chunk", "File Manager"],
   ["post", "/files/upload-chunk/cancel", "File Manager"],
   // ---- Security / Anti-Red / Cloudflare ----

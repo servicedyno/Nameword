@@ -135,6 +135,13 @@ export const resellerAPI = {
     renameFile: async (u, dir, oldName, newName) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/rename`, { dir, oldName, newName })).data,
     deleteFile: async (u, dir, file, isDirectory = false) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/files`, { data: { dir, file, isDirectory } })).data,
     uploadFile: async (u, dir, fileName, content_base64) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/upload`, { dir, fileName, content_base64 })).data,
+    // One-tap unzip: upload a base64 archive, extract it, and return the listing
+    // in a single call. destDir defaults to dir; removeArchive deletes the archive
+    // after a successful extract. Supports zip / tar / tar.gz.
+    unzip: async (u, dir, fileName, content_base64, { destDir, removeArchive = true } = {}) =>
+      (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/unzip`, {
+        dir, fileName, content_base64, ...(destDir ? { destDir } : {}), removeArchive,
+      })).data,
     // Extract an archive (.zip/.tar/.gz) into destDir (defaults to the current dir upstream).
     extractFile: async (u, dir, file, destDir) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/files/extract`, destDir ? { dir, file, destDir } : { dir, file })).data,
     // Zip a selection of files/folders in `dir` into destFile.
