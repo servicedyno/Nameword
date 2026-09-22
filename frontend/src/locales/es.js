@@ -1590,7 +1590,7 @@ export const es = {
       emptyDescription: "Registra tu primer dominio privado — la privacidad WHOIS está incluida en todos los nombres elegibles.",
       emptyPrimaryLabel: "Buscar un dominio",
       nsLabels: {
-        cloudflare: "DNS de Cloudflare",
+        cloudflare: "DNS gestionado",
         registrar: "Predeterminado del registrador",
         custom: "Servidores de nombres personalizados"
       },

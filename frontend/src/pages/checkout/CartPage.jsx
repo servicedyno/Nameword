@@ -41,7 +41,7 @@ function DomainLine({ item, hosting, problem, onRemove, onNsChange, onNsListChan
                     className="nw-input mt-1 !py-2 !px-3 text-sm max-w-xs"
                     data-testid={`cart-ns-select-${item.domain}`}
                   >
-                    <option value="cloudflare">Cloudflare DNS (recommended, free)</option>
+                    <option value="cloudflare">Managed DNS (recommended, free)</option>
                     <option value="registrar">Registrar default</option>
                     <option value="custom">Custom nameservers</option>
                   </select>

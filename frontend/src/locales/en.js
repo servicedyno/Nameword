@@ -1598,7 +1598,7 @@ export const en = {
       emptyDescription: "Register your first private domain — WHOIS privacy is included on every eligible name.",
       emptyPrimaryLabel: "Search a domain",
       nsLabels: {
-        cloudflare: "Cloudflare DNS",
+        cloudflare: "Managed DNS",
         registrar: "Registrar default",
         custom: "Custom nameservers"
       },

@@ -282,7 +282,6 @@ export default function DnsManagerNomadly() {
   const [activeDomain, setActiveDomain] = useState(params.get("domain") || "");
 
   const [records, setRecords] = useState([]);
-  const [source, setSource] = useState(null);
   const [nameservers, setNameservers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -335,7 +334,6 @@ export default function DnsManagerNomadly() {
           }))
         : [];
       setRecords(mapped);
-      setSource(data?.source || null);
       setActiveDomain(dom);
       // current nameservers: from the owned-domain entry, else NS records
       const owned = ownedDomains.find((x) => String(x.domain).toLowerCase() === dom);
@@ -553,18 +551,18 @@ export default function DnsManagerNomadly() {
               <div>
                 <h2 className="text-2xl font-semibold text-primary dark:text-white inline-flex items-center gap-2"><FiGlobe className="text-brand" /> {activeDomain}</h2>
                 <p className="text-xs text-ink-soft dark:text-gray-500 mt-0.5">
-                  {records.length} record{records.length !== 1 ? "s" : ""}{source ? ` · served from ${source}` : ""}
+                  {records.length} record{records.length !== 1 ? "s" : ""}
                 </p>
               </div>
               <button onClick={() => loadRecords(activeDomain)} className="flex items-center gap-2 text-sm text-darkbtn hover:text-darkbtn-hover font-medium"><FiRefreshCw size={15} /> Refresh</button>
             </div>
 
-            {/* Current nameservers */}
+            {/* Nameservers — mode control only; underlying provider hostnames are never shown */}
             <div className="nw-card !p-5 mb-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-primary dark:text-white flex items-center gap-1.5 mb-2">
-                    <FiServer size={15} /> Current nameservers
+                    <FiServer size={15} /> Nameservers
                     {nameservers.length > 0 && (
                       <span
                         data-testid="dns-ns-mode-badge"
@@ -574,19 +572,13 @@ export default function DnsManagerNomadly() {
                             : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
                         }`}
                       >
-                        {onCloudflareDefault ? "Cloudflare · default" : "Custom"}
+                        {onCloudflareDefault ? "Default" : "Custom"}
                       </span>
                     )}
                   </h3>
-                  {nameservers.length ? (
-                    <div className="flex flex-wrap gap-2" data-testid="dns-current-ns">
-                      {nameservers.map((n, i) => (
-                        <span key={i} className="inline-flex items-center gap-1.5 rounded-lg bg-lightgray-200 dark:bg-gray-800 px-2.5 py-1 text-xs font-mono text-primary dark:text-gray-200">{n}<CopyButton text={n} testId={`dns-copy-ns-${i}`} /></span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-secondary dark:text-gray-400">Not available for this domain.</p>
-                  )}
+                  <p className="text-xs text-secondary dark:text-gray-400 max-w-md">
+                    Keep the default managed nameservers so the records here take effect automatically, or point this domain at your own nameservers.
+                  </p>
                 </div>
 
                 {/* Default / Custom switch */}
@@ -597,7 +589,7 @@ export default function DnsManagerNomadly() {
                     data-testid="dns-ns-mode-default"
                     className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!nsCustomOpen ? "bg-white dark:bg-gray-900 text-primary dark:text-white shadow-sm" : "text-ink-soft dark:text-gray-400 hover:text-primary dark:hover:text-gray-200"}`}
                   >
-                    Default (Cloudflare)
+                    Default
                   </button>
                   <button
                     type="button"
@@ -610,23 +602,23 @@ export default function DnsManagerNomadly() {
                 </div>
               </div>
 
-              {/* Default (Cloudflare) panel */}
+              {/* Default panel */}
               {!nsCustomOpen && (
                 <div className="mt-4" data-testid="dns-ns-default-panel">
                   {onCloudflareDefault ? (
                     <p className="text-xs text-secondary dark:text-gray-400 inline-flex items-center gap-1.5">
-                      <FiCheck size={13} className="text-emerald-500" /> This domain already uses the default Cloudflare nameservers, so records here take effect automatically.
+                      <FiCheck size={13} className="text-emerald-500" /> This domain uses our default managed nameservers, so records here take effect automatically.
                     </p>
                   ) : !confirmResetNs ? (
                     <div className="flex flex-col gap-1.5">
                       <button type="button" onClick={() => setConfirmResetNs(true)} disabled={savingNs} className="nw-btn-primary nw-btn-sm self-start disabled:opacity-60 inline-flex items-center gap-1.5" data-testid="dns-ns-reset">
-                        <FiRefreshCw size={14} /> Use Cloudflare default nameservers
+                        <FiRefreshCw size={14} /> Use default nameservers
                       </button>
-                      <p className="text-[11px] text-ink-soft dark:text-gray-500">Points this domain back to the Cloudflare nameservers we manage, so the records here take effect. DNS changes are free.</p>
+                      <p className="text-[11px] text-ink-soft dark:text-gray-500">Points this domain back to our default managed nameservers, so the records here take effect. DNS changes are free.</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2 rounded-lg border border-line dark:border-gray-700 p-3" data-testid="dns-ns-reset-confirm-box">
-                      <p className="text-xs text-primary dark:text-white">Switch <span className="font-semibold break-all">{activeDomain}</span> back to the default Cloudflare nameservers?</p>
+                      <p className="text-xs text-primary dark:text-white">Switch <span className="font-semibold break-all">{activeDomain}</span> back to our default managed nameservers?</p>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={resetToDefault} disabled={savingNs} className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-60 inline-flex items-center gap-1.5" data-testid="dns-ns-reset-confirm">
                           <FiSave size={14} /> {savingNs ? "Applying…" : "Yes, use default"}

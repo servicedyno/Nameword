@@ -9,7 +9,7 @@ import StatusBadge from "../../../components/common/StatusBadge";
 import { fmtDate } from "../../../utils/formatDate";
 
 const NS_LABEL_FALLBACK = {
-  cloudflare: "Cloudflare DNS",
+  cloudflare: "Managed DNS",
   registrar: "Registrar default",
   custom: "Custom nameservers",
 };
@@ -47,11 +47,9 @@ const DomainList = () => {
       meta: { className: "hidden md:table-cell" },
       cell: ({ row }) => {
         const d = row.original;
-        const list = Array.isArray(d.nameservers) ? d.nameservers.filter(Boolean) : [];
         return (
           <div className="hidden md:block">
-            <p className="text-primary dark:text-gray-200">{NS_LABEL[d.ns_choice] || d.nameserver_type || "—"}</p>
-            {list.length > 0 && <p className="text-xs text-ink-soft dark:text-gray-400 truncate max-w-[220px]">{list.join(", ")}</p>}
+            <p className="text-primary dark:text-gray-200">{NS_LABEL[d.ns_choice] || "Managed DNS"}</p>
           </div>
         );
       },

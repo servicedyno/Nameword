@@ -116,15 +116,9 @@ export default function OrderSuccess() {
                   <div className="min-w-0">
                     <p className="font-semibold text-primary dark:text-white break-all">{it.type === "domain" ? it.domain : it.plan_name}</p>
                     <p className="text-xs text-ink-soft dark:text-gray-400">
-                      {it.type === "domain" ? `Registration · 1 year · ${it.ns_choice === "registrar" ? "Registrar DNS" : it.ns_choice === "custom" ? "Custom nameservers" : "Cloudflare DNS"}` : `Hosting for ${it.domain} · ${durationLabel(it.duration_days)}`}
+                      {it.type === "domain" ? `Registration · 1 year · ${it.ns_choice === "registrar" ? "Registrar DNS" : it.ns_choice === "custom" ? "Custom nameservers" : "Managed DNS"}` : `Hosting for ${it.domain} · ${durationLabel(it.duration_days)}`}
                     </p>
                     {it.message && <p className="mt-1 text-xs text-ink-soft dark:text-gray-400">{it.message}</p>}
-                    {it.ns_choice === "custom" && Array.isArray(it.nameservers) && it.nameservers.length > 0 && (
-                      <p className="mt-1 text-xs text-ink-soft dark:text-gray-400 nw-mono">NS: {it.nameservers.join(", ")}</p>
-                    )}
-                    {Array.isArray(it.upstream?.result?.nameservers) && (
-                      <p className="mt-1 text-xs text-ink-soft dark:text-gray-400 nw-mono">NS: {it.upstream.result.nameservers.join(", ")}</p>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-1">

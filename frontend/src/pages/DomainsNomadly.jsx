@@ -47,7 +47,7 @@ function ExactMatchCard({ result, inCart, onAdd, onContinue }) {
           {available ? (
             <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-ink-soft dark:text-gray-400">
               <li className="inline-flex items-center gap-1.5"><FiLock size={14} className="text-brand" /> WHOIS privacy included</li>
-              <li className="inline-flex items-center gap-1.5"><FiShield size={14} className="text-brand" /> Free Cloudflare DNS</li>
+              <li className="inline-flex items-center gap-1.5"><FiShield size={14} className="text-brand" /> Free managed DNS</li>
               <li className="inline-flex items-center gap-1.5"><FiCheck size={14} className="text-brand" /> Instant activation</li>
             </ul>
           ) : (
@@ -297,7 +297,6 @@ export default function DomainsNomadly() {
                     <div className="min-w-0">
                       <span className="font-semibold text-primary dark:text-white">{d.domain}</span>
                       <div className="flex items-center gap-x-5 gap-y-1 flex-wrap text-sm text-secondary dark:text-gray-400 mt-0.5">
-                        {d.nameserver_type && <span>NS: {d.nameserver_type}</span>}
                         {d.registered_at && <span>Since {new Date(d.registered_at).toLocaleDateString()}</span>}
                       </div>
                     </div>

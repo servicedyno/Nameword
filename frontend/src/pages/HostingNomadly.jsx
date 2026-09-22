@@ -17,7 +17,6 @@ import {
   FiRefreshCw,
   FiTrash2,
   FiLock,
-  FiExternalLink,
   FiAlertTriangle,
   FiPauseCircle,
   FiPlayCircle,
@@ -77,7 +76,6 @@ export default function HostingNomadly() {
   const [plansLoading, setPlansLoading] = useState(true);
   const [plansError, setPlansError] = useState(null);
 
-  const [accountsMeta, setAccountsMeta] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
 
@@ -91,7 +89,6 @@ export default function HostingNomadly() {
   // Account actions
   const [busyUser, setBusyUser] = useState(null);
   const [confirmUser, setConfirmUser] = useState(null);
-  const [creds, setCreds] = useState(null);
 
   // Manage panel (4d: details/usage, upgrade, addon domains, Visitor Captcha)
   const [manage, setManage] = useState(null); // { user, domain, plan_id }
@@ -124,7 +121,6 @@ export default function HostingNomadly() {
     setAccountsLoading(true);
     try {
       const data = await resellerAPI.listHosting();
-      setAccountsMeta({ panel_url: data?.panel_url, server_ip: data?.server_ip });
       setAccounts(Array.isArray(data?.accounts) ? data.accounts : []);
     } catch (_) {
       setAccounts([]);
@@ -225,35 +221,6 @@ export default function HostingNomadly() {
       loadAccounts();
     } catch (err) {
       showAlert(err?.response?.data?.message || "Failed to terminate.", { type: "fail" });
-    } finally {
-      setBusyUser(null);
-    }
-  };
-
-  const doLogin = async (user) => {
-    setBusyUser(user + "login");
-    try {
-      const data = await resellerAPI.hostingLogin(user);
-      if (data?.login_url) {
-        window.open(data.login_url, "_blank", "noopener,noreferrer");
-      } else {
-        showAlert(data?.note || "One-click login is only available in live mode.", { type: "info" });
-      }
-    } catch (err) {
-      showAlert(err?.response?.data?.message || "Could not generate login link.", { type: "fail" });
-    } finally {
-      setBusyUser(null);
-    }
-  };
-
-  const revealCreds = async (user) => {
-    setBusyUser(user + "creds");
-    try {
-      const data = await resellerAPI.getHostingCredentials(user);
-      setCreds({ user, ...(data || {}) });
-    } catch (err) {
-      const data = err?.response?.data;
-      setCreds({ user, _error: true, ...(data || { message: "Could not fetch credentials." }) });
     } finally {
       setBusyUser(null);
     }
@@ -500,15 +467,6 @@ export default function HostingNomadly() {
             </button>
           </div>
 
-          {accountsMeta && (accountsMeta.panel_url || accountsMeta.server_ip) && (
-            <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-secondary dark:text-gray-400">
-              {accountsMeta.panel_url && (
-                <span>Panel: <a href={accountsMeta.panel_url} target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">{accountsMeta.panel_url}</a></span>
-              )}
-              {accountsMeta.server_ip && <span>Server IP: <span className="text-primary dark:text-white font-medium">{accountsMeta.server_ip}</span></span>}
-            </div>
-          )}
-
           {accountsLoading ? (
             <div className="space-y-3">
               {[0, 1].map((i) => <div key={i} className="h-20 rounded-xl border border-lightgray dark:border-gray-800 animate-pulse" />)}
@@ -542,9 +500,7 @@ export default function HostingNomadly() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button disabled={busyUser === user + "login"} onClick={() => doLogin(user)} title="Open cPanel" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-gray-800 disabled:opacity-50"><FiExternalLink size={16} /> <span className="text-sm">Login</span></button>
                       <button onClick={() => openManage(a)} title="Manage plan, addons & captcha" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800" data-testid={`hosting-manage-${user}`}><FiSettings size={16} /> <span className="text-sm">Manage</span></button>
-                      <button disabled={busyUser === user + "creds"} onClick={() => revealCreds(user)} title="Credentials" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800 disabled:opacity-50"><FiLock size={16} /> <span className="text-sm">Credentials</span></button>
                       {a.suspended ? (
                         <button disabled={busyUser === user + "unsuspend"} onClick={() => doUnsuspend(user)} title="Unsuspend" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-green-600 hover:bg-green-50 dark:hover:bg-gray-800 disabled:opacity-50"><FiPlayCircle size={16} /></button>
                       ) : (
@@ -625,39 +581,6 @@ export default function HostingNomadly() {
         </div>
       )}
 
-      {/* Credentials modal */}
-      {creds && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setCreds(null)}>
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
-              <h3 className="text-lg font-semibold text-primary dark:text-white">cPanel credentials</h3>
-              <button onClick={() => setCreds(null)} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
-            </div>
-            <div className="px-6 py-5 space-y-3 text-sm">
-              {creds._error ? (
-                <p className="text-secondary dark:text-gray-400">{creds.message || "Credentials are not available."}</p>
-              ) : (
-                <>
-                  <Row label="User" value={creds.username || creds.user} />
-                  {creds.panel_url && <Row label="Panel URL" value={creds.panel_url} />}
-                  {creds.server_ip && <Row label="Server IP" value={creds.server_ip} />}
-                  {Array.isArray(creds.nameservers) && creds.nameservers.length > 0 && (
-                    <Row label="Nameservers" value={creds.nameservers.join(", ")} />
-                  )}
-                  <Row label="Panel PIN" value={creds.panel_pin || (creds.mode === "dry_run" ? "(only shown in live mode)" : "—")} />
-                  {creds.direct_cpanel_login_url && (
-                    <div className="pt-1">
-                      <a href={creds.direct_cpanel_login_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-brand-600 dark:text-brand-400 hover:underline font-medium"><FiExternalLink size={14} /> Open cPanel</a>
-                    </div>
-                  )}
-                  {creds.note && <p className="text-xs text-secondary dark:text-gray-400 pt-1 border-t border-lightgray dark:border-gray-800 mt-2">{creds.note}</p>}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Manage modal (4d): details/usage, upgrade, addon domains, Visitor Captcha */}
       {manage && (
         <div className="fixed inset-0 z-[60] flex bg-black/60" onClick={closeManage}>
@@ -711,7 +634,6 @@ export default function HostingNomadly() {
                     <Row label="Plan" value={String(manageData?.plan || manage.plan_id || "—").replace(/-/g, " ")} />
                     <Row label="Status" value={manageData?.suspended ? "Suspended" : (manageData?.status === "test_mode" ? "Test mode" : "Active")} />
                     <Row label="Expires" value={manageData?.expires_at ? new Date(manageData.expires_at).toLocaleDateString() : "—"} />
-                    <Row label="Server IP" value={manageData?.deliverables?.server_ip || "—"} />
                   </div>
                   {manageData?.usage && (
                     <div>
@@ -779,7 +701,7 @@ export default function HostingNomadly() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium text-primary dark:text-white flex items-center gap-1.5"><FiShield size={15} /> Visitor Captcha + Geo</p>
-                          <p className="text-xs text-secondary dark:text-gray-400 mt-0.5">Golden Anti-Red exclusive · requires the domain on Cloudflare.</p>
+                          <p className="text-xs text-secondary dark:text-gray-400 mt-0.5">Golden Anti-Red exclusive · requires the domain to use our managed nameservers.</p>
                         </div>
                         <button
                           type="button"
