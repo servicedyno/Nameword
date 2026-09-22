@@ -70,6 +70,16 @@ const CLIENT_ORDER_ID = "seed-filemanager-nbayftest";
           expires_at: expires,
           term_days: 30,
         },
+        {
+          type: "domain",
+          domain: "namewords.sbs",
+          ns_choice: "custom",
+          nameservers: ["ns1.dnsimple.com", "ns2.dnsimple.com"],
+          price_usd: 39,
+          status: "active",
+          expires_at: expires,
+          term_days: 365,
+        },
       ],
     });
     await order.save();

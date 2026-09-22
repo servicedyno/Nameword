@@ -427,11 +427,18 @@ export default function DnsManagerNomadly() {
     if (list.length < 2) { showAlert("Provide at least two nameservers.", { type: "fail" }); return; }
     setSavingNs(true);
     try {
-      await resellerAPI.setNameservers(activeDomain, list);
-      showAlert("Nameservers updated.", { type: "success" });
+      const res = await resellerAPI.setNameservers(activeDomain, list);
+      showAlert(
+        res?.applying
+          ? "Nameservers are being applied — this can take up to a minute to take effect."
+          : "Nameservers updated.",
+        { type: "success" }
+      );
       setNs("");
       setNsCustomOpen(false);
-      loadRecords(activeDomain);
+      // Optimistically reflect the new state (the registrar change is slow upstream,
+      // so re-reading immediately would still show the old values).
+      if (Array.isArray(res?.nameservers) && res.nameservers.length) setNameservers(res.nameservers);
     } catch (err) {
       showAlert(err?.response?.data?.message || "Could not update nameservers.", { type: "fail" });
     } finally {
@@ -439,15 +446,20 @@ export default function DnsManagerNomadly() {
     }
   };
 
-  // Switch the domain back to its default (Cloudflare) nameservers.
+  // Switch the domain back to its default (managed) nameservers.
   const resetToDefault = async () => {
     setSavingNs(true);
     try {
-      await resellerAPI.resetNameservers(activeDomain);
-      showAlert("Nameservers reset to the Cloudflare default.", { type: "success" });
+      const res = await resellerAPI.resetNameservers(activeDomain);
+      showAlert(
+        res?.applying
+          ? "Switching to the default nameservers — this can take up to a minute to take effect."
+          : "Nameservers reset to the default.",
+        { type: "success" }
+      );
       setConfirmResetNs(false);
       setNsCustomOpen(false);
-      loadRecords(activeDomain);
+      if (Array.isArray(res?.nameservers) && res.nameservers.length) setNameservers(res.nameservers);
     } catch (err) {
       showAlert(err?.response?.data?.message || "Could not reset nameservers.", { type: "fail" });
     } finally {

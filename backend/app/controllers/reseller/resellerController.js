@@ -298,10 +298,52 @@ const isCloudflareNs = (h) =>
 
 // Resolve a domain's default (Cloudflare-assigned) nameservers so the buyer can
 // switch a domain that is currently on CUSTOM nameservers back to the default.
-// Source 1: the provider domain list (nameserver_type/nameservers). Source 2 (a
-// fallback that works even when the registrar points elsewhere): the Cloudflare
-// zone's own NS records, which the provider still manages.
+// The domain always has a provider-managed Cloudflare zone, but the registrar may
+// currently point elsewhere — so the current /domains list and /dns records only
+// show the CUSTOM nameservers. The reliable source for the zone's assigned
+// Cloudflare nameservers is the hosting ns-status lookup, which resolves by domain
+// (the :user is only an ownership/auth context, so any account we own works).
+let _nsCtxUser = null;
+let _nsCtxUserAt = 0;
+async function resellerHostingUser() {
+  if (_nsCtxUser && Date.now() - _nsCtxUserAt < 5 * 60 * 1000) return _nsCtxUser;
+  try {
+    const r = await nomadly.get(`/hosting`);
+    const accts = (r.data && r.data.accounts) || [];
+    const u = accts.find((a) => a && a.username)?.username || null;
+    if (u) {
+      _nsCtxUser = u;
+      _nsCtxUserAt = Date.now();
+    }
+    return u;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function resolveCloudflareNameservers(domain) {
+  // Source 0 (most reliable): the domain's Cloudflare zone nameservers via the
+  // hosting ns-status lookup — works even when the registrar points at custom NS.
+  try {
+    const u = await resellerHostingUser();
+    if (u) {
+      const r = await nomadly.get(`/hosting/${enc(u)}/domains/ns-status`, {
+        params: { domain },
+      });
+      const ns = (r.data && r.data.nameservers) || [];
+      const cf = [
+        ...new Set(
+          ns
+            .map((x) => String(x || "").trim().replace(/\.$/, ""))
+            .filter(isCloudflareNs)
+        ),
+      ];
+      if (cf.length >= 2) return cf;
+    }
+  } catch (e) {
+    /* fall through to the other sources */
+  }
+  // Source 1: the provider domain list (only helps if already on Cloudflare).
   try {
     const r = await nomadly.get(`/domains`);
     const list = (r.data && r.data.domains) || [];
@@ -315,6 +357,7 @@ async function resolveCloudflareNameservers(domain) {
   } catch (e) {
     /* fall through to the DNS-records source */
   }
+  // Source 2: the Cloudflare zone's own NS records.
   try {
     const r = await nomadly.get(`/dns/${enc(domain)}/records`);
     const recs = (r.data && r.data.records) || [];
@@ -331,6 +374,55 @@ async function resolveCloudflareNameservers(domain) {
     /* no-op */
   }
   return [];
+}
+
+// The registrar-side nameserver change is SLOW upstream (can take ~45s). To stay
+// within the frontend/ingress request budget we respond optimistically after a
+// short grace window and let the provider call finish in the background.
+async function applyNameservers(res, domain, nameservers, extra = {}) {
+  const putP = nomadly
+    .put(`/dns/${enc(domain)}/nameservers`, { nameservers }, { timeout: 120000 })
+    .then((up) => ({ ok: true, up }))
+    .catch((err) => ({ ok: false, err }));
+  const graceP = new Promise((r) => setTimeout(() => r({ pending: true }), 18000));
+  const winner = await Promise.race([putP, graceP]);
+  if (winner && winner.pending) {
+    // Still applying — keep the promise alive so it completes, and log any failure
+    // (prevents an unhandled rejection after we've already responded).
+    putP.then((r) => {
+      if (!r.ok) {
+        console.error(
+          "nameserver apply failed",
+          domain,
+          r.err?.response?.data || r.err?.message
+        );
+      }
+    });
+    return res.status(202).json({
+      success: true,
+      applying: true,
+      domain,
+      nameservers,
+      ...extra,
+      message:
+        "Nameservers are being applied — this can take up to a minute to take effect.",
+    });
+  }
+  if (winner.ok) {
+    const up = winner.up;
+    return res
+      .status(up.status || 200)
+      .json({ ...(up.data || {}), nameservers, ...extra });
+  }
+  const err = winner.err;
+  const status = err?.response?.status || 502;
+  const data =
+    err?.response?.data || {
+      success: false,
+      error: "reseller_unreachable",
+      message: err?.message || "Upstream error",
+    };
+  return res.status(status).json(data);
 }
 
 // Replace nameservers. Two modes:
@@ -351,23 +443,25 @@ const setNameservers = (req, res) =>
           success: false,
           error: "cloudflare_ns_unavailable",
           message:
-            "Couldn't determine this domain's default Cloudflare nameservers. Enter them manually, or try again shortly.",
+            "Couldn't determine this domain's default nameservers. Enter them manually, or try again shortly.",
         });
       }
-      return forward(
-        res,
-        nomadly
-          .put(`/dns/${enc(req.params.domain)}/nameservers`, { nameservers: cf })
-          .then((up) => ({
-            status: up.status,
-            data: { ...(up.data || {}), ns_choice: "cloudflare", reset_to_default: true },
-          }))
-      );
+      return applyNameservers(res, req.params.domain, cf, {
+        ns_choice: "cloudflare",
+        reset_to_default: true,
+      });
     }
-    return forward(
-      res,
-      nomadly.put(`/dns/${enc(req.params.domain)}/nameservers`, body)
-    );
+    const list = Array.isArray(body.nameservers)
+      ? body.nameservers.map((x) => String(x || "").trim()).filter(Boolean)
+      : [];
+    if (list.length < 2) {
+      return res.status(400).json({
+        success: false,
+        error: "invalid_nameservers",
+        message: "Provide at least two nameservers.",
+      });
+    }
+    return applyNameservers(res, req.params.domain, list, { ns_choice: "custom" });
   });
 
 // ---------- cPanel Hosting ----------
