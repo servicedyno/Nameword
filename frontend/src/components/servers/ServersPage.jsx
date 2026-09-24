@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import ProductShell from "../layout/ProductShell";
 import EmptyState from "../common/EmptyState";
-import { resellerProduct } from "../../api/reseller";
+import resellerAPI, { resellerProduct } from "../../api/reseller";
 import { useAlert } from "../../context/AlertContext";
 import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
@@ -27,6 +27,10 @@ import {
   FiZap,
   FiShoppingCart,
   FiArrowRight,
+  FiKey,
+  FiClock,
+  FiActivity,
+  FiDownloadCloud,
 } from "react-icons/fi";
 
 // Jurisdictions offered today (labels come from locales/site.*.js -> servers.regions)
@@ -105,9 +109,20 @@ export default function ServersPage({ product = "vps" }) {
   const [hostname, setHostname] = useState("");
   const [os, setOs] = useState(meta.osChoices ? meta.osChoices[0] : "windows");
 
+  // RDP Windows editions (ws2019 | ws2022 | ws2025) from GET /rdp/plans os_options.
+  const [osOptions, setOsOptions] = useState([]);
+  const [defaultOs, setDefaultOs] = useState("ws2022");
+  const [rdpEdition, setRdpEdition] = useState("ws2022");
+
   const [busyId, setBusyId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const [creds, setCreds] = useState(null);
+  // RDP management modals
+  const [statusId, setStatusId] = useState(null); // live "Windows is booting" status
+  const [reinstallServer, setReinstallServer] = useState(null);
+  const [reinstallOs, setReinstallOs] = useState("ws2022");
+  const [renewServer, setRenewServer] = useState(null);
+  const [renewMonths, setRenewMonths] = useState(1);
 
   // --- data loaders ---
   const loadPlans = useCallback(
@@ -117,6 +132,14 @@ export default function ServersPage({ product = "vps" }) {
       try {
         const data = await api.getPlans(rg);
         setPlans(Array.isArray(data?.plans) ? data.plans : []);
+        // Capture Windows editions for RDP (os_options + default_os).
+        if (Array.isArray(data?.os_options) && data.os_options.length) {
+          setOsOptions(data.os_options);
+          const def = data.default_os || (data.os_options.find((o) => o.default) || data.os_options[0]).id;
+          setDefaultOs(def);
+          setRdpEdition(def);
+          setReinstallOs(def);
+        }
       } catch (err) {
         setPlansError(
           err?.response?.data?.message || "Could not load plans. Please retry."
@@ -170,7 +193,7 @@ export default function ServersPage({ product = "vps" }) {
       product,
       plan: configPlan,
       region,
-      os: meta.osChoices ? os : undefined,
+      os: meta.osChoices ? os : (product === "rdp" ? rdpEdition : undefined),
       hostname: hostname.trim(),
     });
     showAlert(`${configPlan.name || configPlan.plan_id} added to cart.`, { type: "success" });
@@ -217,6 +240,59 @@ export default function ServersPage({ product = "vps" }) {
       showAlert(err?.response?.data?.message || "Could not fetch credentials.", {
         type: "fail",
       });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // --- RDP-only management ---
+  const doResetPassword = async (id) => {
+    setBusyId(id + "pw");
+    try {
+      const data = await api.resetPassword(id);
+      if (data?.password) {
+        setCreds({ ip: data.ip, username: data.username || "Administrator", password: data.password, _title: "New Administrator password" });
+      }
+      showAlert(data?.password ? "Administrator password reset — data preserved." : (data?.message || "Password reset requested."), { type: "success" });
+      loadServers();
+    } catch (err) {
+      showAlert(err?.response?.data?.message || "Could not reset the password. The server must be running with its agent online.", { type: "fail" });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const doReinstall = async () => {
+    const id = reinstallServer;
+    if (!id) return;
+    setBusyId(id + "reinstall");
+    try {
+      const data = await api.reinstall(id, reinstallOs);
+      setReinstallServer(null);
+      if (data?.password) {
+        setCreds({ ip: data.ip, username: "Administrator", password: data.password, _title: "New password after reinstall" });
+      }
+      showAlert(`Reinstalling ${data?.os_name || reinstallOs} — same IP, ready in ~${data?.eta_minutes || 3} min.`, { type: "success" });
+      loadServers();
+    } catch (err) {
+      showAlert(err?.response?.data?.message || "Reinstall failed.", { type: "fail" });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const doRenew = async () => {
+    const id = renewServer;
+    if (!id) return;
+    setBusyId(id + "renew");
+    try {
+      const data = await api.renew(id, renewMonths);
+      setRenewServer(null);
+      const exp = data?.result?.expires_at ? ` New expiry: ${new Date(data.result.expires_at).toLocaleDateString()}.` : "";
+      showAlert(`Renewed for ${renewMonths} month${renewMonths > 1 ? "s" : ""}.${exp}`, { type: "success" });
+      loadServers();
+    } catch (err) {
+      showAlert(err?.response?.data?.message || "Renewal failed.", { type: "fail" });
     } finally {
       setBusyId(null);
     }
@@ -327,9 +403,9 @@ export default function ServersPage({ product = "vps" }) {
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200"><FiZap size={18} /></span>
                   </div>
                   <div className="space-y-2 mb-5">
-                    <Spec icon={FiCpu} label="vCPU" value={p.vcpus ?? "—"} />
+                    <Spec icon={FiCpu} label={p.cpu ? `vCPU · ${p.cpu}` : "vCPU"} value={p.vcpus ?? "—"} />
                     <Spec icon={FiServer} label="GB RAM" value={p.ram_gb ?? "—"} />
-                    <Spec icon={FiHardDrive} label="GB SSD" value={p.disk_gb ?? "—"} />
+                    <Spec icon={FiHardDrive} label={`GB ${p.storage_type || "SSD"}`} value={p.disk_gb ?? "—"} />
                   </div>
                   <div className="flex items-end justify-between border-t border-line dark:border-gray-800 pt-4">
                     <div>
@@ -396,6 +472,14 @@ export default function ServersPage({ product = "vps" }) {
                       <button disabled={busyId === id + "stop"} onClick={() => doAction(id, "stop")} title="Stop" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-amber-600 hover:bg-amber-50 dark:hover:bg-gray-800 disabled:opacity-50"><FiPower size={16} /></button>
                       <button disabled={busyId === id + "reboot"} onClick={() => doAction(id, "reboot")} title="Reboot" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-800 disabled:opacity-50"><FiRotateCw size={16} /></button>
                       <button disabled={busyId === id + "creds"} onClick={() => revealCreds(id)} className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800 disabled:opacity-50"><FiLock size={16} /> <span className="text-sm">Credentials</span></button>
+                      {product === "rdp" && (
+                        <>
+                          <button onClick={() => setStatusId(id)} title="Provisioning status" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-gray-800" data-testid={`rdp-status-${id}`}><FiActivity size={16} /></button>
+                          <button disabled={busyId === id + "pw"} onClick={() => doResetPassword(id)} title="Reset Administrator password (data preserved)" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800 disabled:opacity-50" data-testid={`rdp-reset-${id}`}><FiKey size={16} /></button>
+                          <button onClick={() => { setReinstallServer(id); setReinstallOs(defaultOs); }} title="Reinstall Windows (rebuild, same IP)" className="p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800" data-testid={`rdp-reinstall-${id}`}><FiDownloadCloud size={16} /></button>
+                          <button onClick={() => { setRenewServer(id); setRenewMonths(1); }} title="Renew subscription" className="flex items-center gap-1.5 p-2 rounded-md border border-lightgray dark:border-gray-800 text-primary dark:text-white hover:bg-hover dark:hover:bg-gray-800" data-testid={`rdp-renew-${id}`}><FiClock size={16} /> <span className="text-sm">Renew</span></button>
+                        </>
+                      )}
                       {confirmId === id ? (
                         <span className="flex items-center gap-1">
                           <button disabled={busyId === id + "destroy"} onClick={() => doDestroy(id)} className="px-3 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm">Confirm</button>
@@ -427,7 +511,7 @@ export default function ServersPage({ product = "vps" }) {
                   <span className="font-medium text-primary dark:text-white">{configPlan.name || configPlan.plan_id}</span>
                   <span className="font-bold text-primary dark:text-white">{money(configPlan.price_usd)}<span className="text-secondary text-sm font-normal"> /mo</span></span>
                 </div>
-                <p className="text-xs text-secondary dark:text-gray-400 mt-1">{configPlan.ram_gb} GB RAM · {configPlan.disk_gb} GB SSD · {regionLabel(region)}</p>
+                <p className="text-xs text-secondary dark:text-gray-400 mt-1">{configPlan.ram_gb} GB RAM · {configPlan.disk_gb} GB {configPlan.storage_type || "SSD"}{configPlan.cpu ? ` · ${configPlan.cpu}` : ""} · {regionLabel(region)}</p>
               </div>
 
               <div>
@@ -442,7 +526,18 @@ export default function ServersPage({ product = "vps" }) {
                   </select>
                 </div>
               ) : (
-                <p className="text-sm text-secondary dark:text-gray-400">Operating system: <span className="text-primary dark:text-white font-medium">Windows</span></p>
+                <div>
+                  <label htmlFor="rdp-edition" className="block text-sm font-medium text-primary dark:text-white mb-1">Windows edition</label>
+                  {osOptions.length ? (
+                    <select id="rdp-edition" value={rdpEdition} onChange={(e) => setRdpEdition(e.target.value)} className="w-full appearance-none rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" data-testid="rdp-edition-select">
+                      {osOptions.map((o) => (
+                        <option key={o.id} value={o.id}>{o.name}{o.fast_deploy ? ` · ready in ~${o.eta_minutes || 3} min` : ""}{o.default ? " (default)" : ""}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-sm text-secondary dark:text-gray-400">Operating system: <span className="text-primary dark:text-white font-medium">Windows Server</span></p>
+                  )}
+                </div>
               )}
               <p className="flex items-center gap-2 text-xs text-secondary dark:text-gray-400"><FiLock size={13} /> Pay from your prepaid wallet at checkout. Billed monthly.</p>
             </div>
@@ -459,7 +554,7 @@ export default function ServersPage({ product = "vps" }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setCreds(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
-              <h3 className="text-lg font-semibold text-primary dark:text-white">Login credentials</h3>
+              <h3 className="text-lg font-semibold text-primary dark:text-white">{creds._title || "Login credentials"}</h3>
               <button onClick={() => setCreds(null)} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
             </div>
             <div className="px-6 py-5 space-y-3 text-sm">
@@ -470,6 +565,63 @@ export default function ServersPage({ product = "vps" }) {
           </div>
         </div>
       )}
+
+      {/* Reinstall (RDP) modal */}
+      {reinstallServer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setReinstallServer(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="rdp-reinstall-modal">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-primary dark:text-white">Reinstall Windows</h3>
+              <button onClick={() => setReinstallServer(null)} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3">
+                <FiAlertTriangle className="text-amber-600 dark:text-amber-300 mt-0.5 shrink-0" />
+                <p className="text-sm text-amber-800 dark:text-amber-200">The disk is <span className="font-semibold">wiped</span> and Windows is rebuilt from a golden image. The public IP is kept and a new password is generated — ready in ~3-5 min.</p>
+              </div>
+              <div>
+                <label htmlFor="reinstall-os" className="block text-sm font-medium text-primary dark:text-white mb-1">Windows edition</label>
+                <select id="reinstall-os" value={reinstallOs} onChange={(e) => setReinstallOs(e.target.value)} className="w-full appearance-none rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 text-primary dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/15" data-testid="rdp-reinstall-os">
+                  {(osOptions.length ? osOptions : [{ id: "ws2019", name: "Windows Server 2019" }, { id: "ws2022", name: "Windows Server 2022" }, { id: "ws2025", name: "Windows Server 2025" }]).map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-lightgray dark:border-gray-800 flex justify-end gap-3">
+              <button onClick={() => setReinstallServer(null)} className="nw-btn-secondary nw-btn-sm">Cancel</button>
+              <button disabled={busyId === reinstallServer + "reinstall"} onClick={doReinstall} className="nw-btn-primary nw-btn-sm" data-testid="rdp-reinstall-confirm"><FiDownloadCloud size={15} /> Reinstall</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Renew (RDP) modal */}
+      {renewServer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setRenewServer(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="rdp-renew-modal">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-primary dark:text-white">Renew RDP subscription</h3>
+              <button onClick={() => setRenewServer(null)} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-sm text-secondary dark:text-gray-400">Extend your term and clear any grace period. Charged from the prepaid wallet — longer terms get a bundle discount (2&nbsp;mo −10%, 3&nbsp;mo −15%).</p>
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3].map((m) => (
+                  <button key={m} onClick={() => setRenewMonths(m)} className={`rounded-xl border px-3 py-3 text-sm font-semibold ${renewMonths === m ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand/15 dark:text-brand-200 dark:border-brand-500" : "border-line text-primary dark:border-gray-700 dark:text-white"}`} data-testid={`rdp-renew-months-${m}`}>{m} mo{m > 1 ? ` · -${m === 2 ? 10 : 15}%` : ""}</button>
+                ))}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-lightgray dark:border-gray-800 flex justify-end gap-3">
+              <button onClick={() => setRenewServer(null)} className="nw-btn-secondary nw-btn-sm">Cancel</button>
+              <button disabled={busyId === renewServer + "renew"} onClick={doRenew} className="nw-btn-primary nw-btn-sm" data-testid="rdp-renew-confirm"><FiClock size={15} /> Renew {renewMonths} mo</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live provisioning status (RDP) */}
+      {statusId && <RdpStatusModal id={statusId} onClose={() => setStatusId(null)} onRefresh={loadServers} />}
 
       {/* Sticky cart bar — a persistent, always-visible way to reach the cart
           and the crypto checkout after adding a plan (mirrors the domains page). */}
@@ -503,6 +655,107 @@ function Row({ label, value }) {
     <div className="flex items-center justify-between gap-4">
       <span className="text-secondary dark:text-gray-400">{label}</span>
       <span className="font-mono text-primary dark:text-white break-all text-right">{value}</span>
+    </div>
+  );
+}
+
+// Live "Windows is booting" status — polls GET /rdp/:id every ~10s and renders the
+// provisioning block (stage, progress, ETA, 4-step timeline) until credentials are ready.
+function RdpStatusModal({ id, onClose, onRefresh }) {
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    let timer;
+    const isDone = (d) => {
+      const st = String(d?.status || d?.provisioning?.status || "").toLowerCase();
+      return d?.credentials_ready === true || ["active", "failed", "destroyed"].includes(st);
+    };
+    const poll = async () => {
+      try {
+        const d = await resellerAPI.getRdp(id);
+        if (!alive) return;
+        setData(d);
+        setErr(null);
+        if (!isDone(d)) timer = setTimeout(poll, 10000);
+        else if (typeof onRefresh === "function") onRefresh();
+      } catch (_) {
+        if (!alive) return;
+        setErr("Could not load status. Retrying…");
+        timer = setTimeout(poll, 12000);
+      }
+    };
+    poll();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [id, onRefresh]);
+
+  const prov = data?.provisioning || {};
+  const steps = Array.isArray(prov.steps) ? prov.steps : [];
+  const progress = Math.max(0, Math.min(100, Number(prov.progress) || 0));
+  const statusLabel = prov.stage_label || prov.status || data?.status || "Loading…";
+  const eta =
+    prov.eta_seconds != null
+      ? `${Math.max(0, Math.round(prov.eta_seconds / 60))} min`
+      : prov.eta_minutes != null
+      ? `${prov.eta_minutes} min`
+      : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()} data-testid="rdp-status-modal">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-lightgray dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-primary dark:text-white flex items-center gap-2"><FiActivity className="text-brand" /> Windows provisioning status</h3>
+          <button onClick={onClose} className="text-secondary hover:text-primary dark:hover:text-white" aria-label="Close"><FiX size={22} /></button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          {!data ? (
+            <div className="h-24 animate-pulse rounded-xl bg-lightgray dark:bg-gray-800" />
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusStyle(data.status || prov.status)}`}>{data.status || prov.status || "unknown"}</span>
+                {eta && !data.credentials_ready && <span className="text-sm text-secondary dark:text-gray-400">ETA ~{eta}</span>}
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-primary dark:text-white">{statusLabel}</span>
+                  <span className="text-sm text-secondary dark:text-gray-400">{progress}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-lightgray dark:bg-gray-800">
+                  <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+              {steps.length > 0 && (
+                <ol className="space-y-2">
+                  {steps.map((s, i) => (
+                    <li key={s.key || i} className="flex items-center gap-2 text-sm">
+                      {s.done ? (
+                        <FiCheckCircle className="text-green-500 shrink-0" />
+                      ) : s.current ? (
+                        <FiRefreshCw className="text-brand animate-spin shrink-0" />
+                      ) : (
+                        <span className="h-4 w-4 rounded-full border border-line dark:border-gray-700 shrink-0" />
+                      )}
+                      <span className={s.done || s.current ? "text-primary dark:text-white" : "text-secondary dark:text-gray-500"}>{s.label || s.key}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              {data.ip && <p className="text-sm text-secondary dark:text-gray-400">IP: <span className="font-mono text-primary dark:text-white">{data.ip}</span></p>}
+              {data.credentials_ready && (
+                <div className="flex items-center gap-2 rounded-xl border border-green-400/40 bg-green-50 dark:bg-green-500/10 px-4 py-3 text-sm text-green-800 dark:text-green-200">
+                  <FiCheckCircle className="shrink-0" /> Your server is ready — open Credentials to log in.
+                </div>
+              )}
+              {err && <p className="text-xs text-amber-600 dark:text-amber-300">{err}</p>}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

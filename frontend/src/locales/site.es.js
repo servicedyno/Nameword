@@ -152,6 +152,13 @@ export const siteEs = {
         title: "Dominios, DNS, hosting y API",
         lead: "El resto del stack — privado y con un solo monedero prepago.",
       },
+      hosting: {
+        kicker: "Hosting cPanel",
+        title: "Hosting cPanel Anti-Red",
+        lead: "cPanel offshore con protección Anti-Red, Administrador de archivos, MySQL y dominios adicionales ilimitados — pagado desde tu monedero prepago.",
+        cta: "Obtener hosting",
+        popular: "Mejor valor",
+      },
     },
   },
 

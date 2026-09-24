@@ -173,6 +173,37 @@ const rdpAction = (req, res) => serverAction(req, res, "rdp");
 const deleteRdp = (req, res) => deleteServer(req, res, "rdp");
 const getRdpCredentials = (req, res) => getServerCredentials(req, res, "rdp");
 
+// ---------- RDP-only management (Windows) ----------
+// New reseller endpoints: in-place Administrator password reset, reinstall from a
+// golden image (optional Windows edition), and wallet-billed renewal (1-3 months).
+// All are ownership-scoped; test-mode entries (no provider_id) get a friendly stub.
+async function rdpPasswordReset(req, res) {
+  const entry = await ownership.findOwnedServer(userId(req), "rdp", req.params.id);
+  if (!entry) return forbidden(res, "RDP");
+  if (entry.item.provider_id) {
+    return forward(res, nomadly.post(`/rdp/${enc(entry.item.provider_id)}/password-reset`, req.body || {}));
+  }
+  return res.json(testModeResult("RDP"));
+}
+
+async function rdpReinstall(req, res) {
+  const entry = await ownership.findOwnedServer(userId(req), "rdp", req.params.id);
+  if (!entry) return forbidden(res, "RDP");
+  if (entry.item.provider_id) {
+    return forward(res, nomadly.post(`/rdp/${enc(entry.item.provider_id)}/reinstall`, req.body || {}));
+  }
+  return res.json(testModeResult("RDP"));
+}
+
+async function rdpRenew(req, res) {
+  const entry = await ownership.findOwnedServer(userId(req), "rdp", req.params.id);
+  if (!entry) return forbidden(res, "RDP");
+  if (entry.item.provider_id) {
+    return forward(res, nomadly.post(`/rdp/${enc(entry.item.provider_id)}/renew`, req.body || {}));
+  }
+  return res.json(testModeResult("RDP"));
+}
+
 // ---------- Domains ----------
 // Default TLD applied when a caller searches a bare keyword (no dot). This lets
 // "coolstartup2026" resolve to "coolstartup2026.com" instead of the upstream
@@ -932,6 +963,9 @@ module.exports = {
   rdpAction,
   deleteRdp,
   getRdpCredentials,
+  rdpPasswordReset,
+  rdpReinstall,
+  rdpRenew,
   searchDomain,
   suggestDomains,
   listDomains,

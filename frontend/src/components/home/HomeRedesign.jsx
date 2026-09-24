@@ -3,6 +3,7 @@ import { usePageMeta } from "../../hooks/usePageMeta";
 import Hero from "./landing/Hero";
 import CloudVps from "./landing/CloudVps";
 import WindowsRdp from "./landing/WindowsRdp";
+import CpanelHosting from "./landing/CpanelHosting";
 import EverythingElse from "./landing/EverythingElse";
 import WhyNameword from "./landing/WhyNameword";
 import PricingTeaser from "./landing/PricingTeaser";
@@ -17,6 +18,7 @@ const HomeRedesign = () => {
       <Hero />
       <CloudVps />
       <WindowsRdp />
+      <CpanelHosting />
       <EverythingElse />
       <WhyNameword />
       <PricingTeaser />

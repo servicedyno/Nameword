@@ -74,7 +74,8 @@ export default function WindowsRdp() {
                     specs={[
                       { label: "vCPU", value: p.vcpus ?? "\u2014" },
                       { label: "RAM", value: `${p.ram_gb ?? "\u2014"} GB` },
-                      { label: "SSD", value: `${p.disk_gb ?? "\u2014"} GB` },
+                      { label: "Storage", value: `${p.disk_gb ?? "\u2014"} GB ${p.storage_type || "NVMe SSD"}` },
+                      { label: "CPU", value: p.cpu || "AMD" },
                       { label: "Network", value: s.network },
                     ]}
                   />

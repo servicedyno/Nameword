@@ -152,6 +152,13 @@ export const siteFr = {
         title: "Domaines, DNS, hébergement et API",
         lead: "Le reste de la stack — privé, avec un seul portefeuille prépayé.",
       },
+      hosting: {
+        kicker: "Hébergement cPanel",
+        title: "Hébergement cPanel Anti-Red",
+        lead: "cPanel offshore avec protection Anti-Red, gestionnaire de fichiers, MySQL et domaines additionnels illimités — payé depuis votre portefeuille prépayé.",
+        cta: "Obtenir l'hébergement",
+        popular: "Meilleur rapport",
+      },
     },
   },
 

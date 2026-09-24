@@ -29,6 +29,9 @@ router.get("/rdp", ...auth, c.listRdp);
 router.post("/rdp", ...auth, c.createRdp);
 router.get("/rdp/:id/credentials", ...auth, c.getRdpCredentials);
 router.post("/rdp/:id/action", ...auth, c.rdpAction);
+router.post("/rdp/:id/password-reset", ...auth, c.rdpPasswordReset);
+router.post("/rdp/:id/reinstall", ...auth, c.rdpReinstall);
+router.post("/rdp/:id/renew", ...auth, c.rdpRenew);
 router.get("/rdp/:id", ...auth, c.getRdp);
 router.delete("/rdp/:id", ...auth, c.deleteRdp);
 

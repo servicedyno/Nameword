@@ -31,6 +31,13 @@ export const resellerAPI = {
   deleteRdp: async (id) => (await apiClient.delete(`${R}/rdp/${id}`)).data,
   getRdpCredentials: async (id) =>
     (await apiClient.get(`${R}/rdp/${id}/credentials`)).data,
+  // New RDP management (Windows)
+  resetRdpPassword: async (id) =>
+    (await apiClient.post(`${R}/rdp/${id}/password-reset`, {})).data,
+  reinstallRdp: async (id, os) =>
+    (await apiClient.post(`${R}/rdp/${id}/reinstall`, os ? { os } : {})).data,
+  renewRdp: async (id, months = 1) =>
+    (await apiClient.post(`${R}/rdp/${id}/renew`, { months })).data,
 
   // Domains
   searchDomain: async (domain) =>
@@ -194,6 +201,11 @@ export const resellerProduct = (product) => {
     remove: (id) => (isRdp ? resellerAPI.deleteRdp(id) : resellerAPI.deleteVps(id)),
     credentials: (id) =>
       isRdp ? resellerAPI.getRdpCredentials(id) : resellerAPI.getVpsCredentials(id),
+    // RDP-only management (no-op / undefined for VPS)
+    isRdp,
+    resetPassword: (id) => (isRdp ? resellerAPI.resetRdpPassword(id) : Promise.reject(new Error('Not supported'))),
+    reinstall: (id, os) => (isRdp ? resellerAPI.reinstallRdp(id, os) : Promise.reject(new Error('Not supported'))),
+    renew: (id, months) => (isRdp ? resellerAPI.renewRdp(id, months) : Promise.reject(new Error('Not supported'))),
   };
 };
 

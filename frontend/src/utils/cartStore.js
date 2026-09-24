@@ -88,7 +88,7 @@ export const cartStore = {
       plan_id: plan.plan_id,
       plan_name: plan.name || plan.plan_id,
       region: String(region || "EU").toUpperCase(),
-      os: type === "vps" ? (os || "ubuntu") : "windows",
+      os: type === "vps" ? (os || "ubuntu") : (os || "ws2022"),
       hostname: hostname || "",
       vcpus: plan.vcpus ?? null,
       ram_gb: plan.ram_gb ?? null,

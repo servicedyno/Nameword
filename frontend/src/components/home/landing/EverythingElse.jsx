@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { LuGlobe, LuNetwork, LuServer, LuCode, LuArrowRight } from "react-icons/lu";
+import { LuGlobe, LuNetwork, LuCode, LuArrowRight } from "react-icons/lu";
 import { useLanguage } from "../../../hooks/useLanguage";
 import { useAuth } from "../../../hooks/useAuth";
 import Reveal from "./Reveal";
@@ -8,7 +8,6 @@ import Reveal from "./Reveal";
 const ITEMS = [
   { key: "domains", to: "/domains", icon: LuGlobe },
   { key: "dns", to: "/dns-manager", icon: LuNetwork, protectedRoute: true },
-  { key: "hosting", to: "/hosting", icon: LuServer },
   { key: "api", to: "/api", icon: LuCode },
 ];
 
@@ -37,7 +36,7 @@ export default function EverythingElse() {
           <p className="nw-lead mt-3">{s.lead}</p>
         </Reveal>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ITEMS.map((p, i) => (
             <Reveal key={p.key} delay={(i % 4) * 0.05} className="flex">
               <button

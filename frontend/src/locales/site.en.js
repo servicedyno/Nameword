@@ -167,6 +167,13 @@ export const siteEn = {
         title: "Domains, DNS, hosting & API",
         lead: "The rest of the stack — quietly private, one prepaid wallet.",
       },
+      hosting: {
+        kicker: "cPanel Hosting",
+        title: "Anti-Red cPanel hosting",
+        lead: "Offshore cPanel with Anti-Red protection, File Manager, MySQL and unlimited addon domains — paid from your prepaid wallet.",
+        cta: "Get hosting",
+        popular: "Best value",
+      },
     },
   },
 
