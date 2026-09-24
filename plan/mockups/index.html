@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nameword — Landing redesign mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body{font-family:"Inter",system-ui,sans-serif;margin:0;background:#f6f7f9;color:#0b1020}
+  .wrap{max-width:880px;margin:0 auto;padding:56px 20px 80px}
+  h1{font-size:34px;letter-spacing:-.02em;margin:0 0 6px}
+  p{color:#475069;line-height:1.6}
+  .mono{font-family:"JetBrains Mono",monospace;font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#4f46e5;font-weight:600}
+  .card{display:block;background:#fff;border:1px solid #e6e8ee;border-radius:16px;padding:22px 24px;margin:14px 0;text-decoration:none;color:inherit;transition:.15s}
+  .card:hover{border-color:#c7cbd6;box-shadow:0 8px 30px rgba(16,20,40,.06)}
+  .card h2{margin:0 0 4px;font-size:19px;letter-spacing:-.01em}
+  .tag{display:inline-block;font-size:12px;font-weight:600;color:#4f46e5;background:#eef0ff;border-radius:999px;padding:3px 10px;margin-bottom:10px}
+  .note{margin-top:26px;font-size:13px;color:#6b7280;background:#fff;border:1px dashed #d7dae3;border-radius:12px;padding:14px 16px}
+  .arrow{color:#4f46e5;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mono">Nameword · visual mockups</div>
+  <h1>Landing page redesign — mockup options</h1>
+  <p>Static visual references only (no real functionality). Prices shown are examples; the live site calculates real prices. Open each option to compare how VPS &amp; RDP plans could appear on the home page.</p>
+
+  <a class="card" href="./landing-product-forward.html">
+    <span class="tag">Option A · recommended</span>
+    <h2>Product-forward landing</h2>
+    <p>Keeps the privacy hero &amp; domain search, then puts a clean <strong>Cloud VPS</strong> plan grid (4 tiers) and a <strong>Windows RDP</strong> plan grid (3 tiers) high on the page — Contabo-style specs &amp; prices. The rest (Domains, DNS, Hosting, API) is condensed into a slim row. <span class="arrow">Open →</span></p>
+  </a>
+
+  <a class="card" href="./servers-tabbed.html">
+    <span class="tag">Option B</span>
+    <h2>Servers shown as VPS / RDP tabs</h2>
+    <p>Same plans, presented as a single “Cloud servers” block with a <strong>VPS | RDP</strong> toggle and a compact comparison layout. Takes less vertical space. <span class="arrow">Open →</span></p>
+  </a>
+
+  <div class="note">
+    Real plan data used in the mockups —<br/>
+    <strong>VPS:</strong> Basic 2 vCPU / 8 GB / 64 GB · Standard 4 / 16 / 80 · Premium 8 / 32 / 160 · Enterprise 16 / 64 / 200.<br/>
+    <strong>RDP (Windows):</strong> Basic 2 CPU / 4 GB / 100 GB SSD · Standard 4 / 8 / 250 · Premium 8 / 16 / 500 · all 1 Gbps.
+  </div>
+</div>
+</body>
+</html>

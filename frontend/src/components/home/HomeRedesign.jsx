@@ -1,7 +1,9 @@
 import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import Hero from "./landing/Hero";
-import Products from "./landing/Products";
+import CloudVps from "./landing/CloudVps";
+import WindowsRdp from "./landing/WindowsRdp";
+import EverythingElse from "./landing/EverythingElse";
 import WhyNameword from "./landing/WhyNameword";
 import PricingTeaser from "./landing/PricingTeaser";
 import RewardsBand from "./landing/RewardsBand";
@@ -13,7 +15,9 @@ const HomeRedesign = () => {
   return (
     <>
       <Hero />
-      <Products />
+      <CloudVps />
+      <WindowsRdp />
+      <EverythingElse />
       <WhyNameword />
       <PricingTeaser />
       <RewardsBand />

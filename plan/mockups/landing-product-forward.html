@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nameword — Option A · Product-forward landing (mockup)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { sans:['Inter','system-ui','sans-serif'], mono:['JetBrains Mono','monospace'] },
+    colors: { brand:{50:'#eef0ff',100:'#e0e3ff',300:'#a5adff',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3'} }
+  }}}
+</script>
+<style>body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{letter-spacing:-.021em}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#4f46e5}
+</style>
+</head>
+<body class="bg-white text-slate-900">
+
+<!-- mockup banner -->
+<div class="bg-slate-900 text-center text-[12px] tracking-wide text-slate-300 py-1.5">MOCKUP · Option A · visual reference only — example prices</div>
+
+<!-- NAV -->
+<header class="sticky top-0 z-20 border-b border-slate-100 bg-white/85 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-5 h-16">
+    <div class="flex items-center gap-2.5">
+      <div class="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white font-bold">N</div>
+      <span class="text-[19px] font-bold">nameword</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-7 text-[15px] font-medium text-slate-600">
+      <a class="hover:text-slate-900" href="#">Products</a>
+      <a class="hover:text-slate-900" href="#vps">VPS</a>
+      <a class="hover:text-slate-900" href="#rdp">RDP</a>
+      <a class="hover:text-slate-900" href="#">Pricing</a>
+      <a class="hover:text-slate-900" href="#">Support</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="#" class="hidden sm:block text-[15px] font-semibold text-slate-700">Sign in</a>
+      <a href="#" class="rounded-lg bg-brand-600 px-4 py-2 text-[14px] font-semibold text-white hover:bg-brand-700">Create account</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="relative overflow-hidden">
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand-50/70 to-transparent"></div>
+  <div class="relative mx-auto max-w-3xl px-5 pt-20 pb-14 text-center">
+    <div class="kicker">Offshore · Private · DMCA-ignored</div>
+    <h1 class="mt-5 text-5xl sm:text-6xl font-bold leading-[1.05]">Privacy and freedom,<br/>hosted offshore.</h1>
+    <p class="mx-auto mt-6 max-w-xl text-lg text-slate-500">Domains, VPS and Windows RDP from privacy-first jurisdictions. Private WHOIS, minimal logs, and a prepaid crypto wallet — no card required.</p>
+    <!-- domain search -->
+    <div class="mx-auto mt-9 max-w-xl">
+      <div class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+        <span class="pl-3 text-slate-400">🔍</span>
+        <input class="w-full bg-transparent px-2 py-2.5 outline-none placeholder:text-slate-400" placeholder="yourname.com" />
+        <button class="rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white hover:bg-brand-700">Search domains</button>
+      </div>
+      <div class="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13px] text-slate-500">
+        <span>✓ Private WHOIS included</span><span>✓ Offshore &amp; DMCA-ignored</span><span>✓ Prepaid crypto wallet</span>
+      </div>
+    </div>
+    <div class="mt-6 text-[14px] text-slate-500">Need a server instead?
+      <a href="#vps" class="font-semibold text-brand-700">Jump to VPS &amp; RDP →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CLOUD VPS -->
+<section id="vps" class="mx-auto max-w-6xl px-5 py-16">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <div class="kicker">Cloud VPS</div>
+      <h2 class="mt-2 text-3xl sm:text-4xl font-bold">High-performance VPS, deployed in minutes</h2>
+      <p class="mt-2 max-w-xl text-slate-500">Full root access, NVMe-class storage and hourly or monthly billing. Pay from your prepaid wallet.</p>
+    </div>
+    <a href="#" class="rounded-lg border border-slate-200 px-4 py-2 text-[14px] font-semibold text-slate-700 hover:border-slate-300">Compare all VPS →</a>
+  </div>
+
+  <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <!-- Basic -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:shadow-slate-200/60 transition">
+      <div class="text-[13px] font-semibold text-slate-500">Basic</div>
+      <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$8.40</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+      <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+        <li class="flex justify-between"><span>vCPU</span><span class="font-semibold text-slate-900">2</span></li>
+        <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">8 GB</span></li>
+        <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">64 GB</span></li>
+        <li class="flex justify-between"><span>Type</span><span class="font-mono text-[12px] text-slate-500">e2-standard-2</span></li>
+      </ul>
+      <button class="mt-6 w-full rounded-lg border border-slate-200 py-2.5 font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Deploy</button>
+    </div>
+    <!-- Standard (popular) -->
+    <div class="relative rounded-2xl border-2 border-brand-500 bg-white p-6 shadow-lg shadow-brand-500/10">
+      <div class="absolute -top-3 left-6 rounded-full bg-brand-600 px-3 py-1 text-[11px] font-semibold text-white">Most popular</div>
+      <div class="text-[13px] font-semibold text-slate-500">Standard</div>
+      <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$16.80</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+      <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+        <li class="flex justify-between"><span>vCPU</span><span class="font-semibold text-slate-900">4</span></li>
+        <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">16 GB</span></li>
+        <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">80 GB</span></li>
+        <li class="flex justify-between"><span>Type</span><span class="font-mono text-[12px] text-slate-500">e2-standard-4</span></li>
+      </ul>
+      <button class="mt-6 w-full rounded-lg bg-brand-600 py-2.5 font-semibold text-white hover:bg-brand-700">Deploy</button>
+    </div>
+    <!-- Premium -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:shadow-slate-200/60 transition">
+      <div class="text-[13px] font-semibold text-slate-500">Premium</div>
+      <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$33.60</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+      <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+        <li class="flex justify-between"><span>vCPU</span><span class="font-semibold text-slate-900">8</span></li>
+        <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">32 GB</span></li>
+        <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">160 GB</span></li>
+        <li class="flex justify-between"><span>Type</span><span class="font-mono text-[12px] text-slate-500">e2-standard-8</span></li>
+      </ul>
+      <button class="mt-6 w-full rounded-lg border border-slate-200 py-2.5 font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Deploy</button>
+    </div>
+    <!-- Enterprise -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:shadow-slate-200/60 transition">
+      <div class="text-[13px] font-semibold text-slate-500">Enterprise</div>
+      <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$67.20</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+      <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+        <li class="flex justify-between"><span>vCPU</span><span class="font-semibold text-slate-900">16</span></li>
+        <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">64 GB</span></li>
+        <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">200 GB</span></li>
+        <li class="flex justify-between"><span>Type</span><span class="font-mono text-[12px] text-slate-500">e2-standard-16</span></li>
+      </ul>
+      <button class="mt-6 w-full rounded-lg border border-slate-200 py-2.5 font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Deploy</button>
+    </div>
+  </div>
+</section>
+
+<!-- WINDOWS RDP -->
+<section id="rdp" class="border-y border-slate-100 bg-slate-50/60">
+  <div class="mx-auto max-w-6xl px-5 py-16">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <div class="kicker">Windows RDP</div>
+        <h2 class="mt-2 text-3xl sm:text-4xl font-bold">Remote Windows desktops, ready to connect</h2>
+        <p class="mt-2 max-w-xl text-slate-500">Full admin RDP with SSD storage and 1 Gbps networking. Choose a region and connect in minutes.</p>
+      </div>
+      <a href="#" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-[14px] font-semibold text-slate-700 hover:border-slate-300">Compare all RDP →</a>
+    </div>
+
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Basic -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:shadow-slate-200/60 transition">
+        <div class="text-[13px] font-semibold text-slate-500">Basic Plan</div>
+        <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$18</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+        <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+          <li class="flex justify-between"><span>CPU</span><span class="font-semibold text-slate-900">2 cores</span></li>
+          <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">4 GB</span></li>
+          <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">100 GB SSD</span></li>
+          <li class="flex justify-between"><span>Network</span><span class="font-semibold text-slate-900">1 Gbps</span></li>
+        </ul>
+        <button class="mt-6 w-full rounded-lg border border-slate-200 py-2.5 font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Configure</button>
+      </div>
+      <!-- Standard popular -->
+      <div class="relative rounded-2xl border-2 border-brand-500 bg-white p-6 shadow-lg shadow-brand-500/10">
+        <div class="absolute -top-3 left-6 rounded-full bg-brand-600 px-3 py-1 text-[11px] font-semibold text-white">Most popular</div>
+        <div class="text-[13px] font-semibold text-slate-500">Standard Plan</div>
+        <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$32</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+        <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+          <li class="flex justify-between"><span>CPU</span><span class="font-semibold text-slate-900">4 cores</span></li>
+          <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">8 GB</span></li>
+          <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">250 GB SSD</span></li>
+          <li class="flex justify-between"><span>Network</span><span class="font-semibold text-slate-900">1 Gbps</span></li>
+        </ul>
+        <button class="mt-6 w-full rounded-lg bg-brand-600 py-2.5 font-semibold text-white hover:bg-brand-700">Configure</button>
+      </div>
+      <!-- Premium -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:shadow-slate-200/60 transition">
+        <div class="text-[13px] font-semibold text-slate-500">Premium Plan</div>
+        <div class="mt-2 flex items-end gap-1"><span class="text-3xl font-bold">$58</span><span class="pb-1 text-slate-400 text-sm">/mo*</span></div>
+        <ul class="mt-5 space-y-2.5 text-[14px] text-slate-600">
+          <li class="flex justify-between"><span>CPU</span><span class="font-semibold text-slate-900">8 cores</span></li>
+          <li class="flex justify-between"><span>RAM</span><span class="font-semibold text-slate-900">16 GB</span></li>
+          <li class="flex justify-between"><span>Storage</span><span class="font-semibold text-slate-900">500 GB SSD</span></li>
+          <li class="flex justify-between"><span>Network</span><span class="font-semibold text-slate-900">1 Gbps</span></li>
+        </ul>
+        <button class="mt-6 w-full rounded-lg border border-slate-200 py-2.5 font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Configure</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EVERYTHING ELSE (slim) -->
+<section class="mx-auto max-w-6xl px-5 py-16">
+  <div class="kicker">Also available</div>
+  <h2 class="mt-2 text-2xl sm:text-3xl font-bold">Everything else you need</h2>
+  <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <a href="#" class="rounded-xl border border-slate-200 p-5 hover:border-slate-300">
+      <div class="text-2xl">🌐</div><div class="mt-3 font-semibold">Domains</div>
+      <div class="text-[13px] text-slate-500">Private registration from $30/yr</div>
+    </a>
+    <a href="#" class="rounded-xl border border-slate-200 p-5 hover:border-slate-300">
+      <div class="text-2xl">🧭</div><div class="mt-3 font-semibold">DNS</div>
+      <div class="text-[13px] text-slate-500">Fast, free managed DNS</div>
+    </a>
+    <a href="#" class="rounded-xl border border-slate-200 p-5 hover:border-slate-300">
+      <div class="text-2xl">🗄️</div><div class="mt-3 font-semibold">Web Hosting</div>
+      <div class="text-[13px] text-slate-500">cPanel hosting, offshore</div>
+    </a>
+    <a href="#" class="rounded-xl border border-slate-200 p-5 hover:border-slate-300">
+      <div class="text-2xl">⚡</div><div class="mt-3 font-semibold">Developer API</div>
+      <div class="text-[13px] text-slate-500">Automate domains &amp; servers</div>
+    </a>
+  </div>
+</section>
+
+<!-- WHY (short) -->
+<section class="border-t border-slate-100 bg-slate-50/60">
+  <div class="mx-auto max-w-6xl px-5 py-14 grid gap-6 sm:grid-cols-4 text-center sm:text-left">
+    <div><div class="text-brand-600 text-xl">📍</div><div class="mt-2 font-semibold">Offshore</div><div class="text-[13px] text-slate-500">Privacy-first jurisdictions</div></div>
+    <div><div class="text-brand-600 text-xl">🛡️</div><div class="mt-2 font-semibold">DMCA-ignored</div><div class="text-[13px] text-slate-500">Your content stays up</div></div>
+    <div><div class="text-brand-600 text-xl">🙈</div><div class="mt-2 font-semibold">Private WHOIS</div><div class="text-[13px] text-slate-500">Included, not upsold</div></div>
+    <div><div class="text-brand-600 text-xl">👛</div><div class="mt-2 font-semibold">Prepaid wallet</div><div class="text-[13px] text-slate-500">Top up with crypto</div></div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="mx-auto max-w-6xl px-5 py-16">
+  <div class="rounded-3xl bg-slate-950 px-6 py-16 text-center text-white ring-1 ring-white/10">
+    <h2 class="text-3xl sm:text-5xl font-bold">Claim your space — offshore and private.</h2>
+    <p class="mx-auto mt-4 max-w-xl text-slate-300">Register a domain or deploy a server in minutes. Pay from your prepaid crypto wallet.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="#" class="rounded-lg bg-brand-600 px-5 py-3 font-semibold text-white hover:bg-brand-700">Create account</a>
+      <a href="#vps" class="rounded-lg border border-white/20 bg-white/5 px-5 py-3 font-semibold text-white hover:bg-white/10">Browse servers</a>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-slate-100">
+  <div class="mx-auto max-w-6xl px-5 py-10 text-[13px] text-slate-500 flex flex-wrap items-center justify-between gap-4">
+    <span>© Nameword — mockup</span>
+    <span>* Example prices only. Live prices are calculated automatically.</span>
+  </div>
+</footer>
+
+</body>
+</html>

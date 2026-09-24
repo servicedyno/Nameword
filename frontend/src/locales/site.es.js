@@ -129,6 +129,30 @@ export const siteEs = {
       placeholder: "tunombre.com",
       button: "Buscar",
     },
+    servers: {
+      perMonth: "/mes",
+      popular: "Más popular",
+      vps: {
+        kicker: "Cloud VPS",
+        title: "Cloud VPS de alto rendimiento",
+        lead: "Root completo, almacenamiento SSD rápido y la jurisdicción que elijas — desplegado en segundos, pagado desde tu monedero prepago.",
+        compare: "Comparar todos los VPS",
+        deploy: "Desplegar",
+      },
+      rdp: {
+        kicker: "Windows RDP",
+        title: "RDP de Windows privado",
+        lead: "Escritorios con acceso de administrador en red de 1 Gbps — accesibles desde cualquier lugar y tuyos.",
+        viewAll: "Ver todos los planes RDP",
+        configure: "Configurar",
+        network: "1 Gbps",
+      },
+      everything: {
+        kicker: "Todo lo demás",
+        title: "Dominios, DNS, hosting y API",
+        lead: "El resto del stack — privado y con un solo monedero prepago.",
+      },
+    },
   },
 
   domainsPage: {

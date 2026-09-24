@@ -77,7 +77,11 @@ export default function Hero() {
               <LuShieldCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {s.trustNote}
             </span>
             <button
-              onClick={() => navigate("/vps")}
+              onClick={() => {
+                const el = document.getElementById("vps");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                else navigate("/vps");
+              }}
               className="inline-flex items-center gap-1.5 text-15 font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
               data-testid="hero-need-servers-link"
             >

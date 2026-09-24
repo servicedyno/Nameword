@@ -129,6 +129,30 @@ export const siteFr = {
       placeholder: "votrenom.com",
       button: "Rechercher",
     },
+    servers: {
+      perMonth: "/mois",
+      popular: "Le plus populaire",
+      vps: {
+        kicker: "Cloud VPS",
+        title: "VPS Cloud haute performance",
+        lead: "Root complet, stockage SSD rapide et la juridiction de votre choix — déployé en quelques secondes, payé depuis votre portefeuille prépayé.",
+        compare: "Comparer tous les VPS",
+        deploy: "Déployer",
+      },
+      rdp: {
+        kicker: "Windows RDP",
+        title: "RDP Windows privé",
+        lead: "Bureaux avec accès administrateur sur réseau 1 Gbps — accessibles partout, bien à vous.",
+        viewAll: "Voir tous les plans RDP",
+        configure: "Configurer",
+        network: "1 Gbps",
+      },
+      everything: {
+        kicker: "Tout le reste",
+        title: "Domaines, DNS, hébergement et API",
+        lead: "Le reste de la stack — privé, avec un seul portefeuille prépayé.",
+      },
+    },
   },
 
   domainsPage: {

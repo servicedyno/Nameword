@@ -1,5 +1,27 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ✅ SESSION (2025-07) — Product-forward landing (VPS & RDP on the home page)
+Contabo-style: the home page now surfaces the paid server products with specs + LIVE prices.
+New section order in `components/home/HomeRedesign.jsx`:
+Hero → CloudVps (#vps) → WindowsRdp (#rdp) → EverythingElse → WhyNameword → PricingTeaser →
+RewardsBand → FinalCta. (The old big `Products.jsx` grid is no longer used on the home page.)
+New files (components/home/landing/):
+- ServerPlanCard.jsx (+ ServerPlanSkeleton) — reusable plan card, "Most popular" highlight.
+- CloudVps.jsx — fetches resellerAPI.getVpsPlans('EU'); renders ALL plans (live: 6× "Cloud VPS 10–60",
+  $18–$288/mo); popular = index 3; Deploy + "Compare all VPS" → /vps. Safe FALLBACK array if fetch slow/fails.
+- WindowsRdp.jsx — fetches getRdpPlans('EU'); shows ONE card per tier (filters duration_months===1 →
+  Standard/Pro/Power, $56/$112/$224 /mo); popular = Pro; Configure + "View all RDP plans" → /rdp;
+  Network spec hardcoded "1 Gbps". Safe FALLBACK.
+- EverythingElse.jsx — condensed strip (Domains, DNS[protected→/sign-in], Web Hosting, Developer API),
+  reuses t.site.nav.items copy.
+Copy: added `home.servers` block (perMonth/popular + vps/rdp/everything) to site.en/es/fr.js (i18n-safe).
+Hero: "Need a server?" link now smooth-scrolls to #vps (falls back to navigate('/vps')).
+Prices are LIVE (verified GET /reseller/vps/plans → 200, 6 plans). Deploy/Configure route to existing
+/vps and /rdp pages — NO new checkout flow. No price/margin/checkout changes.
+STATUS: ✅ lint clean; ✅ auto_frontend_testing_agent 26/26 PASS (live search, all nav, mobile no-scroll,
+API 200, no JS errors); dark mode verified via screenshot. Vite DEV (HMR).
+
+
 ## ✅ SESSION (2025-07) — Landing page redesign (calmer, product-first)
 Scope: public landing + shared nav/footer only (deeper app screens untouched).
 Typography: switched the whole app to **Inter** (was Outfit + Plus Jakarta Sans); JetBrains Mono kept for

@@ -144,6 +144,30 @@ export const siteEn = {
       placeholder: "yourname.com",
       button: "Search",
     },
+    servers: {
+      perMonth: "/mo",
+      popular: "Most popular",
+      vps: {
+        kicker: "Cloud VPS",
+        title: "High-performance Cloud VPS",
+        lead: "Full root, fast SSD storage and the jurisdiction you choose — deployed in seconds, paid from your prepaid wallet.",
+        compare: "Compare all VPS",
+        deploy: "Deploy",
+      },
+      rdp: {
+        kicker: "Windows RDP",
+        title: "Private Windows RDP",
+        lead: "Full Administrator desktops on a 1 Gbps network — reachable anywhere, owned by you.",
+        viewAll: "View all RDP plans",
+        configure: "Configure",
+        network: "1 Gbps",
+      },
+      everything: {
+        kicker: "Everything else",
+        title: "Domains, DNS, hosting & API",
+        lead: "The rest of the stack — quietly private, one prepaid wallet.",
+      },
+    },
   },
 
   domainsPage: {

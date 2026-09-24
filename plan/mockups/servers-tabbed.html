@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nameword — Option B · Servers as VPS/RDP tabs (mockup)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { sans:['Inter','system-ui','sans-serif'], mono:['JetBrains Mono','monospace'] },
+    colors: { brand:{50:'#eef0ff',100:'#e0e3ff',300:'#a5adff',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3'} }
+  }}}
+</script>
+<style>body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{letter-spacing:-.021em}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#4f46e5}
+  .tab.active{background:#4f46e5;color:#fff}
+</style>
+</head>
+<body class="bg-white text-slate-900">
+
+<div class="bg-slate-900 text-center text-[12px] tracking-wide text-slate-300 py-1.5">MOCKUP · Option B · visual reference only — example prices</div>
+
+<!-- NAV -->
+<header class="border-b border-slate-100">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-5 h-16">
+    <div class="flex items-center gap-2.5">
+      <div class="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white font-bold">N</div>
+      <span class="text-[19px] font-bold">nameword</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-7 text-[15px] font-medium text-slate-600">
+      <a href="#">Products</a><a href="#">VPS</a><a href="#">RDP</a><a href="#">Pricing</a><a href="#">Support</a>
+    </nav>
+    <a href="#" class="rounded-lg bg-brand-600 px-4 py-2 text-[14px] font-semibold text-white">Create account</a>
+  </div>
+</header>
+
+<!-- compact hero -->
+<section class="mx-auto max-w-3xl px-5 pt-16 pb-8 text-center">
+  <div class="kicker">Cloud servers</div>
+  <h1 class="mt-4 text-4xl sm:text-5xl font-bold">Deploy a VPS or Windows RDP in minutes</h1>
+  <p class="mx-auto mt-4 max-w-xl text-slate-500">Same offshore, privacy-first platform. Full root / admin access, prepaid crypto billing, no card required.</p>
+</section>
+
+<!-- TABS -->
+<section class="mx-auto max-w-6xl px-5 pb-20">
+  <div class="mx-auto flex w-fit items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
+    <button onclick="show('vps')" id="tab-vps" class="tab active rounded-full px-6 py-2 text-[15px] font-semibold text-slate-600">Cloud VPS</button>
+    <button onclick="show('rdp')" id="tab-rdp" class="tab rounded-full px-6 py-2 text-[15px] font-semibold text-slate-600">Windows RDP</button>
+  </div>
+
+  <!-- VPS panel -->
+  <div id="panel-vps" class="mt-9 overflow-hidden rounded-2xl border border-slate-200">
+    <table class="w-full text-left text-[14px]">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="px-5 py-3 font-medium">Plan</th>
+          <th class="px-5 py-3 font-medium">vCPU</th>
+          <th class="px-5 py-3 font-medium">RAM</th>
+          <th class="px-5 py-3 font-medium">Storage</th>
+          <th class="px-5 py-3 font-medium">From</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr><td class="px-5 py-4 font-semibold">Basic</td><td class="px-5 py-4">2</td><td class="px-5 py-4">8 GB</td><td class="px-5 py-4">64 GB</td><td class="px-5 py-4 font-bold">$8.40<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:border-brand-300">Deploy</a></td></tr>
+        <tr class="bg-brand-50/40"><td class="px-5 py-4 font-semibold">Standard <span class="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white align-middle">Popular</span></td><td class="px-5 py-4">4</td><td class="px-5 py-4">16 GB</td><td class="px-5 py-4">80 GB</td><td class="px-5 py-4 font-bold">$16.80<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-brand-700">Deploy</a></td></tr>
+        <tr><td class="px-5 py-4 font-semibold">Premium</td><td class="px-5 py-4">8</td><td class="px-5 py-4">32 GB</td><td class="px-5 py-4">160 GB</td><td class="px-5 py-4 font-bold">$33.60<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:border-brand-300">Deploy</a></td></tr>
+        <tr><td class="px-5 py-4 font-semibold">Enterprise</td><td class="px-5 py-4">16</td><td class="px-5 py-4">64 GB</td><td class="px-5 py-4">200 GB</td><td class="px-5 py-4 font-bold">$67.20<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:border-brand-300">Deploy</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RDP panel -->
+  <div id="panel-rdp" class="mt-9 hidden overflow-hidden rounded-2xl border border-slate-200">
+    <table class="w-full text-left text-[14px]">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="px-5 py-3 font-medium">Plan</th>
+          <th class="px-5 py-3 font-medium">CPU</th>
+          <th class="px-5 py-3 font-medium">RAM</th>
+          <th class="px-5 py-3 font-medium">Storage</th>
+          <th class="px-5 py-3 font-medium">Network</th>
+          <th class="px-5 py-3 font-medium">From</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr><td class="px-5 py-4 font-semibold">Basic Plan</td><td class="px-5 py-4">2</td><td class="px-5 py-4">4 GB</td><td class="px-5 py-4">100 GB SSD</td><td class="px-5 py-4">1 Gbps</td><td class="px-5 py-4 font-bold">$18<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:border-brand-300">Configure</a></td></tr>
+        <tr class="bg-brand-50/40"><td class="px-5 py-4 font-semibold">Standard Plan <span class="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white align-middle">Popular</span></td><td class="px-5 py-4">4</td><td class="px-5 py-4">8 GB</td><td class="px-5 py-4">250 GB SSD</td><td class="px-5 py-4">1 Gbps</td><td class="px-5 py-4 font-bold">$32<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-brand-700">Configure</a></td></tr>
+        <tr><td class="px-5 py-4 font-semibold">Premium Plan</td><td class="px-5 py-4">8</td><td class="px-5 py-4">16 GB</td><td class="px-5 py-4">500 GB SSD</td><td class="px-5 py-4">1 Gbps</td><td class="px-5 py-4 font-bold">$58<span class="text-slate-400 font-normal">/mo*</span></td><td class="px-5 py-4 text-right"><a href="#" class="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:border-brand-300">Configure</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="mt-4 text-[12px] text-slate-400">* Example prices only. Live prices are calculated automatically from provider cost.</p>
+</section>
+
+<script>
+  function show(which){
+    document.getElementById('panel-vps').classList.toggle('hidden', which!=='vps');
+    document.getElementById('panel-rdp').classList.toggle('hidden', which!=='rdp');
+    document.getElementById('tab-vps').classList.toggle('active', which==='vps');
+    document.getElementById('tab-rdp').classList.toggle('active', which==='rdp');
+  }
+</script>
+</body>
+</html>
