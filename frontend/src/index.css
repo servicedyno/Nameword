@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 @import "tailwindcss";
 
@@ -131,10 +131,10 @@
   --shadow-alert-white: 0px 7px 20px 0px #ffffff0a;
   --shadow-glow: 0 0 0 1px rgba(79, 70, 229, 0.2), 0 12px 40px -12px rgba(79, 70, 229, 0.35);
 
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", "Plus Jakarta Sans", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-poppins: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-poppins: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --text-15: 15px;
   --text-13: 13px;
@@ -258,6 +258,7 @@ html:not(.dark) body {
 
 h1, h2, h3, .nw-h2, .font-display {
   font-family: var(--font-display);
+  letter-spacing: -0.021em;
 }
 
 ::selection {
@@ -1169,6 +1170,10 @@ input[type="checkbox"]:checked {
   .nw-eyebrow::after {
     content: "]";
     @apply text-brand-300 dark:text-brand-500;
+  }
+  /* Calmer landing label — quiet uppercase kicker, no brackets (redesign) */
+  .nw-kicker {
+    @apply inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-300;
   }
   .nw-h2 {
     @apply text-3xl sm:text-4xl font-bold tracking-tight text-primary dark:text-white;

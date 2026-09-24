@@ -21,7 +21,7 @@ export default function PricingTeaser() {
     <section id="pricing" className="nw-section bg-surface-2 dark:bg-gray-900/40">
       <div className="nw-container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <span className="nw-kicker mb-4">{s.eyebrow}</span>
           <h2 className="nw-h2">{s.title}</h2>
           <p className="nw-lead mt-4">{s.lead}</p>
         </Reveal>

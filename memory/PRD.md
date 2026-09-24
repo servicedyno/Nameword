@@ -1,5 +1,26 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ✅ SESSION (2025-07) — Landing page redesign (calmer, product-first)
+Scope: public landing + shared nav/footer only (deeper app screens untouched).
+Typography: switched the whole app to **Inter** (was Outfit + Plus Jakarta Sans); JetBrains Mono kept for
+code/price accents. Global change in `index.css` (@import + --font-sans/--font-display tokens; added
+-0.021em heading tracking).
+Landing changes (all in components/home/landing/*):
+- Hero.jsx REWRITTEN: centered, product-first; removed the photographic dark backdrop, the HeroShowcase
+  floating mock card, the gradient headline, the 5-star rating chip, and the nw-grid-bg/nw-hero-glow decor.
+  Domain search is the single focal point; slim quiet trust strip below. Live search flow unchanged.
+- Added calm `.nw-kicker` label class (no "[ ]" brackets) and swapped landing eyebrows to it (Products,
+  WhyNameword, PricingTeaser). Did NOT touch the shared `.nw-eyebrow`/`.nw-hero`/grid/glow classes because
+  other (out-of-scope) pages still use them.
+- RewardsBand.jsx: replaced the dark photo panel with a clean prepaid-wallet product card (no photo).
+- FinalCta.jsx: replaced the photo background with one confident solid dark panel (no photo/glow).
+- DomainSearchForm.jsx: added `center` prop to center the chips in the new hero.
+NOTE: landing no longer imports landing/images.js or HeroShowcase.jsx (files kept, now unused).
+STATUS: ✅ lint clean; ✅ auto_frontend_testing_agent 7/7 sections PASS (live domain search 200, all nav
+works, no console errors, no 390px horizontal scroll); dark mode verified via screenshot. Vite DEV mode
+(supervisor `frontend` runs `yarn start`), so HMR picks up changes; restart frontend only if needed.
+
+
 ## ✅ SESSION (2025-07) — Fresh environment setup from provided creds
 Pod was reset (empty .env files; backend supervisor reverted to the default `uvicorn server:app` which fails
 for this Node app). Re-did the full setup:

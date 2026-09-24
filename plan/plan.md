@@ -1,74 +1,66 @@
-# Plan — Redesign the DNS management screen to feel like a modern DNS platform
+# Nameword — Landing Page Redesign (cleaner, calmer UI)
 
-## The problem
-The DNS management screen works, but it doesn't look or behave like the DNS managers people
-are used to on other platforms:
+## Problem
+The current landing page feels busy and dated. Too many competing elements compete for
+attention (a photographic dark hero with a floating mock card, animated gradient headline,
+a 5-star rating chip, repeated "eyebrow" labels, decorative grid/glow backgrounds, and heavy
+section styling). The type combination (three different fonts) reads as unpolished. The goal is
+a clean, modern, product-first landing comparable to leading domain/hosting and developer
+platforms.
 
-- You have to **type the domain by hand** to load its records — there's no list of the
-  domains you own to pick from.
-- Records sit in a **plain table**, with a **separate "Add a record" form** lower down and a
-  **pop-up window** for edits — instead of managing everything in one place.
-- **TTL is shown as raw seconds** (e.g. 3600) rather than friendly choices like "1 hour".
-- **Delete happens instantly** with no confirmation — easy to remove the wrong record.
-- There's **no search, no filtering by record type, and no sorting**, so a busy zone is hard
-  to scan.
-- The add/edit fields are the **same for every record type**, with little guidance, where
-  other platforms tailor the fields (e.g. priority for MX, multi-line for TXT) and validate
-  the value before saving.
+## Objective
+Redesign the public landing page so it looks calm, premium, and trustworthy — more whitespace,
+one confident typeface, a single focused hero, and restrained use of color and motion — while
+keeping all current messaging and every link/button working exactly as today.
 
-## What will change
+## What changes (scope)
+1. **Landing (home) page** — full visual redesign of all its sections.
+2. **Shared top navigation bar and footer** — restyled to match (these appear on the landing and
+   set the overall tone).
 
-**A. Pick the domain instead of typing it**
-- A **dropdown of the domains you own** to choose from, with a manual-entry option kept as a
-  fallback. Selecting a domain loads its records.
-- Show the domain's **current nameservers** and where the records are served from, so it's
-  clear what you're editing.
+Everything else in the app (dashboard, domain/DNS/hosting management, VPS/RDP, checkout, sign-in
+and account pages) keeps its current design in this pass. Those can be redesigned later as a
+separate effort if wanted.
 
-**B. A records area that feels like a real control panel**
-- An **"add record" row at the top of the table** (not a separate form far below).
-- **Edit records in place** (click to edit the row, Save/Cancel) rather than in a pop-up.
-- **Type-aware fields with light validation and short hints** per record type — A (IPv4),
-  AAAA (IPv6), CNAME/NS (target host), MX (priority + mail host), TXT (multi-line value),
-  SRV (its fields). Bad values are caught before saving.
-- **Friendly TTL choices** (Auto, 1 min, 5 min, 30 min, 1 hour, 1 day) with a "custom
-  seconds" option still available.
-- Clearer rows: the **full record name** (e.g. `www.mysite.com`), a **copy button** on the
-  value, sensible truncation for long values, and the **record type shown as a labelled
-  badge**.
-- **Delete asks for confirmation** first.
+## Design direction
+A clean, editorial, light-first look with a restrained single accent color:
+- **Typography:** move to one modern, highly legible sans‑serif — **Inter** — used for both
+  headings and body (large headings tightened for a crisp, premium feel). A monospace font is
+  kept only for the small code/price accents. This replaces the current three-font mix and is the
+  main fix for the "bad font" complaint.
+- **Color:** keep the existing indigo brand accent, but use it sparingly on a mostly white/neutral
+  canvas. Remove the decorative gradient text, grid pattern, and glow backgrounds.
+- **Space & rhythm:** larger, consistent vertical spacing between sections; fewer borders, chips,
+  and badges; simpler cards.
+- **Motion:** keep it subtle (gentle fade-in on scroll); remove the busier animated effects.
+- **Dark mode:** kept and cleaned up to match.
 
-**C. Find records fast**
-- A **search box**, **filter by record type**, **sortable columns**, and a visible
-  **record count**.
+## Section-by-section
+- **Hero:** one clear headline, one supporting line, and the domain-search bar as the centerpiece.
+  Remove the photographic dark background, the floating mock card, the gradient headline, and the
+  star-rating chip. Optionally show a light, simple product preview beside the copy instead of the
+  photo. The live domain search (typing a name and seeing real availability/pricing) keeps working
+  exactly as it does now.
+- **Trust row:** a slim, quiet strip of the four proof points (offshore, DMCA-ignored, private
+  WHOIS, prepaid wallet) instead of boxed badges.
+- **Products (Domains, DNS, Hosting, VPS, RDP, API):** a clean, even card grid with consistent
+  icons, titles, prices, and a link into each product.
+- **Why Nameword + How it works:** a tidy feature grid plus a simple 3-step strip, with the privacy
+  checklist folded in calmly.
+- **Pricing teaser, rewards line, final call-to-action:** kept, simplified, and visually aligned.
 
-**D. Nameservers, restyled**
-- Show the **current nameservers**, and present the "replace nameservers" tool more clearly
-  (at least two entries), keeping the note that **DNS changes are free**.
+## What does NOT change
+- All copy/messaging (offshore, privacy-first, DMCA-ignored, prepaid crypto wallet, etc.).
+- All functionality: domain search, navigation targets, sign-in/create-account, pricing links,
+  language switcher, dark-mode toggle, and every existing route.
+- No backend changes.
 
-**E. Polish**
-- Loading placeholders, a clearer empty state, success/error messages, a **mobile-friendly**
-  layout (records become cards on small screens), and the same overall look and dark-mode
-  styling the rest of the app already uses.
-
-## Decisions worth confirming (a default is chosen for each)
-1. **Editing style — default: edit in place** (like Cloudflare). Alternative: keep the
-   current pop-up editor.
-2. **Domain selection — default: dropdown of your owned domains + manual-entry fallback.**
-   Alternative: keep manual typing only.
-3. **TTL — default: friendly presets with a custom option.** Alternative: keep raw seconds.
-4. **Delete — default: ask for confirmation.** Alternative: keep instant delete.
-5. **Reference look — default: a clean, modern Cloudflare-style table.** Say if you'd prefer
-   the Namecheap/GoDaddy style instead.
-
-## Out of scope (unless requested)
-- A Cloudflare-style **"proxy" (orange cloud) on/off toggle** per record — the connected DNS
-  API doesn't expose a per-record proxy flag to set.
-- **DNS record history / one-click restore** — not supported by the connected DNS API.
-- **DNSSEC**, email-deliverability wizards, and traffic analytics.
-- Any change to **how DNS is priced** (it stays free) or how nameservers work upstream.
-
-## Notes
-- This is a presentation and interaction redesign plus a domain picker and search — it uses
-  the same records and the same DNS source as today.
-- The supported record types stay the same (A, AAAA, CNAME, MX, TXT, NS, SRV). Whether a live
-  change takes effect still depends on the domain being on the connected DNS, exactly as now.
+## Assumptions (please challenge any of these)
+- **Font = Inter.** If a different feel is preferred (e.g. Geist for a more "developer platform"
+  look, or a more distinctive display face for headlines), say so and it will be used instead.
+- **Keep the indigo accent.** If a different accent/near‑black palette is preferred, it can change.
+- **Scope = landing + shared nav/footer only** this round; deeper app screens stay as-is.
+- **Same content and sections**, just cleaner — no copywriting rewrite and no sections removed
+  (only simplified). If entire sections should be dropped for a shorter page, indicate which.
+- **Hero visual:** replace the photo/mock with a lighter product preview (or a plain, uncluttered
+  hero). If a specific reference site's style is desired, share it and the design will follow it.

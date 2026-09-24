@@ -1,30 +1,15 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { motion as Motion, useReducedMotion } from "motion/react";
-import { LuLock, LuStar, LuShieldCheck, LuArrowRight, LuMapPin, LuEyeOff, LuWallet } from "react-icons/lu";
+import { LuShieldCheck, LuArrowRight, LuMapPin, LuEyeOff, LuWallet } from "react-icons/lu";
 import { useLanguage } from "../../../hooks/useLanguage";
 import DomainSearchResults from "../../domain/DomainSearchResults";
-import HeroShowcase from "../HeroShowcase";
 import DomainSearchForm from "./DomainSearchForm";
-import { LANDING_IMG } from "./images";
 
 const TRUST_ICONS = [LuMapPin, LuShieldCheck, LuEyeOff, LuWallet];
 
-function HeroStage() {
-  return (
-    <div className="relative mt-4 lg:mt-0" data-testid="hero-stage">
-      <div className="absolute inset-x-0 -top-6 -bottom-6 overflow-hidden rounded-[2rem] bg-gray-950 sm:-inset-x-6 sm:-top-14 lg:-inset-x-8 lg:-bottom-12">
-        <img src={LANDING_IMG.hero} alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover object-center opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-900/60 via-gray-950/45 to-gray-950/80" />
-        <div className="absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
-      </div>
-      <div className="relative px-3 py-6 sm:px-6 sm:py-8">
-        <HeroShowcase onDark />
-      </div>
-    </div>
-  );
-}
-
+// Calm, centered, product-first hero. The domain search is the single focal
+// point — no photographic backdrop, mock card, gradient headline or rating chip.
 export default function Hero() {
   const { t } = useLanguage();
   const s = t.site.home;
@@ -42,54 +27,39 @@ export default function Hero() {
     setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
 
-  const idx = s.heading.indexOf(",");
-  const head1 = idx >= 0 ? s.heading.slice(0, idx + 1) : s.heading;
-  const head2 = idx >= 0 ? s.heading.slice(idx + 1).trim() : "";
-
-  const container = { animate: { transition: { staggerChildren: reduced ? 0 : 0.09, delayChildren: 0.04 } } };
+  const container = { animate: { transition: { staggerChildren: reduced ? 0 : 0.08, delayChildren: 0.03 } } };
   const fadeUp = {
-    initial: { opacity: 0, y: reduced ? 0 : 16 },
+    initial: { opacity: 0, y: reduced ? 0 : 14 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
   };
 
   return (
-    <section className="nw-hero">
-      <div className="absolute inset-0 nw-grid-bg opacity-40 dark:opacity-80" />
-      <div className="nw-hero-glow -top-32 -right-24 h-96 w-96 opacity-70" />
+    <section className="relative overflow-hidden bg-white dark:bg-gray-950">
+      {/* one very soft top tint — no grid, no glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand-50/60 to-transparent dark:from-brand-500/[0.06]" />
 
-      <div className="nw-container relative grid items-center gap-16 py-14 sm:py-20 lg:grid-cols-2 lg:gap-14 lg:py-24">
-        <Motion.div variants={container} initial="initial" animate="animate">
-          <Motion.div variants={fadeUp} className="mb-5 flex flex-wrap items-center gap-3">
-            <span className="nw-eyebrow"><LuLock className="h-3.5 w-3.5" /> {s.eyebrow}</span>
-            <span className="nw-chip" data-testid="hero-rating-chip">
-              <span className="flex items-center gap-0.5 text-amber-400">
-                {[0, 1, 2, 3, 4].map((i) => <LuStar key={i} className="h-3.5 w-3.5 fill-current" />)}
-              </span>
-              {s.rating}
-            </span>
+      <div className="nw-container relative py-20 sm:py-24 lg:py-28">
+        <Motion.div variants={container} initial="initial" animate="animate" className="mx-auto max-w-3xl text-center">
+          <Motion.div variants={fadeUp}>
+            <span className="nw-kicker">{s.eyebrow}</span>
           </Motion.div>
 
           <Motion.h1
             variants={fadeUp}
-            className="text-4xl font-bold leading-[1.08] tracking-tight text-primary dark:text-white sm:text-5xl lg:text-6xl"
+            className="mt-5 text-[2.5rem] font-bold leading-[1.06] tracking-tight text-primary dark:text-white sm:text-6xl"
             data-testid="hero-heading"
           >
-            {head1}
-            {head2 && (
-              <>
-                {" "}
-                <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent dark:from-brand-400 dark:to-brand-200">
-                  {head2}
-                </span>
-              </>
-            )}
+            {s.heading}
           </Motion.h1>
 
-          <Motion.p variants={fadeUp} className="mt-5 max-w-xl text-lg text-ink-soft dark:text-gray-400">
+          <Motion.p
+            variants={fadeUp}
+            className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft dark:text-gray-400"
+          >
             {s.subheading}
           </Motion.p>
 
-          <Motion.div variants={fadeUp} className="mt-8">
+          <Motion.div variants={fadeUp} className="mx-auto mt-9 max-w-2xl">
             <DomainSearchForm
               testId="hero"
               placeholder={s.placeholder}
@@ -98,10 +68,11 @@ export default function Hero() {
               busy={searching}
               onSubmit={onSearch}
               chips={s.heroChips}
+              center
             />
           </Motion.div>
 
-          <Motion.div variants={fadeUp} className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <Motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
             <span className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
               <LuShieldCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {s.trustNote}
             </span>
@@ -115,19 +86,22 @@ export default function Hero() {
           </Motion.div>
         </Motion.div>
 
-        <HeroStage />
-      </div>
-
-      {/* Slim trust row — folds the old boxed trust strip into the hero */}
-      <div className="nw-container relative">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-7 dark:border-white/[0.06] md:grid-cols-4" data-testid="hero-trust-row">
+        {/* Slim, quiet trust strip — proof points, not boxed badges */}
+        <div
+          className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-8 gap-y-7 border-t border-line pt-10 dark:border-white/[0.06] md:grid-cols-4"
+          data-testid="hero-trust-row"
+        >
           {s.trust.map((it, i) => {
             const Icon = TRUST_ICONS[i] || LuShieldCheck;
             return (
-              <div key={it.label} className="flex items-center gap-3" data-testid={`trust-item-${i}`}>
-                <span className="nw-icon h-10 w-10 shrink-0"><Icon className="h-5 w-5" /></span>
+              <div
+                key={it.label}
+                className="flex flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3 sm:text-left"
+                data-testid={`trust-item-${i}`}
+              >
+                <Icon className="h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-primary dark:text-white">{it.label}</p>
+                  <p className="text-sm font-semibold text-primary dark:text-white">{it.label}</p>
                   <p className="text-xs text-ink-soft dark:text-gray-400">{it.sub}</p>
                 </div>
               </div>
@@ -137,7 +111,7 @@ export default function Hero() {
       </div>
 
       {submitted && (
-        <div ref={resultsRef} className="nw-container relative scroll-mt-24 pb-16 pt-12" data-testid="hero-search-results">
+        <div ref={resultsRef} className="nw-container relative scroll-mt-24 pb-16" data-testid="hero-search-results">
           <DomainSearchResults query={submitted} nonce={searchNonce} onLoadingChange={setSearching} />
         </div>
       )}

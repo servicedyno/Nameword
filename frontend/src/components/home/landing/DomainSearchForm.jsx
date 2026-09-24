@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LuSearch, LuCheck } from "react-icons/lu";
 
-export default function DomainSearchForm({ placeholder, buttonLabel, busyLabel, busy = false, onSubmit, testId, glass = false, chips }) {
+export default function DomainSearchForm({ placeholder, buttonLabel, busyLabel, busy = false, onSubmit, testId, glass = false, chips, center = false }) {
   const [query, setQuery] = useState("");
   const submit = () => {
     if (busy) return;
@@ -40,7 +40,7 @@ export default function DomainSearchForm({ placeholder, buttonLabel, busyLabel, 
         </button>
       </div>
       {chips && (
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 px-1">
+        <div className={`mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 px-1 ${center ? "justify-center" : ""}`}>
           {chips.map((f) => (
             <span key={f} className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
               <LuCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {f}

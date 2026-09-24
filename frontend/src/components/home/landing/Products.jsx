@@ -52,7 +52,7 @@ function ApiCard({ item, explore, onClick }) {
         </div>
       </div>
       <div className="rounded-xl border border-line bg-surface-2 p-4 font-mono text-[12px] leading-relaxed text-ink-soft dark:border-white/[0.06] dark:bg-white/[0.03] dark:text-gray-300">
-        <span className="text-brand-600 dark:text-brand-400">$</span> curl -H "Authorization: Bearer ···" \
+        <span className="text-brand-600 dark:text-brand-400">$</span>{' curl -H "Authorization: Bearer ···" \\'}
         <span className="mt-1 block pl-4">api.nameword.com/v1/domains</span>
         <span className="mt-1 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-brand-500" />
       </div>
@@ -80,7 +80,7 @@ export default function Products() {
       <div className="nw-container">
         <Reveal className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="max-w-2xl">
-            <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+            <span className="nw-kicker mb-4">{s.eyebrow}</span>
             <h2 className="nw-h2">{s.title}</h2>
             <p className="nw-lead mt-4">{s.lead}</p>
           </div>

@@ -18,7 +18,7 @@ export default function WhyNameword() {
     <section id="why" className="nw-section bg-surface-2 dark:bg-gray-900/40">
       <div className="nw-container">
         <Reveal className="max-w-2xl">
-          <span className="nw-eyebrow mb-4">{s.eyebrow}</span>
+          <span className="nw-kicker mb-4">{s.eyebrow}</span>
           <h2 className="nw-h2">{s.title}</h2>
           <p className="nw-lead mt-4">{s.lead}</p>
         </Reveal>
@@ -42,7 +42,7 @@ export default function WhyNameword() {
           className="mt-6 rounded-2xl border border-line bg-white p-6 dark:border-white/[0.06] dark:bg-gray-950 sm:p-8"
           data-testid="privacy-freedom"
         >
-          <span className="nw-eyebrow mb-5"><LuShieldCheck className="h-3.5 w-3.5" /> {privacy.eyebrow}</span>
+          <span className="nw-kicker mb-5"><LuShieldCheck className="h-3.5 w-3.5" /> {privacy.eyebrow}</span>
           <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
             {privacy.items.map((line, i) => (
               <li key={line} className="flex items-start gap-3" data-testid={`privacy-item-${i}`}>
@@ -58,7 +58,7 @@ export default function WhyNameword() {
         {/* How it works — compact 3 steps */}
         <div className="mt-16">
           <Reveal className="max-w-2xl">
-            <span className="nw-eyebrow mb-3">{steps.eyebrow}</span>
+            <span className="nw-kicker mb-3">{steps.eyebrow}</span>
             <h3 className="font-display text-2xl font-bold tracking-tight text-primary dark:text-white sm:text-3xl">{steps.title}</h3>
           </Reveal>
           <ol className="mt-10 grid gap-8 md:grid-cols-3">
