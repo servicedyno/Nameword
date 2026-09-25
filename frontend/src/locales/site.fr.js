@@ -129,6 +129,24 @@ export const siteFr = {
       placeholder: "votrenom.com",
       button: "Rechercher",
     },
+    promo: {
+      announce: "Portefeuille prépayé en crypto · Sans pièce d'identité · Hébergement DMCA ignoré",
+      announceDismiss: "Masquer l'annonce",
+      heroReassure: "Payez en crypto · Sans KYC · Mise en service instantanée",
+      popularTlds: "TLD populaires",
+      coinsLabel: "Le portefeuille accepte",
+      reassure: "Sans KYC · Portefeuille prépayé · Mise en service instantanée",
+      guarantees: {
+        title: "Ce que chaque commande inclut",
+        lead: "Aucune petite ligne — la même promesse de confidentialité sur chaque domaine, serveur et hébergement.",
+        items: [
+          { title: "Inscription sans KYC", desc: "Créez un compte et payez — sans vérification d'identité." },
+          { title: "Prépayé, sans surprise", desc: "Rechargez une fois ; aucun prélèvement automatique." },
+          { title: "Mise en service instantanée", desc: "Domaines, DNS et serveurs en quelques minutes." },
+          { title: "Crypto acceptée", desc: "Rechargez votre portefeuille en BTC, ETH ou USDT." },
+        ],
+      },
+    },
     servers: {
       perMonth: "/mois",
       popular: "Le plus populaire",
@@ -159,6 +177,29 @@ export const siteFr = {
         cta: "Obtenir l'hébergement",
         popular: "Meilleur rapport",
       },
+    },
+    testimonials: {
+      eyebrow: "En leurs mots",
+      title: "Conçu pour ceux qui tiennent à rester en ligne",
+      lead: "Comment des fondateurs, éditeurs et développeurs soucieux de leur vie privée utilisent Nameword.",
+      items: [
+        { quote: "J'ai déplacé ma publication offshore après un retrait de mauvaise foi. Deux ans plus tard, mon site n'a jamais été hors ligne.", role: "Éditeur indépendant" },
+        { quote: "S'inscrire avec une simple adresse e-mail et payer en USDT, c'est exactement comme la facturation devrait être. Sans carte, sans KYC, sans bruit.", role: "Développeur soucieux de la confidentialité" },
+        { quote: "Un accès root complet sur un VPS dans la juridiction que j'ai choisie, actif en moins d'une minute. Les clés, c'est moi qui les ai, pas une file d'attente du support.", role: "Exploitant de boutique offshore" },
+      ],
+    },
+    faq: {
+      eyebrow: "FAQ",
+      title: "Des réponses claires, sans détour",
+      lead: "Tout sur la confidentialité, le paiement en crypto et notre position offshore, sans DMCA.",
+      items: [
+        { q: "Que signifie vraiment « sans DMCA » ?", a: "Notre infrastructure se trouve dans des juridictions offshore où nous ne traitons pas les avis de retrait DMCA américains. Le contenu légitime reste en ligne : nous ne retirons pas votre site parce que quelqu'un a déposé une plainte." },
+        { q: "Dois-je vérifier mon identité (KYC) ?", a: "Non. Créez un compte avec une simple adresse e-mail, approvisionnez un portefeuille prépayé en crypto et lancez-vous. Nous ne demandons jamais de pièce d'identité." },
+        { q: "Avec quelles cryptomonnaies puis-je payer ?", a: "Rechargez votre portefeuille prépayé en BTC, ETH ou USDT. Chaque domaine, serveur et plan d'hébergement est ensuite payé depuis ce solde, sans aucune carte enregistrée." },
+        { q: "La confidentialité WHOIS est-elle vraiment incluse ?", a: "Oui, sur chaque TLD éligible et sans frais supplémentaires. Vos données personnelles sont exclues du registre WHOIS public par défaut ; ce n'est jamais une option payante." },
+        { q: "Où sont hébergés mes domaines et serveurs ?", a: "Vous choisissez la juridiction offshore et privée au moment du paiement. Les VPS et RDP vous donnent un accès root/administrateur complet, et vous pouvez migrer ou exporter quand vous le souhaitez." },
+        { q: "Que se passe-t-il quand mon solde est bas ?", a: "Rien n'est prélevé automatiquement sur une carte, car il n'y en a pas. Nous vous prévenons avant toute expiration pour que vous rechargiez à votre rythme." },
+      ],
     },
   },
 

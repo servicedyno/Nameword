@@ -1,28 +1,40 @@
 import { useLanguage } from "../../hooks/useLanguage";
 import { usePageMeta } from "../../hooks/usePageMeta";
+import AnnouncementBar from "./landing/AnnouncementBar";
 import Hero from "./landing/Hero";
+import TrustStrip from "./landing/TrustStrip";
+import ProductsGlance from "./landing/ProductsGlance";
 import CloudVps from "./landing/CloudVps";
 import WindowsRdp from "./landing/WindowsRdp";
 import CpanelHosting from "./landing/CpanelHosting";
-import EverythingElse from "./landing/EverythingElse";
 import WhyNameword from "./landing/WhyNameword";
-import PricingTeaser from "./landing/PricingTeaser";
+import Testimonials from "./landing/Testimonials";
 import RewardsBand from "./landing/RewardsBand";
+import PricingTeaser from "./landing/PricingTeaser";
+import GuaranteesStrip from "./landing/GuaranteesStrip";
+import Faq from "./landing/Faq";
 import FinalCta from "./landing/FinalCta";
 
+// Hostinger-inspired, media-rich landing. Privacy-first identity, live domain
+// search and live VPS/RDP/hosting pricing all preserved.
 const HomeRedesign = () => {
   const { t } = useLanguage();
   usePageMeta(null, t.site.meta.description);
   return (
     <>
+      <AnnouncementBar />
       <Hero />
+      <TrustStrip />
+      <ProductsGlance />
       <CloudVps />
       <WindowsRdp />
       <CpanelHosting />
-      <EverythingElse />
       <WhyNameword />
-      <PricingTeaser />
+      <Testimonials />
       <RewardsBand />
+      <PricingTeaser />
+      <GuaranteesStrip />
+      <Faq />
       <FinalCta />
     </>
   );

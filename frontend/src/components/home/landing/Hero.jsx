@@ -1,15 +1,24 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { motion as Motion, useReducedMotion } from "motion/react";
-import { LuShieldCheck, LuArrowRight, LuMapPin, LuEyeOff, LuWallet } from "react-icons/lu";
+import { LuArrowRight, LuLock, LuBitcoin, LuZap } from "react-icons/lu";
 import { useLanguage } from "../../../hooks/useLanguage";
 import DomainSearchResults from "../../domain/DomainSearchResults";
 import DomainSearchForm from "./DomainSearchForm";
 
-const TRUST_ICONS = [LuMapPin, LuShieldCheck, LuEyeOff, LuWallet];
+// Popular TLDs with reference prices (the /pricing + search show live prices).
+const TLD_CHIPS = [
+  { tld: ".com", price: "39" },
+  { tld: ".net", price: "51" },
+  { tld: ".org", price: "29" },
+  { tld: ".io", price: "244" },
+  { tld: ".xyz", price: "19" },
+];
 
-// Calm, centered, product-first hero. The domain search is the single focal
-// point — no photographic backdrop, mock card, gradient headline or rating chip.
+const REASSURE_ICONS = [LuBitcoin, LuLock, LuZap];
+
+// Bold, search-first hero. Live domain search is the centerpiece, with a crypto/
+// no-KYC reassurance line and popular-TLD price chips just beneath it.
 export default function Hero() {
   const { t } = useLanguage();
   const s = t.site.home;
@@ -27,16 +36,20 @@ export default function Hero() {
     setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
 
-  const container = { animate: { transition: { staggerChildren: reduced ? 0 : 0.08, delayChildren: 0.03 } } };
+  const container = { animate: { transition: { staggerChildren: reduced ? 0 : 0.07, delayChildren: 0.03 } } };
   const fadeUp = {
     initial: { opacity: 0, y: reduced ? 0 : 14 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
   };
 
+  const reassure = String(s.promo.heroReassure).split(" · ");
+
   return (
     <section className="relative overflow-hidden bg-white dark:bg-gray-950">
-      {/* one very soft top tint — no grid, no glow */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand-50/60 to-transparent dark:from-brand-500/[0.06]" />
+      {/* soft, warm gradient wash — media-rich but not crowding the search */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[26rem] bg-gradient-to-b from-brand-50 via-brand-50/40 to-transparent dark:from-brand-500/[0.10] dark:via-brand-500/[0.04] dark:to-transparent" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-500/10" />
+      <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-brand-400/20 blur-3xl dark:bg-brand-500/10" />
 
       <div className="nw-container relative py-20 sm:py-24 lg:py-28">
         <Motion.div variants={container} initial="initial" animate="animate" className="mx-auto max-w-3xl text-center">
@@ -46,16 +59,13 @@ export default function Hero() {
 
           <Motion.h1
             variants={fadeUp}
-            className="mt-5 text-[2.5rem] font-bold leading-[1.06] tracking-tight text-primary dark:text-white sm:text-6xl"
+            className="mt-5 text-[2.75rem] font-extrabold leading-[1.04] tracking-tight text-primary dark:text-white sm:text-6xl lg:text-[4.25rem]"
             data-testid="hero-heading"
           >
             {s.heading}
           </Motion.h1>
 
-          <Motion.p
-            variants={fadeUp}
-            className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft dark:text-gray-400"
-          >
+          <Motion.p variants={fadeUp} className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft dark:text-gray-400">
             {s.subheading}
           </Motion.p>
 
@@ -67,15 +77,39 @@ export default function Hero() {
               busyLabel={s.searching}
               busy={searching}
               onSubmit={onSearch}
-              chips={s.heroChips}
               center
             />
           </Motion.div>
 
-          <Motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
-            <span className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
-              <LuShieldCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {s.trustNote}
-            </span>
+          {/* reassurance line just beneath the search */}
+          <Motion.div variants={fadeUp} className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2" data-testid="hero-reassure">
+            {reassure.map((line, i) => {
+              const Icon = REASSURE_ICONS[i] || LuLock;
+              return (
+                <span key={line} className="flex items-center gap-1.5 text-13 font-medium text-ink-soft dark:text-gray-400">
+                  <Icon className="h-4 w-4 text-brand-600 dark:text-brand-400" /> {line}
+                </span>
+              );
+            })}
+          </Motion.div>
+
+          {/* popular TLD price chips */}
+          <Motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft/80 dark:text-gray-500">{s.promo.popularTlds}</span>
+            {TLD_CHIPS.map((c) => (
+              <button
+                key={c.tld}
+                onClick={() => navigate(`/domains?value=${encodeURIComponent("yourname" + c.tld)}`)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-13 font-medium text-primary transition-colors hover:border-brand/40 hover:bg-brand-50 dark:border-white/10 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand/40 dark:hover:bg-white/[0.05]"
+                data-testid={`hero-tld-${c.tld.slice(1)}`}
+              >
+                <span className="font-semibold">{c.tld}</span>
+                <span className="text-ink-soft dark:text-gray-400">${c.price}</span>
+              </button>
+            ))}
+          </Motion.div>
+
+          <Motion.div variants={fadeUp} className="mt-7">
             <button
               onClick={() => {
                 const el = document.getElementById("vps");
@@ -89,29 +123,6 @@ export default function Hero() {
             </button>
           </Motion.div>
         </Motion.div>
-
-        {/* Slim, quiet trust strip — proof points, not boxed badges */}
-        <div
-          className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-8 gap-y-7 border-t border-line pt-10 dark:border-white/[0.06] md:grid-cols-4"
-          data-testid="hero-trust-row"
-        >
-          {s.trust.map((it, i) => {
-            const Icon = TRUST_ICONS[i] || LuShieldCheck;
-            return (
-              <div
-                key={it.label}
-                className="flex flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3 sm:text-left"
-                data-testid={`trust-item-${i}`}
-              >
-                <Icon className="h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-primary dark:text-white">{it.label}</p>
-                  <p className="text-xs text-ink-soft dark:text-gray-400">{it.sub}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {submitted && (

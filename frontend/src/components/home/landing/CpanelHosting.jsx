@@ -45,6 +45,11 @@ export default function CpanelHosting() {
             <span className="nw-kicker mb-3">{s.kicker}</span>
             <h2 className="nw-h2">{s.title}</h2>
             <p className="nw-lead mt-3">{s.lead}</p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+              {String(t.site.home.promo.reassure).split(" · ").map((r) => (
+                <span key={r} className="flex items-center gap-1.5 text-13 text-ink-soft dark:text-gray-400"><LuCheck className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" /> {r}</span>
+              ))}
+            </div>
           </div>
           <button onClick={() => navigate("/hosting")} className="nw-btn-secondary" data-testid="hosting-view-all">
             {s.cta} <LuArrowRight className="h-4 w-4" />

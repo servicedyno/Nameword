@@ -1,60 +1,87 @@
-# Landing page redesign — product-forward, with VPS & RDP on the home page
+# Nameword Landing Redesign — Hostinger-inspired, media-rich
 
-## The problem
-The current home page doesn't show what Nameword actually sells. The paid products —
-VPS and Windows RDP — aren't visible until you dig into sub-pages. Reference given:
-**contabo.com**, which leads with server plans, their specs, and prices right on the
-home page. Goal: a cleaner, more commercial landing that surfaces VPS and RDP plans
-(with specs + prices) on the main page, while keeping Nameword's privacy-first identity
-and its domain search.
+A visual and layout overhaul of the public landing page, borrowing Hostinger's product
+arrangement, plan-card polish and warmth — while keeping Nameword's privacy-first, offshore,
+no-KYC, crypto-wallet identity and every existing link, live search and live price intact.
 
-## Mockups to look at first
-Open these static previews in a browser (example prices only — the live site calculates
-real prices automatically):
+## Who it's for
+- Privacy-conscious buyers shopping for offshore/anonymous domains, DNS, VPS, Windows RDP and cPanel hosting.
+- First-time visitors sizing up the products and prices at a glance before committing.
+- Returning users who just want a fast, obvious path into a specific product.
 
-- Index / overview: `/app/plan/mockups/index.html`
-- **Option A — Product-forward landing** (recommended): `/app/plan/mockups/landing-product-forward.html`
-- **Option B — Servers as VPS/RDP tabs**: `/app/plan/mockups/servers-tabbed.html`
+## Core features and experience
+The page is re-sequenced and re-skinned top-to-bottom, learning from how Hostinger arranges
+and presents things (pricing surfaced early, clear product grid, rich plan cards, reassurance
+near every call-to-action, alternating feature rows, a bold closing prompt):
 
-Both use the real plan line-ups already in the system:
-- **VPS:** Basic (2 vCPU / 8 GB / 64 GB) · Standard (4 / 16 / 80) · Premium (8 / 32 / 160) · Enterprise (16 / 64 / 200)
-- **RDP (Windows):** Basic (2 CPU / 4 GB / 100 GB SSD) · Standard (4 / 8 / 250) · Premium (8 / 16 / 500) — all 1 Gbps
+1. **Announcement bar (new):** a thin, dismissible strip at the very top carrying one privacy/crypto
+   line (e.g. "Prepaid crypto wallet · No ID required · DMCA-ignored hosting").
+2. **Hero (bolder, kept search-first):** a stronger headline and supporting line with the **live domain
+   search as the centerpiece**, a reassurance line just beneath ("Pay with crypto · No KYC · Instant
+   setup"), quick TLD price chips, and a tasteful supporting visual that doesn't crowd the search.
+3. **Trust strip (new):** privacy proof points (offshore jurisdiction, DMCA-ignored, private WHOIS,
+   prepaid wallet) alongside accepted-crypto coin logos — no invented ratings or counts.
+4. **Products at a glance (new grid):** polished icon/illustration tiles for Domains, DNS, Web Hosting
+   (cPanel), VPS, Windows RDP and Developer API — a quick map of everything on offer, high on the page.
+5. **Cloud VPS, Windows RDP, cPanel Hosting (restyled):** the three product blocks become richer,
+   Hostinger-style plan cards — grouped spec/feature checklists with checkmarks, an accent badge
+   ("Most popular" / "Best value"), the live price, and clear Deploy / Configure / Get hosting buttons
+   plus a "compare all" link. A small reassurance row sits above each set.
+6. **Why Nameword (media-rich feature rows):** alternating text + visual blocks for offshore, privacy,
+   DMCA-ignored and crypto — the privacy checklist folded in calmly.
+7. **Prepaid wallet & rewards band:** kept, upgraded to a warmer, more visual panel.
+8. **Domain TLD pricing teaser:** kept, tidied into a cleaner grid.
+9. **Guarantees strip (new):** a reassurance row adapted from Hostinger's money-back line —
+   "No-KYC signup · Prepaid, no surprise charges · Instant setup · Crypto accepted".
+10. **Final call-to-action band:** a bold, visual closing prompt with reassurance and one primary action.
+11. **Shared top navigation and footer:** restyled to match the new look (organized footer columns with
+    coin badges; a cleaner, polished nav and products menu).
 
-## What the redesigned home page will contain
-1. **Hero (kept, cleaned):** the privacy headline and the live domain search stay as the
-   opening focus, with a short "Need a server? Jump to VPS & RDP" link.
-2. **Cloud VPS section (new on home page):** the 4 VPS plans as clean cards — each with
-   vCPU, RAM, storage and a "from $/mo" price, a highlighted "Most popular" plan, and a
-   Deploy button. A "Compare all VPS" link goes to the full VPS page.
-3. **Windows RDP section (new on home page):** the 3 RDP plans as cards — CPU, RAM, storage,
-   network, "from $/mo" price, and a Configure button, plus a link to the full RDP page.
-4. **"Everything else" strip (condensed):** Domains, DNS, Web Hosting, Developer API as a
-   slim row (these no longer need big cards now that servers lead).
-5. **Kept and tightened:** the trust row (offshore, DMCA-ignored, private WHOIS, prepaid
-   wallet), the TLD pricing teaser, the rewards line, and the final call-to-action.
-6. **Dark mode** stays supported and clean.
+Everything media-rich: illustrations, light product/dashboard mockups, coin and flag visuals, rounded
+cards, soft shadows, accent badges and subtle gradients — kept on-brand and fast. Dark mode included.
 
-All existing links, buttons, the domain search, language switcher and dark-mode toggle keep
-working exactly as today. Deploy / Configure buttons route to the existing VPS and RDP pages —
-no new checkout flow is added.
+## User flow
+Land → (optional) note the announcement bar → either type a name into the hero domain search and see
+live availability/pricing, or scan the "products at a glance" grid → drop into a VPS / RDP / hosting
+plan card → click Deploy / Configure / Get hosting (routes to the existing product page) or add a domain
+→ pay from the prepaid crypto wallet via the existing checkout. The trust strip, why-Nameword rows and
+guarantees strip build confidence along the way; the final CTA offers one last obvious step.
 
-## Decisions to confirm (or push back on)
-1. **Hero lead:** keep the domain search as the hero and feature VPS/RDP directly below
-   (Option A), rather than leading the hero with servers the way Contabo does.
-   *Assumed: keep domain-search hero.*
-2. **Servers layout:** Option A (plan-card grids for VPS and RDP) vs Option B (one "Cloud
-   servers" block with a VPS | RDP tab + comparison table).
-   *Assumed: Option A.*
-3. **Prices on cards:** show a live "from $/mo" pulled automatically from the same pricing
-   the VPS/RDP pages use, rounded to a monthly figure, with a safe fallback number shown if
-   the price lookup is slow.
-   *Assumed: yes, live "from" price with fallback.*
-4. **Plans featured:** show all 4 VPS plans and all 3 RDP plans on the home page.
-   *Assumed: all of them.*
-5. **Billing period displayed:** show monthly ("/mo"). *Assumed: monthly.*
+## UI/UX feel
+Modern, warm and trustworthy — closer to a polished commercial host than a bare developer page, but still
+clean. Indigo accent kept, energized with subtle gradients and accent badges (Most popular / Best value).
+Generous whitespace, consistent rounded cards and soft shadows, checkmark feature lists, alternating
+feature rows with imagery, accepted-coin logos, and light, tasteful motion. Fully responsive with no
+horizontal scroll on mobile; dark mode cleaned up to match.
 
-## Scope / not included this round
-- Only the landing page and the shared top nav + footer change. Deeper screens (dashboard,
-  VPS/RDP management, checkout, sign-in/account) keep their current design.
-- No change to prices, margins, or the deploy/checkout process.
-- No copy rewrite beyond short section intros for the new VPS and RDP blocks.
+## Implementation phases
+**Phase 1 — MVP (built now):** the full visual + arrangement redesign of the landing page and shared
+nav/footer described above — announcement bar, bolder search-first hero with reassurance + trust strip
+and coin logos, products-at-a-glance grid, restyled VPS/RDP/cPanel plan cards with badges and checklists,
+media-rich why-Nameword rows, wallet/rewards band, TLD teaser, guarantees strip, and a strong final CTA.
+All existing copy, links, live domain search and live pricing preserved; dark mode included.
+
+**Phase 2 — social proof & depth (later):** an FAQ accordion (privacy / crypto / offshore questions) and
+a testimonials or use-cases row, plus richer/animated media and micro-interactions.
+
+**Phase 3 — carry the look inward (later):** apply the new visual system to the inner product pages
+(VPS, RDP, hosting, pricing) so the whole storefront matches.
+
+## Assumptions
+- Only visuals and arrangement change; all current messaging, the live domain search, live VPS/RDP/cPanel
+  pricing, every route, the language switcher and dark mode keep working exactly as today.
+- The products shown in the "at a glance" grid are: Domains, DNS, Web Hosting (cPanel), VPS, Windows RDP,
+  Developer API.
+- Reassurance/guarantee wording ("No-KYC signup", "Prepaid, no surprise charges", "Instant setup",
+  "Crypto accepted") is treated as true; any inaccurate item will be dropped or reworded.
+- Accepted-crypto coin logos (e.g. BTC, ETH, USDT) are shown; the exact coin set will match what the
+  wallet actually accepts.
+- No pricing discounts are invented; "Most popular" / "Best value" badges are emphasis only, placed on
+  the mid VPS plan, the Pro RDP tier and the Golden hosting plan.
+- Imagery is a mix of licensed stock/illustrations and lightweight styled mockups (not real screenshots
+  of the live dashboard), chosen to stay on-brand and load fast.
+- Any new section labels are added in English, Spanish and French to keep the three-language parity.
+- The announcement bar is dismissible and never blocks content.
+- The RDP management features and endpoints built earlier are unchanged; this round is landing visuals only.
+- Deploy / Configure / Get hosting continue to route to the existing product pages; there are no checkout
+  or pricing changes.

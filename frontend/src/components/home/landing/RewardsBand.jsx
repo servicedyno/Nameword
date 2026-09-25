@@ -13,7 +13,7 @@ export default function RewardsBand() {
     <section className="nw-section">
       <div className="nw-container">
         <Reveal
-          className="grid overflow-hidden rounded-3xl border border-line bg-white shadow-sm dark:border-white/[0.08] dark:bg-gray-900 lg:grid-cols-2"
+          className="grid overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-brand-50/70 via-white to-white shadow-sm dark:border-white/[0.08] dark:from-brand-500/[0.08] dark:via-gray-900 dark:to-gray-900 lg:grid-cols-2"
           data-testid="rewards-band"
         >
           <div className="p-8 sm:p-12">

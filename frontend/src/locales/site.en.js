@@ -144,6 +144,24 @@ export const siteEn = {
       placeholder: "yourname.com",
       button: "Search",
     },
+    promo: {
+      announce: "Prepaid crypto wallet · No ID required · DMCA-ignored hosting",
+      announceDismiss: "Dismiss announcement",
+      heroReassure: "Pay with crypto · No KYC · Instant setup",
+      popularTlds: "Popular TLDs",
+      coinsLabel: "Wallet accepts",
+      reassure: "No KYC · Prepaid wallet · Instant setup",
+      guarantees: {
+        title: "What every order includes",
+        lead: "No fine print — the same privacy-first promise on every domain, server and hosting plan.",
+        items: [
+          { title: "No-KYC signup", desc: "Create an account and pay — no ID checks, ever." },
+          { title: "Prepaid, no surprises", desc: "Top up once; nothing auto-charges a card on file." },
+          { title: "Instant setup", desc: "Domains, DNS and servers go live in minutes." },
+          { title: "Crypto accepted", desc: "Fund your wallet with BTC, ETH or USDT." },
+        ],
+      },
+    },
     servers: {
       perMonth: "/mo",
       popular: "Most popular",
@@ -174,6 +192,29 @@ export const siteEn = {
         cta: "Get hosting",
         popular: "Best value",
       },
+    },
+    testimonials: {
+      eyebrow: "In their words",
+      title: "Built for people who value staying online",
+      lead: "How privacy-minded founders, publishers and developers use Nameword.",
+      items: [
+        { quote: "I moved my publication offshore after one bad-faith takedown. Two years on, my site has never gone dark.", role: "Independent publisher" },
+        { quote: "Signing up with just an email and paying in USDT is exactly how billing should work. No card, no KYC, no noise.", role: "Privacy-first developer" },
+        { quote: "Full root on a VPS in the jurisdiction I picked, live in under a minute. I hold the keys, not a support queue.", role: "Offshore store operator" },
+      ],
+    },
+    faq: {
+      eyebrow: "FAQ",
+      title: "Questions, answered plainly",
+      lead: "Everything about privacy, crypto billing and our offshore, DMCA-ignored stance.",
+      items: [
+        { q: 'What does "DMCA-ignored" actually mean?', a: "Our infrastructure sits in offshore jurisdictions where we don't process US DMCA takedown notices. Legitimate content stays online — we won't pull your site because someone filed a complaint." },
+        { q: "Do I need to verify my identity (KYC)?", a: "No. Create an account with just an email, fund a prepaid wallet with crypto, and go live. We never ask for ID." },
+        { q: "Which cryptocurrencies can I pay with?", a: "Top up your prepaid wallet with BTC, ETH or USDT. Every domain, server and hosting plan is then paid from that balance — no card is ever stored." },
+        { q: "Is WHOIS privacy really included?", a: "Yes, on every eligible TLD at no extra cost. Your personal details are kept out of the public WHOIS record by default — it's never an upsell." },
+        { q: "Where are my domains and servers hosted?", a: "You choose the offshore, privacy-first jurisdiction at checkout. VPS and RDP give you full root/admin, and you can move or export whenever you like." },
+        { q: "What happens when my balance runs low?", a: "Nothing auto-charges a card, because there isn't one. We remind you before anything expires so you can top up on your own terms." },
+      ],
     },
   },
 
