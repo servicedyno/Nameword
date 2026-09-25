@@ -1,5 +1,16 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## 🔎 SESSION (2026-09-25) — namewords.sbs "site not working" diagnosis + reseller-API gap report
+User: `namewords.sbs` (moxxcompany@gmail.com hosting) doesn't load. Investigated live via reseller API (container has NO external DNS egress — `dig`/`curl` unreliable; used the reseller API as source of truth).
+- **Root cause:** cPanel account `namea3a5` is **suspended** (`GET /hosting/namea3a5` → `suspended:true`, plan Premium Anti-Red 1-Week $30, expires 2026-09-25T16:49Z; server time was 08:38Z so suspended BEFORE expiry). Wallet balance **$10 < $30** renewal, `auto_renew:true` but no renewal txn → auto-renew almost certainly failed on funds. A suspended account also explains the earlier `CPANEL_AUTH_FAILURE` (can't open a cPanel session).
+- **Secondary:** the domain's Cloudflare zone had **only NS records** — no web A record → wouldn't resolve to the server even if active. Delegated to Cloudflare NS (leanna/anderson). Server IP `68.183.77.106`.
+- **Actions taken (live):** Added `A www → 68.183.77.106` via `resellerAPI.addDns` (reseller payload `{type,name,value,ttl}`), confirmed via GET. Apex/root A could NOT be added — reseller rejects `name:"@"`/`""` (`dns_add_failed`) and double-appends the domain when given the FQDN (created+deleted a junk `namewords.sbs.namewords.sbs`). Left `www` only per user; apex flagged in the report.
+- **Report written:** `/app/memory/reseller_api_provisioning_gaps.md` — 5 reseller-API gaps with exact request/response repros (1: provisioning must auto-create web DNS; 2: apex add + name normalization; 3: cPanel SSO CPANEL_AUTH_FAILURE; 4: no `/hosting/:user/renew` + missing suspended_reason/auto-renew-error fields; 5: `/domains` reports empty nameservers). Strictly server-side (no client workarounds section, per user).
+- **Delete+recreate live test: BLOCKED** — recreate is wallet-billed $30 vs $10 balance, destructive on a live paid account, and would re-hit gaps 1-3. Pending user wallet top-up (≥$30) + explicit terminate confirmation.
+- **No app code changed this turn** → no testing_agent run applicable.
+
+
+
 ## ✅ SESSION (2026-06, fork a0fb0b8d) — 4 hosting/UX features (docroot, quiet errors, plan compare, inner-page polish)
 All four built + verified by testing_agent iteration_21 = 100% (read-only on the live account).
 1. **Docroot Control (#1):** `components/hosting/CpanelTabs.jsx` DomainsTab — each addon domain row now has a "Docroot" toggle (`cpanel-docroot-toggle-N`) opening an inline editor: optional mode `<select>` (`cpanel-docroot-mode`, from `M.docrootModes`), a path input (`cpanel-docroot-input`) and Save (`cpanel-docroot-save`). Saves via `M.setDocroot(u,{domain,document_root})` (+ `M.setDocrootMode` if modes exist). `document_root` is the provider field name. (namea3a5 has 0 addons so the toggle isn't shown there yet.)
