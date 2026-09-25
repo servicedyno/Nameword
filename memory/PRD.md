@@ -1,5 +1,16 @@
 # Nameword Platform — Setup & Credential Audit (PRD / Handoff)
 
+## ✅ SESSION (2026-06, fork a0fb0b8d) — Landing Phase 1 fix + Phase 2 (Testimonials + FAQ)
+Continued the "Hostinger-inspired, media-rich" landing redesign. Real pod URL = `https://nameword-dev-7.preview.emergentagent.com` (both backend+frontend already RUNNING; backend health mode=live). Frontend runs Vite DEV (`yarn start`, HMR) — `.env` changes need `sudo supervisorctl restart frontend`; code edits hot-reload.
+- **CRITICAL FIX (Phase 1 was silently broken):** `components/home/landing/GuaranteesStrip.jsx` had a mismatched JSX tag (line 33 `</div>` where a `<Reveal>` was opened) → the vite react-babel plugin threw "Expected corresponding JSX closing tag for <Reveal>", crashing the ENTIRE landing page. Changed `</div>` → `</Reveal>`. All 19 landing components now pass `esbuild`.
+- **.env:** updated `frontend/.env` `VITE_API_BASE_URL` from the stale `5c680fc7-…` host to `https://nameword-dev-7.preview.emergentagent.com` (used for Google OAuth redirects; API calls already use same-origin).
+- **Phase 2 (NEW):** `components/home/landing/Testimonials.jsx` (3 persona-based, NON-fabricated voice cards — no invented names/ratings/logos, role labels only) and `components/home/landing/Faq.jsx` (6-item accordion, useState open-index, motion AnimatePresence, first item open by default; privacy/crypto/offshore/DMCA questions). Wired into `HomeRedesign.jsx`: order now …WhyNameword → **Testimonials** → RewardsBand → PricingTeaser → GuaranteesStrip → **Faq** → FinalCta. Copy added to `locales/site.{en,es,fr}.js` under `home.testimonials` + `home.faq` (i18n-safe, all 3 languages).
+- **Testids:** testimonial-0..2; faq-list, faq-item-0..5, faq-trigger-0..5, faq-answer-N.
+- **STATUS: ✅ testing_agent iteration_19 = 100% (13/13).** Verified: no crash/white screen, all sections + testids present, FAQ single-open toggle + chevron rotate, hero live domain search hits real reseller API, live VPS/RDP plan prices, dark mode (testimonial/FAQ bg rgb(9,8,13), legible), EN+ES runtime i18n (FR static-confirmed), 390px NO horizontal scroll. NOTE: Vite DEV preview 429-rate-limits rapid reloads (preview side effect, not a bug); `.prod` toggle + `start.sh` can serve a prod build if regression flakiness matters.
+- NEXT (backlog): Phase 3 — carry the new visual system inward to VPS/RDP/hosting/pricing pages for consistency.
+
+
+
 ## ✅ SESSION (2025-07) — Product-forward landing (VPS & RDP on the home page)
 Contabo-style: the home page now surfaces the paid server products with specs + LIVE prices.
 New section order in `components/home/HomeRedesign.jsx`:

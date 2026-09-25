@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend-only live test of Nameword landing page focused on Phase 2 (Testimonials + FAQ accordion) plus regression across all landing sections. Landing renders with NO Vite error overlay and NO white screen after the GuaranteesStrip.jsx fix. All required data-testids are present on first paint (announcement-bar, hero-heading/reassure/tld chips, trust-item-0..3, glance-*, testimonial-0..2, rewards-band + perk-0..3 + rewards-cta, guarantees-strip + guarantee-0..3, faq-list + faq-item-0..5 + faq-trigger-0..5 + faq-answer-0, final-cta, cta-create-account, cta-browse-domains). Announcement bar dismisses (element removed). FAQ accordion: item-0 open by default; clicking faq-trigger-2 opens answer-2 and closes answer-0 (single-open behavior); clicking trigger-2 again collapses it (chevron rotation via rotate-180 class). Hero live domain search submits to real reseller API and hero-search-results appears. glance-dns click routed to /sign-in as expected while logged out. Dark mode toggle flips html.className to 'dark'; testimonial figure bg = rgb(9,8,13) and FAQ item bg = rgb(9,8,13) — proper dark surfaces, white/quote text legible, no light-on-light. 390px mobile: document.scrollWidth == clientWidth (390 == 390), NO horizontal scroll, testimonials and FAQ stack cleanly. i18n: setting localStorage language='es' and reloading rendered fully Spanish Testimonials (\"Trasladé mi publicación offshore...\", role \"Editor independiente\") and Spanish FAQ triggers (\"¿Qué significa realmente «sin DMCA»?\") — no raw i18n keys leaked. Static verification of site.fr.js confirms full French translations for testimonials/faq blocks. Live server plan cards (Cloud VPS $18–$288, Windows RDP $56–$224) render with prices from the live reseller API. No React/JSX errors captured. Numerous 429 responses were observed on rapid reloads (Vite HMR dev server rate-limiting the preview host) — this is a preview-environment side effect, not a landing bug.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Faq.jsx AnimatePresence works correctly, but the accordion allows all items to be closed (open === -1). Product-wise fine, but the review request states 'first item is open by default' which is honored via useState(0).",
+    "Rapid reloads against the Vite dev preview trigger 429 rate limits that can produce transient blank pages during test runs — consider using a served/prod build for automated regression to avoid flakiness (not a code bug)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100% for tested flows (13/13 features verified)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Phase 2 (Testimonials + FAQ) tests pass in EN/ES with dark mode + 390px mobile. FR runtime render was skipped after ES verification because the Vite dev host rate-limited repeated reloads (429s produced a transient blank load); static FR locale content is present and translated. If retesting FR at runtime, add larger delays between reloads or hit a production build. GuaranteesStrip.jsx line 33 fix is confirmed live — no crash.",
+  "rca of the issue": "N/A — no bugs found in this iteration."
+}
