@@ -5,6 +5,16 @@
 **For:** The reseller‑API team / agent that maintains the Nomadly reseller API
 **Scope:** Server‑side reseller‑API changes ONLY (client app is not the problem here).
 
+## TL;DR (status 2026‑09‑25)
+Buying a **domain + cPanel plan** does NOT produce a working website end‑to‑end. All root causes are
+server‑side in the Nomadly reseller API — the Nameword client app is fine. **7 gaps** are documented
+below; the hard blockers are: provisioning never creates the web DNS (Gap 1), an apex `A` record can't
+be added at all (Gap 2), the cPanel session SSO fails (Gap 3), and account termination is a silent
+no‑op (Gap 6). A live **delete+recreate** verification was attempted on `namewords.sbs` but is blocked
+by Gap 6, so the suspended live account `namea3a5` was **left intact** (nothing was destroyed; no
+re‑purchase was charged). Please action the gaps in the priority order at the bottom and run the
+acceptance test.
+
 ## Context
 Nameword proxies the Nomadly reseller API for domains + cPanel hosting + VPS/RDP. A real
 customer bought a **domain + cPanel hosting plan together**, but the website does not load.
@@ -156,12 +166,55 @@ UI/user has one consistent source of truth.
 
 ---
 
+## GAP 6 — `DELETE /hosting/:user` reports success but does NOT terminate the account  **[SEV: HIGH]**
+Tested live 2026‑09‑25 on the suspended account `namea3a5`.
+```
+DELETE /hosting/namea3a5
+→ 200 {"mode":"live","username":"namea3a5","terminated":true,"detail":true}
+```
+But `GET /hosting/namea3a5` and `GET /hosting` still return the account — fully intact and still
+suspended — 90s later and after a SECOND `DELETE` (which returned `terminated:true, detail:null`).
+The account is never actually removed. Our proxy faithfully forwards `nomadly.delete('/hosting/:user')`
+and returns the upstream body verbatim, so this `terminated:true` is the PROVIDER's response.
+
+**Impact:** you cannot delete/rebuild an account, cannot free a domain from a broken/suspended plan,
+and cannot cleanly re‑provision. Likely the provider refuses/defers terminating a *suspended* account
+but still returns success.
+
+**Expected:** actually terminate, OR return an honest error
+(e.g. `{ "error":"cannot_terminate_suspended", "message":"unsuspend first" }`). Ideally allow
+terminating suspended accounts; otherwise document that `unsuspend` is required first.
+
+---
+
+## GAP 7 — `/hosting` list and `/hosting/:user` details disagree on `suspended`  **[SEV: LOW]**
+```
+GET /hosting            → accounts[].suspended = false
+GET /hosting/namea3a5   → suspended: true   (and usage.suspended: true)
+```
+The details + live usage (WHM) say suspended; the list says active. Report one consistent truth.
+
+---
+
+## Changing a plan's domain / moving a domain between plans — NOT supported
+There is **no** endpoint to change the primary domain a hosting plan is provisioned on, or to move a
+domain from one plan to another. The only near‑equivalent is
+`POST /hosting/:user/domains/set-primary`, which merely re‑points among domains **already attached to
+that same account** (main + addons) — and it is a cPanel‑SESSION op that currently returns
+`CPANEL_AUTH_FAILURE` (Gap 3). Request: a first‑class **"change/replace primary domain"** (and/or
+**"detach domain"**) endpoint that works at the reseller/WHM level (not behind the cPanel session), so a
+plan's domain can be corrected without terminate+recreate.
+
+---
+
 ## Suggested priority
 1. **Gap 1** (auto‑create web DNS on provisioning) — without this, "buy → live" can never work.
 2. **Gap 2** (apex record add + name normalization) — needed so the root domain can point to the server.
 3. **Gap 3** (cPanel session SSO) — needed for all in‑panel management.
-4. **Gap 4** (renew endpoint + suspension/auto‑renew reason fields).
-5. **Gap 5** (consistent NS reporting).
+4. **Gap 6** (termination is a silent no‑op) — blocks rebuild/cleanup and the end‑to‑end test.
+5. **Gap 4** (renew endpoint + suspension/auto‑renew reason fields).
+6. **Gap 7** (list vs details `suspended` mismatch) + **Gap 5** (consistent NS reporting).
+7. First‑class "change/replace domain on a plan" endpoint (see above).
 
 ## End‑to‑end acceptance test the reseller API should pass
 1. Register a domain + buy a cPanel plan on it in one flow (wallet‑billed).
@@ -170,8 +223,12 @@ UI/user has one consistent source of truth.
 4. The domain serves the cPanel default page over HTTP within a few minutes.
 5. `POST /hosting/:user/renew` extends the term and lifts suspension when funded (Gap 4).
 
-## Live delete+recreate re‑test — currently BLOCKED
-We considered `DELETE /hosting/:user` then re‑buying on the same domain to prove end‑to‑end.
-Blocked because the re‑purchase is wallet‑billed at **$30** and the wallet holds **$10**; also it is
-destructive on a live, already‑paid account, and would simply re‑hit Gaps 1–3. To run it: top up
-the wallet to ≥ $30, then terminate + re‑provision and re‑check steps 2–4 above.
+## Live delete+recreate re‑test — ATTEMPTED 2026‑09‑25, BLOCKED by Gap 6
+The in‑app wallet was manually topped to $40 to fund a $30 re‑buy on `namewords.sbs`.
+`DELETE /hosting/namea3a5` returned `terminated:true` (twice) but the account never went away
+(Gap 6), so a clean recreate on the same domain is impossible. **No re‑purchase was attempted, so the
+wallet was not charged for it.** To actually run the end‑to‑end test, Gap 6 (working termination) must
+be fixed first — or the provider must confirm that `unsuspend` → `terminate` works. Then:
+`POST /checkout/orders {items:[{type:"hosting",plan_id:"premium-weekly",domain:"namewords.sbs"}]}`
+should provision a fresh account, and the acceptance test above (auto‑DNS, JSON `/domains`, live site)
+can be verified.
