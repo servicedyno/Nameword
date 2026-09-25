@@ -57,7 +57,10 @@ export const setupAxiosInterceptors = (logout, redirectAPIKey) => {
         const isPaymentProviderError =
           data?.error?.statusCode === 401 ||
           /token has expired|please login again/i.test(msg + ' ' + nestedMsg);
-        if (!isPaymentProviderError) {
+        // Provider cPanel-session relays (CPANEL_AUTH_FAILURE) are NOT our auth —
+        // never log the user out because of them.
+        const isProviderCpanelError = data?.code === 'CPANEL_AUTH_FAILURE';
+        if (!isPaymentProviderError && !isProviderCpanelError) {
           logout();
         }
       } else if (
@@ -69,7 +72,12 @@ export const setupAxiosInterceptors = (logout, redirectAPIKey) => {
         // Only explicit API-key features may bounce the user to the API-key settings.
         redirectAPIKey(error?.response?.data?.message);
       }
-      console.error('❌ Response Error:', error);
+      // Known-benign provider cPanel-session relay — log quietly, don't spam the console.
+      if (error.response?.data?.code === 'CPANEL_AUTH_FAILURE') {
+        if (import.meta.env.DEV) console.debug('cPanel provider sync pending:', error.config?.url);
+      } else {
+        console.error('❌ Response Error:', error);
+      }
       return Promise.reject(error);
     }
   );

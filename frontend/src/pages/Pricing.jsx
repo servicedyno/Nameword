@@ -211,10 +211,10 @@ export default function Pricing() {
     <ProductShell>
       {/* Hero */}
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
-        <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
         <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
+        <div className="nw-hero-glow -bottom-28 -left-24 h-72 w-72" />
         <div className="nw-container relative py-14 text-center sm:py-20">
-          <span className="nw-eyebrow mb-4">{sp.eyebrow}</span>
+          <span className="nw-kicker mb-4">{sp.eyebrow}</span>
           <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white sm:text-5xl">
             {sp.title}
           </h1>

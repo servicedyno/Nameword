@@ -326,13 +326,13 @@ export default function HostingNomadly() {
     <ProductShell>
       {/* Branded hero */}
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
-        <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
         <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
-        <div className="nw-container relative py-10 sm:py-14">
+        <div className="nw-hero-glow -bottom-28 -left-24 h-72 w-72" />
+        <div className="nw-container relative py-12 sm:py-16">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <span className="nw-eyebrow mb-4">Offshore cPanel Hosting</span>
-              <h1 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-4xl">
+              <span className="nw-kicker mb-4">Offshore cPanel Hosting</span>
+              <h1 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-5xl">
                 Anti-Red hosting, wallet-billed
               </h1>
               <p className="mt-3 max-w-xl nw-lead">
@@ -430,18 +430,20 @@ export default function HostingNomadly() {
                       ))}
                     </ul>
 
-                    <div className="flex flex-wrap gap-2 mb-5">
-                      <span className="nw-chip !text-xs">
-                        {p.addon_domains === "unlimited"
-                          ? "Unlimited addon domains"
-                          : `${p.addon_domains} addon domain${p.addon_domains === 1 ? "" : "s"}`}
+                    <div className="mb-4 flex items-center gap-2 rounded-lg bg-brand-50/70 px-3 py-2 dark:bg-brand-500/10" data-testid={`plan-addon-allowance-${p.plan_id}`}>
+                      <FiGlobe className="shrink-0 text-brand-600 dark:text-brand-400" size={15} />
+                      <span className="text-sm font-medium text-primary dark:text-white">Addon domains</span>
+                      <span className="ml-auto font-mono text-sm font-bold text-brand-700 dark:text-brand-300">
+                        {p.addon_domains === "unlimited" ? "Unlimited" : p.addon_domains}
                       </span>
-                      {p.visitor_captcha_available && (
+                    </div>
+                    {p.visitor_captcha_available && (
+                      <div className="mb-5">
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
                           <FiShield size={12} /> Visitor Captcha + Geo
                         </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     <button onClick={() => openBuy(p)} className="nw-btn-primary w-full justify-center">Select plan</button>
                   </div>

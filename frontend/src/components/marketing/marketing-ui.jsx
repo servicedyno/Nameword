@@ -17,7 +17,7 @@ export function ProductHero({ eyebrow, title, subtitle, primaryTo, primaryLabel,
       <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
       <div className="nw-container relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-2 lg:gap-12 lg:py-24">
         <div>
-          <span className="nw-eyebrow mb-5">{eyebrow}</span>
+          <span className="nw-kicker mb-5">{eyebrow}</span>
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-primary dark:text-white sm:text-5xl">{title}</h1>
           <p className="mt-5 max-w-xl text-lg text-ink-soft dark:text-gray-400">{subtitle}</p>
           {chips.length > 0 && (
@@ -58,7 +58,7 @@ export function ProductHero({ eyebrow, title, subtitle, primaryTo, primaryLabel,
 export function SectionHeading({ eyebrow, title, subtitle }) {
   return (
     <div className="mx-auto max-w-2xl text-center">
-      {eyebrow && <span className="nw-eyebrow mb-4">{eyebrow}</span>}
+      {eyebrow && <span className="nw-kicker mb-4">{eyebrow}</span>}
       <h2 className="nw-h2">{title}</h2>
       {subtitle && <p className="nw-lead mt-4">{subtitle}</p>}
     </div>

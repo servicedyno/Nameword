@@ -302,13 +302,13 @@ export default function ServersPage({ product = "vps" }) {
     <ProductShell>
       {/* Branded hero */}
       <section className="nw-hero border-b border-line dark:border-white/[0.06]">
-        <div className="absolute inset-0 nw-grid-bg opacity-60 dark:opacity-100" />
         <div className="nw-hero-glow -top-24 -right-24 h-72 w-72" />
-        <div className="nw-container relative py-10 sm:py-14">
+        <div className="nw-hero-glow -bottom-28 -left-24 h-72 w-72" />
+        <div className="nw-container relative py-12 sm:py-16">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <span className="nw-eyebrow mb-4">{copy.eyebrow}</span>
-              <h1 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-4xl">
+              <span className="nw-kicker mb-4">{copy.eyebrow}</span>
+              <h1 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight text-primary dark:text-white sm:text-5xl">
                 {copy.title}
               </h1>
               <p className="mt-3 max-w-xl nw-lead">{copy.tagline}</p>
