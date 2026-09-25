@@ -243,41 +243,112 @@ const SubdomainsTab = ({ user }) => {
 };
 
 /* ------------------------------ Domains ------------------------------ */
-const DomainsTab = ({ user, domain }) => {
-  const { data, loading, reload } = useLoad(() => M.domains(user), [user]);
+const DomainsTab = ({ user, domain, addonAllowance }) => {
+  const dom = useLoad(() => M.domains(user), [user]);                     // primary + subdomains (cPanel-session; best-effort)
+  const add = useLoad(() => resellerAPI.listHostingAddons(user), [user]); // addon list + quota (reliable)
   const { run, busy } = useRunner();
-  const d = data?.data || {};
-  const main = d.main_domain || domain;
-  const addons = Array.isArray(d.addon_domains) ? d.addon_domains : [];
-  const subs = Array.isArray(d.sub_domains) ? d.sub_domains : [];
+  const [addon, setAddon] = useState("");
+  const [connect, setConnect] = useState(null);
+
+  const dd = dom.data?.data || {};
+  const ad = add.data || {};
+  const main = dd.main_domain || domain;
+  const subs = Array.isArray(dd.sub_domains) ? dd.sub_domains : [];
+  const addonList = Array.isArray(ad.addons) ? ad.addons : Array.isArray(dd.addon_domains) ? dd.addon_domains : [];
+  const quota = ad.addon_quota != null ? ad.addon_quota : addonAllowance != null ? addonAllowance : null;
+  const unlimited = String(quota).toLowerCase() === "unlimited";
+  const limit = typeof quota === "number" ? quota : null;
+  const used = ad.addon_count != null ? ad.addon_count : addonList.length;
+  const atLimit = !unlimited && limit != null && used >= limit;
+  const loading = dom.loading || add.loading;
+
+  const addAddon = async () => {
+    const val = addon.trim().toLowerCase();
+    if (!val) return;
+    setConnect(null);
+    const res = await run(() => resellerAPI.addHostingAddon(user, val), `Addon domain ${val} added.`);
+    if (res && res.connect) setConnect(res.connect);
+    setAddon("");
+    add.reload();
+    dom.reload();
+  };
+
   return (
     <div className="space-y-3" data-testid="cpanel-tab-domains">
-      <TestBanner data={data} feature="Domains" />
+      <TestBanner data={add.data} feature="Domains" />
       <SectionTitle icon={FiGlobe}>Domains on this account</SectionTitle>
       {loading ? <Loading /> : (
-        <div className="space-y-3 text-sm">
+        <div className="space-y-4 text-sm">
           <div>
             <p className="text-xs text-secondary dark:text-gray-400 mb-1">Primary</p>
             <p className="text-primary dark:text-white inline-flex items-center gap-2"><FiGlobe size={13} /> {main || "—"}</p>
           </div>
           <div>
-            <p className="text-xs text-secondary dark:text-gray-400 mb-1">Addon domains</p>
-            {addons.length ? (
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs font-medium text-primary dark:text-white">Addon domains</p>
+              {(unlimited || limit != null) && (
+                <span className="text-xs text-secondary dark:text-gray-400" data-testid="cpanel-addon-quota">
+                  {unlimited ? `${used} used · unlimited` : `${used} of ${limit} used`}
+                </span>
+              )}
+            </div>
+            {addonList.length ? (
               <ul className="space-y-1">
-                {addons.map((a, i) => {
-                  const name = a.domain || a;
+                {addonList.map((a, i) => {
+                  const name = a.domain || a.name || a;
                   return (
                     <li key={i} className="flex items-center justify-between text-secondary dark:text-gray-300">
                       <span className="inline-flex items-center gap-2"><FiGlobe size={13} /> {name}</span>
                       <span className="flex items-center gap-3">
-                        <button onClick={async () => { await run(() => M.setPrimaryDomain(user, name), "Primary domain updated."); reload(); }} disabled={busy} className="text-xs text-brand-600 dark:text-brand-400 hover:underline disabled:opacity-50">Make primary</button>
-                        <button onClick={async () => { await run(() => M.deleteAddonDomain(user, name), "Addon domain removed."); reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Remove addon"><FiTrash2 size={14} /></button>
+                        <button onClick={async () => { await run(() => M.setPrimaryDomain(user, name), "Primary domain updated."); dom.reload(); add.reload(); }} disabled={busy} className="text-xs text-brand-600 dark:text-brand-400 hover:underline disabled:opacity-50">Make primary</button>
+                        <button onClick={async () => { await run(() => M.deleteAddonDomain(user, name), "Addon domain removed."); add.reload(); dom.reload(); }} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Remove addon"><FiTrash2 size={14} /></button>
                       </span>
                     </li>
                   );
                 })}
               </ul>
-            ) : <Empty>No addon domains.</Empty>}
+            ) : <Empty>No addon domains yet.</Empty>}
+
+            {/* Add an addon domain */}
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                value={addon}
+                onChange={(e) => setAddon(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") addAddon(); }}
+                placeholder="example.com"
+                disabled={atLimit}
+                className="nw-input !py-2 !px-3 text-sm flex-1 disabled:opacity-50"
+                data-testid="cpanel-addon-input"
+              />
+              <button
+                onClick={addAddon}
+                disabled={busy || atLimit || !addon.trim()}
+                className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"
+                data-testid="cpanel-addon-add-btn"
+              >
+                <FiPlus size={13} /> Add
+              </button>
+            </div>
+            {atLimit ? (
+              <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400" data-testid="cpanel-addon-limit-note">
+                You've used all {limit} addon domain{limit === 1 ? "" : "s"} included with this plan. Upgrade the plan to add more.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-secondary dark:text-gray-400">
+                Point a domain you own at this account. Nameword-registered domains connect automatically; others get nameservers to set at your registrar.
+              </p>
+            )}
+            {connect && (
+              <div className="mt-2 rounded-lg border border-lightgray dark:border-gray-800 bg-lightgray/40 dark:bg-gray-800/40 px-3 py-2 text-xs text-secondary dark:text-gray-300" data-testid="cpanel-addon-connect">
+                <p className="text-primary dark:text-white font-medium mb-0.5 inline-flex items-center gap-1.5"><FiGlobe size={12} /> {connect.domain}</p>
+                <p>{connect.note}</p>
+                {!connect.ns_pointed && Array.isArray(connect.nameservers) && connect.nameservers.length > 0 && (
+                  <ul className="mt-1 font-mono text-primary dark:text-white">
+                    {connect.nameservers.map((ns, i) => <li key={i}>{ns}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <p className="text-xs text-secondary dark:text-gray-400 mb-1">Subdomains</p>
@@ -954,7 +1025,7 @@ const TABS = [
   { id: "site", label: "Site", icon: FiPower, Comp: SiteTab },
 ];
 
-export default function CpanelTabs({ user, domain, isGold, onUpgrade }) {
+export default function CpanelTabs({ user, domain, isGold, onUpgrade, addonAllowance }) {
   const [active, setActive] = useState("databases");
   const ActiveComp = (TABS.find((t) => t.id === active) || TABS[0]).Comp;
   return (
@@ -976,7 +1047,7 @@ export default function CpanelTabs({ user, domain, isGold, onUpgrade }) {
         ))}
       </div>
       <div className="min-h-[220px]">
-        <ActiveComp user={user} domain={domain} isGold={isGold} onUpgrade={onUpgrade} />
+        <ActiveComp user={user} domain={domain} isGold={isGold} onUpgrade={onUpgrade} addonAllowance={addonAllowance} />
       </div>
     </div>
   );

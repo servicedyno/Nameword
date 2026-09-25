@@ -603,6 +603,11 @@ export default function HostingNomadly() {
                 <CpanelTabs
                   user={manage.user}
                   domain={manage.domain}
+                  addonAllowance={(() => {
+                    const pid = manageData?.plan_id || manage.plan_id;
+                    const p = plans.find((x) => x.plan_id === pid);
+                    return p ? p.addon_domains : (manageData?.addon_quota ?? null);
+                  })()}
                   isGold={/gold/i.test(String(manageData?.plan || manage.plan_id || ""))}
                   onUpgrade={() => {
                     setManageTab("overview");
