@@ -1,87 +1,47 @@
-# Nameword Landing Redesign — Hostinger-inspired, media-rich
+# cPanel Advanced-Function Diagnostic — Reseller Provider Gap Report
 
-A visual and layout overhaul of the public landing page, borrowing Hostinger's product
-arrangement, plan-card polish and warmth — while keeping Nameword's privacy-first, offshore,
-no-KYC, crypto-wallet identity and every existing link, live search and live price intact.
+An exhaustive, live functional test of every advanced cPanel capability the reseller API exposes, run against the real namewords.sbs / namea3a5 account. It produces one written report that marks each function PASS / FAIL / NEEDS-PROVIDER-FIX with the exact request and response, ready to hand to the reseller API provider.
 
 ## Who it's for
-- Privacy-conscious buyers shopping for offshore/anonymous domains, DNS, VPS, Windows RDP and cPanel hosting.
-- First-time visitors sizing up the products and prices at a glance before committing.
-- Returning users who just want a fast, obvious path into a specific product.
+- The Nameword team, to know precisely which panel features actually work today versus which only appear to.
+- The reseller API provider, to receive a reproducible, function-by-function list of what to fix on their end (starting with the Security "application not found" errors).
 
 ## Core features and experience
-The page is re-sequenced and re-skinned top-to-bottom, learning from how Hostinger arranges
-and presents things (pricing surfaced early, clear product grid, rich plan cards, reassurance
-near every call-to-action, alternating feature rows, a bold closing prompt):
+Every advanced-panel function is exercised for real and given a verdict. Coverage:
 
-1. **Announcement bar (new):** a thin, dismissible strip at the very top carrying one privacy/crypto
-   line (e.g. "Prepaid crypto wallet · No ID required · DMCA-ignored hosting").
-2. **Hero (bolder, kept search-first):** a stronger headline and supporting line with the **live domain
-   search as the centerpiece**, a reassurance line just beneath ("Pay with crypto · No KYC · Instant
-   setup"), quick TLD price chips, and a tasteful supporting visual that doesn't crowd the search.
-3. **Trust strip (new):** privacy proof points (offshore jurisdiction, DMCA-ignored, private WHOIS,
-   prepaid wallet) alongside accepted-crypto coin logos — no invented ratings or counts.
-4. **Products at a glance (new grid):** polished icon/illustration tiles for Domains, DNS, Web Hosting
-   (cPanel), VPS, Windows RDP and Developer API — a quick map of everything on offer, high on the page.
-5. **Cloud VPS, Windows RDP, cPanel Hosting (restyled):** the three product blocks become richer,
-   Hostinger-style plan cards — grouped spec/feature checklists with checkmarks, an accent badge
-   ("Most popular" / "Best value"), the live price, and clear Deploy / Configure / Get hosting buttons
-   plus a "compare all" link. A small reassurance row sits above each set.
-6. **Why Nameword (media-rich feature rows):** alternating text + visual blocks for offshore, privacy,
-   DMCA-ignored and crypto — the privacy checklist folded in calmly.
-7. **Prepaid wallet & rewards band:** kept, upgraded to a warmer, more visual panel.
-8. **Domain TLD pricing teaser:** kept, tidied into a cleaner grid.
-9. **Guarantees strip (new):** a reassurance row adapted from Hostinger's money-back line —
-   "No-KYC signup · Prepaid, no surprise charges · Instant setup · Crypto accepted".
-10. **Final call-to-action band:** a bold, visual closing prompt with reassurance and one primary action.
-11. **Shared top navigation and footer:** restyled to match the new look (organized footer columns with
-    coin badges; a cleaner, polished nav and products menu).
+- **Account / lifecycle**: account details, site-status, suspend, unsuspend, upgrade, credentials/login.
+- **Domains**: list, add addon domain, delete addon, set-primary (promote addon to primary), document root + docroot modes, nameserver status.
+- **Subdomains**: list, create, delete, bulk-create — including verifying a created subdomain actually appears/resolves, not just that the call returned success.
+- **MySQL**: create/list/delete database, create/delete user, set password, grant/revoke privileges, remote hosts, phpMyAdmin link, rename/repair/check.
+- **Email mailboxes**: list, create, change password, delete, and a real test-send.
+- **SSL**: certificate status and AutoSSL issuance.
+- **Files**: list, read, write/save, mkdir, rename, copy, move, compress, extract/unzip, delete, upload.
+- **Security**: status, Anti-Red deploy + status, Anti-Bot + rules, Safe-Browsing, Blacklist, Visitor-CAPTCHA, JS-Challenge (these are where "application not found" currently appears).
+- **Geo & Analytics & Stats**: geo controls, analytics, usage stats.
 
-Everything media-rich: illustrations, light product/dashboard mockups, coin and flag visuals, rounded
-cards, soft shadows, accent badges and subtle gradients — kept on-brand and fast. Dark mode included.
+For each function the report records: the exact request, the exact response (and timing), a verdict badge — **PASS** (works end to end), **FAIL** (errors / "application not found"), or **NEEDS-PROVIDER-FIX** (returns success but the change doesn't actually take effect) — a plain-language note, and a suggested action for the provider. Where a function creates something, a create → verify → clean-up cycle is run so the outcome is confirmed rather than assumed. Side-effecting actions (change-primary-domain, AutoSSL issuance, real test-send email) are included per the agreed decision, even where not fully reversible.
+
+The report opens with a one-glance summary matrix (function × verdict) and an executive summary that groups systemic gaps — for example, if all Security apps return "application not found", that is flagged as a single likely root cause (the security-app suite not provisioned for this plan/account) rather than as many unrelated failures.
 
 ## User flow
-Land → (optional) note the announcement bar → either type a name into the hero domain search and see
-live availability/pricing, or scan the "products at a glance" grid → drop into a VPS / RDP / hosting
-plan card → click Deploy / Configure / Get hosting (routes to the existing product page) or add a domain
-→ pay from the prepaid crypto wallet via the existing checkout. The trust strip, why-Nameword rows and
-guarantees strip build confidence along the way; the final CTA offers one last obvious step.
+1. Target is fixed to namewords.sbs (cPanel user namea3a5).
+2. The sweep runs function families in a safe order: read-only checks first, then create → verify → clean-up cycles, then the irreversible/side-effecting actions last.
+3. Each call's request, response and timing are captured verbatim.
+4. Verdicts are assigned and systemic patterns grouped.
+5. A single report document is produced: the team reads the matrix; the provider-facing detail section can be sent to the reseller API provider as-is.
 
 ## UI/UX feel
-Modern, warm and trustworthy — closer to a polished commercial host than a bare developer page, but still
-clean. Indigo accent kept, energized with subtle gradients and accent badges (Most popular / Best value).
-Generous whitespace, consistent rounded cards and soft shadows, checkmark feature lists, alternating
-feature rows with imagery, accepted-coin logos, and light, tasteful motion. Fully responsive with no
-horizontal scroll on mobile; dark mode cleaned up to match.
+A clean, skimmable technical report (Markdown). Top: a summary matrix with verdict badges. Then one section per function family, each showing the request, the response, the verdict, and the recommended provider fix. Neutral and reproducible in tone — anyone can re-run the same calls and get the same evidence. No app screens or UI are added.
 
 ## Implementation phases
-**Phase 1 — MVP (built now):** the full visual + arrangement redesign of the landing page and shared
-nav/footer described above — announcement bar, bolder search-first hero with reassurance + trust strip
-and coin logos, products-at-a-glance grid, restyled VPS/RDP/cPanel plan cards with badges and checklists,
-media-rich why-Nameword rows, wallet/rewards band, TLD teaser, guarantees strip, and a strong final CTA.
-All existing copy, links, live domain search and live pricing preserved; dark mode included.
-
-**Phase 2 — social proof & depth (later):** an FAQ accordion (privacy / crypto / offshore questions) and
-a testimonials or use-cases row, plus richer/animated media and micro-interactions.
-
-**Phase 3 — carry the look inward (later):** apply the new visual system to the inner product pages
-(VPS, RDP, hosting, pricing) so the whole storefront matches.
+- **Phase 1 — MVP (built now):** Run the full live sweep against namea3a5, including the side-effecting actions, and deliver the written gap report (summary matrix + per-function request/response/verdict + provider recommendations).
+- **Phase 2 — Re-test / delta report (later):** After the provider ships fixes, re-run the identical sweep and produce a delta report showing what changed (fixed / still broken / newly broken).
+- **Phase 3 — Reusable diagnostics tool (later):** The optional in-app Admin "cPanel Diagnostics" runner that executes the sweep on demand against any account/plan and keeps a history — deferred here since the current deliverable is a report only.
 
 ## Assumptions
-- Only visuals and arrangement change; all current messaging, the live domain search, live VPS/RDP/cPanel
-  pricing, every route, the language switcher and dark mode keep working exactly as today.
-- The products shown in the "at a glance" grid are: Domains, DNS, Web Hosting (cPanel), VPS, Windows RDP,
-  Developer API.
-- Reassurance/guarantee wording ("No-KYC signup", "Prepaid, no surprise charges", "Instant setup",
-  "Crypto accepted") is treated as true; any inaccurate item will be dropped or reworded.
-- Accepted-crypto coin logos (e.g. BTC, ETH, USDT) are shown; the exact coin set will match what the
-  wallet actually accepts.
-- No pricing discounts are invented; "Most popular" / "Best value" badges are emphasis only, placed on
-  the mid VPS plan, the Pro RDP tier and the Golden hosting plan.
-- Imagery is a mix of licensed stock/illustrations and lightweight styled mockups (not real screenshots
-  of the live dashboard), chosen to stay on-brand and load fast.
-- Any new section labels are added in English, Spanish and French to keep the three-language parity.
-- The announcement bar is dismissible and never blocks content.
-- The RDP management features and endpoints built earlier are unchanged; this round is landing visuals only.
-- Deploy / Configure / Get hosting continue to route to the existing product pages; there are no checkout
-  or pricing changes.
+- **Target account:** namewords.sbs / namea3a5, which is on the premium-weekly plan. If the weekly plan gates certain functions (e.g. MySQL has previously required a Gold/monthly plan), those are reported as "plan-gated — cannot verify on this account" rather than FAIL, with a note that a Gold account would be needed to fully verify them.
+- **Account state:** If namea3a5 is currently suspended, most cPanel-session functions will return a session/auth failure. The sweep will attempt unsuspend first (itself one of the tested functions); if it cannot be made active, the report will state that a live/active account is required for meaningful per-function coverage.
+- **"Include everything" = real, possibly permanent changes.** Clean-up will be attempted for created resources (subdomains, databases, mailboxes, files), but change-primary-domain and AutoSSL issuance may not be fully reversible; this is accepted.
+- **Test-send recipient:** since no external recipient was given, the real test email will be sent to a mailbox on the account's own domain (created during the email test) or to the account owner's address on file (moxxcompany@gmail.com), to avoid emailing an uninvolved third party.
+- **Deliverable is a document only** — no application feature, endpoint, or UI is built in Phase 1.
+- **Results reflect the provider's behavior for this account at test time**, exercised through the reseller API exactly as the app integrates it today.
