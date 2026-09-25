@@ -775,8 +775,9 @@ const setHostingCaptcha = (req, res) =>
 // to the signed-in buyer (withOwnedHosting) and simply relays to the provider in
 // live mode. In dry_run (no upstream account provisioned yet) we return a friendly
 // { mode:'dry_run', test_mode:true, note } envelope so the dashboard can render a
-// clear "available once live" state instead of erroring. Email is intentionally
-// NOT proxied here.
+// clear "available once live" state instead of erroring. cPanel mailbox
+// management (mail on the account's own domains) is included below — this is the
+// genuine cPanel email feature, not the retired standalone "Private Email" product.
 // ============================================================================
 const dryTest = (feature) => ({
   mode: "dry_run",
@@ -806,6 +807,15 @@ function hostingMgmt(method, suffix, feature) {
 
 // [ method, suffix-after-/hosting/:user, dry-run feature label ]
 const HOSTING_MGMT_ROUTES = [
+  // ---- Email accounts (cPanel mailboxes on the account's domains) ----
+  // This is the genuine cPanel "mail on your domain" capability (NOT the retired
+  // standalone "Private Email" product). Ownership-scoped + dry_run-aware like the
+  // rest of the panel. DELETE accepts { email, domain } via body or query.
+  ["get", "/email", "Email accounts"],
+  ["post", "/email", "Email accounts"],
+  ["delete", "/email", "Email accounts"],
+  ["put", "/email/password", "Email accounts"],
+  ["post", "/email/test", "Email accounts"],
   // ---- MySQL databases (Premium/Gold) ----
   ["get", "/mysql/databases", "MySQL databases"],
   ["post", "/mysql/databases", "MySQL databases"],

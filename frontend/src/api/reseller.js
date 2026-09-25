@@ -97,6 +97,15 @@ export const resellerAPI = {
   // ---- cPanel FULL-PANEL MANAGEMENT (Modules 2-11) ----
   // All routes are ownership-scoped server-side; `u` is the account username.
   hostingManage: {
+    // Email (cPanel mailboxes on the account's own domains). The genuine cPanel
+    // "mail on your domain" feature — list, create, change password, delete and
+    // send a test message. Ownership-scoped server-side.
+    email: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/email`)).data,
+    createEmail: async (u, payload) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/email`, payload)).data,
+    setEmailPassword: async (u, payload) => (await apiClient.put(`${R}/hosting/${encodeURIComponent(u)}/email/password`, payload)).data,
+    deleteEmail: async (u, email, domain) => (await apiClient.delete(`${R}/hosting/${encodeURIComponent(u)}/email`, { params: { email, domain }, data: { email, domain } })).data,
+    testEmail: async (u, from, to) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/email/test`, { from, to })).data,
+
     // MySQL
     mysqlDatabases: async (u) => (await apiClient.get(`${R}/hosting/${encodeURIComponent(u)}/mysql/databases`)).data,
     createMysqlDatabase: async (u, name) => (await apiClient.post(`${R}/hosting/${encodeURIComponent(u)}/mysql/databases`, { name })).data,

@@ -29,6 +29,8 @@ import {
   FiCheckSquare,
   FiSquare,
   FiCornerUpLeft,
+  FiMail,
+  FiSend,
 } from "react-icons/fi";
 
 const M = resellerAPI.hostingManage;
@@ -1084,8 +1086,137 @@ const SiteTab = ({ user }) => {
 };
 
 /* ------------------------------ Tab shell ---------------------------- */
+/* ------------------------------- Email ------------------------------- */
+// cPanel mailboxes on the account's own domains — the genuine "mail on your
+// domain" feature. List / create / change-password / delete + a test-send.
+const EmailTab = ({ user, domain }) => {
+  const { data, loading, reload } = useLoad(() => M.email(user), [user]);
+  const { run, busy } = useRunner();
+  const [local, setLocal] = useState("");
+  const [pass, setPass] = useState("");
+  const [dom, setDom] = useState(domain || "");
+  const [quota, setQuota] = useState("");
+  const [pwEdit, setPwEdit] = useState(null); // full address whose password is being changed
+  const [pwVal, setPwVal] = useState("");
+  const [testFrom, setTestFrom] = useState("");
+  const [testTo, setTestTo] = useState("");
+
+  const list = Array.isArray(data?.data) ? data.data : [];
+  const providerSyncing = isProviderSyncing(data);
+
+  const splitEmail = (addr) => {
+    const s = String(addr || "");
+    const at = s.lastIndexOf("@");
+    return at === -1
+      ? { localPart: s, domainPart: (domain || "").toLowerCase() }
+      : { localPart: s.slice(0, at), domainPart: s.slice(at + 1) };
+  };
+
+  const create = async () => {
+    const l = local.trim().toLowerCase();
+    const d = (dom || domain || "").trim().toLowerCase();
+    if (!l || !pass || !d) return;
+    await run(
+      () => M.createEmail(user, { email: l, password: pass, domain: d, ...(quota ? { quota: Number(quota) } : {}) }),
+      `Mailbox ${l}@${d} created.`
+    );
+    setLocal(""); setPass(""); setQuota("");
+    reload();
+  };
+
+  const savePw = async (addr) => {
+    if (!pwVal) return;
+    const { localPart, domainPart } = splitEmail(addr);
+    await run(
+      () => M.setEmailPassword(user, { email: localPart, password: pwVal, domain: domainPart }),
+      `Password updated for ${addr}.`
+    );
+    setPwEdit(null); setPwVal("");
+  };
+
+  const del = async (addr) => {
+    const { localPart, domainPart } = splitEmail(addr);
+    await run(() => M.deleteEmail(user, localPart, domainPart), `Mailbox ${addr} deleted.`);
+    reload();
+  };
+
+  const sendTest = async () => {
+    const from = testFrom.trim();
+    const to = testTo.trim();
+    if (!from || !to) return;
+    await run(() => M.testEmail(user, from, to), `Test email sent to ${to}.`);
+    setTestTo("");
+  };
+
+  return (
+    <div className="space-y-5" data-testid="cpanel-tab-email">
+      <TestBanner data={data} feature="Email" />
+      {providerSyncing && <ProviderSyncNote />}
+      <div>
+        <SectionTitle icon={FiMail}>Mailboxes</SectionTitle>
+        {loading ? <Loading /> : list.length ? (
+          <ul className="space-y-1 mb-3">
+            {list.map((m, i) => {
+              const addr = m.email || m.address || m;
+              const used = m.diskused;
+              const q = m.diskquota;
+              return (
+                <li key={i} className="rounded-lg border border-lightgray dark:border-gray-800 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-2 min-w-0 text-secondary dark:text-gray-300">
+                      <FiMail size={13} className="shrink-0" />
+                      <span className="truncate">{addr}</span>
+                    </span>
+                    <span className="flex items-center gap-2 shrink-0">
+                      {(used != null || q != null) && (
+                        <span className="text-[11px] text-secondary dark:text-gray-500">
+                          {used ?? 0}{q != null ? ` / ${q}` : ""} MB
+                        </span>
+                      )}
+                      <button onClick={() => { setPwEdit((c) => (c === addr ? null : addr)); setPwVal(""); }} disabled={busy} className="text-brand-600 dark:text-brand-400 hover:opacity-80 disabled:opacity-50" aria-label="Change password" data-testid={`email-pw-btn-${i}`}><FiEdit2 size={14} /></button>
+                      <button onClick={() => del(addr)} disabled={busy} className="text-red-500 hover:text-red-600 disabled:opacity-50" aria-label="Delete mailbox" data-testid={`email-del-btn-${i}`}><FiTrash2 size={14} /></button>
+                    </span>
+                  </div>
+                  {pwEdit === addr && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input value={pwVal} onChange={(e) => setPwVal(e.target.value)} placeholder="new password" type="password" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="email-pw-input" />
+                      <button onClick={() => savePw(addr)} disabled={busy || !pwVal} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1"><FiSave size={13} /> Save</button>
+                      <button onClick={() => { setPwEdit(null); setPwVal(""); }} disabled={busy} className="text-secondary hover:text-primary dark:text-gray-400" aria-label="Cancel"><FiX size={15} /></button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : <Empty>No mailboxes yet.</Empty>}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <input value={local} onChange={(e) => setLocal(e.target.value)} placeholder="mailbox (e.g. info)" className="nw-input !py-2 !px-3 text-sm" data-testid="email-local-input" />
+          <input value={dom} onChange={(e) => setDom(e.target.value)} placeholder="domain" className="nw-input !py-2 !px-3 text-sm" data-testid="email-domain-input" />
+          <input value={pass} onChange={(e) => setPass(e.target.value)} placeholder="password" type="password" className="nw-input !py-2 !px-3 text-sm" data-testid="email-pass-input" />
+          <input value={quota} onChange={(e) => setQuota(e.target.value.replace(/[^0-9]/g, ""))} placeholder="quota MB (optional, default 250)" className="nw-input !py-2 !px-3 text-sm" inputMode="numeric" data-testid="email-quota-input" />
+        </div>
+        <div className="mt-2">
+          <button onClick={create} disabled={busy || !local.trim() || !pass || !(dom || domain)} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1" data-testid="email-create-btn"><FiPlus size={13} /> Create mailbox</button>
+        </div>
+      </div>
+
+      <div className="border-t border-lightgray dark:border-gray-800 pt-4">
+        <SectionTitle icon={FiSend}>Send a test email</SectionTitle>
+        <p className="text-xs text-secondary dark:text-gray-400 mb-2">Verify SMTP delivery from one of your mailboxes.</p>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <input value={testFrom} onChange={(e) => setTestFrom(e.target.value)} placeholder="from (mailbox, e.g. info)" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="email-testfrom-input" />
+          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="to (recipient address)" className="nw-input !py-2 !px-3 text-sm flex-1" data-testid="email-testto-input" />
+          <button onClick={sendTest} disabled={busy || !testFrom.trim() || !testTo.trim()} className="nw-btn-secondary nw-btn-sm disabled:opacity-50 inline-flex items-center gap-1" data-testid="email-test-btn"><FiSend size={13} /> Send test</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TABS = [
   { id: "databases", label: "Databases", icon: FiDatabase, Comp: MysqlTab },
+  { id: "email", label: "Email", icon: FiMail, Comp: EmailTab },
   { id: "subdomains", label: "Subdomains", icon: FiGlobe, Comp: SubdomainsTab },
   { id: "domains", label: "Domains", icon: FiGlobe, Comp: DomainsTab },
   { id: "ssl", label: "SSL", icon: FiLock, Comp: SslTab },
