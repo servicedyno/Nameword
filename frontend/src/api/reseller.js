@@ -7,6 +7,10 @@ const R = '/reseller';
 export const resellerAPI = {
   getHealth: async () => (await apiClient.get(`${R}/health`)).data,
   getAccount: async () => (await apiClient.get(`${R}/account`)).data,
+  // Provider price catalog (hosting/vps/rdp plans + domain note). Reseller wallet
+  // balance is stripped server-side.
+  getPricing: async (region = 'EU') =>
+    (await apiClient.get(`${R}/pricing`, { params: { region } })).data,
 
   // VPS (Linux)
   getVpsPlans: async (region = 'EU') =>
@@ -47,6 +51,11 @@ export const resellerAPI = {
   listDomains: async () => (await apiClient.get(`${R}/domains`)).data,
   registerDomain: async (payload) =>
     (await apiClient.post(`${R}/domains/register`, payload)).data,
+  // Renew a domain the buyer owns. Provider live-renewal may return 501 today;
+  // the caller should surface the relayed message/price. `payload` may carry
+  // { years } when the provider supports it.
+  renewDomain: async (domain, payload = {}) =>
+    (await apiClient.post(`${R}/domains/${encodeURIComponent(domain)}/renew`, payload)).data,
 
   // DNS (free)
   listDns: async (domain) =>

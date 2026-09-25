@@ -66,6 +66,30 @@ const testModeResult = (kind) => ({
 const getHealth = (req, res) => forward(res, nomadly.get("/health"));
 const getAccount = (req, res) => forward(res, nomadly.get("/account"));
 
+// Full provider price catalog (hosting / VPS / RDP plans + a domain-pricing note).
+// SECURITY: the upstream payload also carries the RESELLER's own wallet balance
+// (`wallet_balance_usd`) and `mode` — we STRIP those so an end user never sees the
+// reseller's internal balance. Only the sellable catalog is relayed.
+const getPricing = async (req, res) => {
+  try {
+    const up = await nomadly.get("/pricing", { params: req.query });
+    let body = up.data;
+    if (body && typeof body === "object") {
+      body = { ...body };
+      delete body.wallet_balance_usd;
+      delete body.mode;
+    }
+    return res.status(up.status).json(body);
+  } catch (err) {
+    if (err.response) return res.status(err.response.status).json(err.response.data);
+    return res.status(502).json({
+      success: false,
+      error: "reseller_unreachable",
+      message: err.message || "Failed to reach the reseller API",
+    });
+  }
+};
+
 // Upstream returns vcpus=null; the plan_id encodes it (e.g. "s-2vcpu-4gb").
 const VCPU_RE = /(\d+)\s*vcpu/i;
 const withVcpus = (upstream) => {
@@ -322,6 +346,15 @@ const updateDnsRecord = (req, res) =>
 const deleteDnsRecord = (req, res) =>
   withOwnedDomain(req, res, () =>
     forward(res, nomadly.delete(`/dns/${enc(req.params.domain)}/records`, { data: req.body || {} }))
+  );
+// Renew a domain the buyer owns (wallet-billed on the reseller wallet upstream).
+// Ownership-scoped. NOTE: the provider currently returns dry_run pricing and, for
+// LIVE registrar renewal, 501 not_implemented — the proxy relays that verbatim, so
+// the UI can show the price/"not available yet" honestly. Kept alongside the
+// existing DynoPay-checkout renewal path (which remains the primary way to renew).
+const renewDomain = (req, res) =>
+  withOwnedDomain(req, res, () =>
+    forward(res, nomadly.post(`/domains/${enc(req.params.domain)}/renew`, req.body || {}))
   );
 // True for a Cloudflare nameserver hostname (e.g. "leanna.ns.cloudflare.com").
 const isCloudflareNs = (h) =>
@@ -959,6 +992,7 @@ async function getRenewals(req, res) {
 module.exports = {
   getHealth,
   getAccount,
+  getPricing,
   getVpsPlans,
   listVps,
   createVps,
@@ -980,6 +1014,7 @@ module.exports = {
   suggestDomains,
   listDomains,
   registerDomain,
+  renewDomain,
   listDnsRecords,
   addDnsRecord,
   updateDnsRecord,

@@ -11,6 +11,9 @@ const auth = require("../../app/middlewares/session-or-apikey");
 // ---------- Meta ----------
 router.get("/health", c.getHealth);
 router.get("/account", ...auth, c.getAccount);
+// Provider price catalog (hosting/vps/rdp plans + domain note). Reseller wallet
+// balance is stripped server-side before relaying (see controller).
+router.get("/pricing", ...auth, c.getPricing);
 // Unified upcoming-expiry list, scoped to the signed-in buyer (Module 12).
 router.get("/renewals", ...auth, c.getRenewals);
 
@@ -40,6 +43,9 @@ router.get("/domains/search", c.searchDomain);
 router.get("/domains/suggest", c.suggestDomains);
 router.get("/domains", ...auth, c.listDomains);
 router.post("/domains/register", ...auth, c.registerDomain);
+// Domain renewal (ownership-scoped). Provider live-renewal may return 501 today;
+// relayed verbatim. Registered before any /domains/:x generic (none exists here).
+router.post("/domains/:domain/renew", ...auth, c.renewDomain);
 
 // ---------- DNS (free) ----------
 router.get("/dns/:domain/records", ...auth, c.listDnsRecords);

@@ -1,662 +1,379 @@
 #!/usr/bin/env python3
 """
-Backend Test Suite for Nameword Platform
-Tests two backend fixes:
-1. Duplicate hosting accounts fix (ownership.js)
-2. cPanel File Manager operations (body-limit bump + proxy routes)
+Backend test for NEW reseller proxy endpoints:
+- GET /api/v1/reseller/pricing
+- POST /api/v1/reseller/domains/:domain/renew
+
+Test requirements:
+1. Routes registered + auth-guarded (unauth -> 400, NOT 404)
+2. GET /pricing with auth returns 200 + plan catalog WITHOUT wallet_balance_usd
+3. POST /domains/:domain/renew with auth returns 403 for non-owned domain
+4. NO REGRESSION: GET /reseller/health still returns 200 mode:live
 """
 
 import requests
 import json
-import base64
-import time
-from typing import Dict, Any, Optional
+import sys
 
-# Base URL from frontend .env
-BASE_URL = "https://reseller-panel-9.preview.emergentagent.com"
-API_BASE = f"{BASE_URL}/api/v1"
+# Backend base URL (internal)
+BASE_URL = "http://localhost:8001/api/v1"
 
-# Test credentials from test_credentials.md
-PRIMARY_ACCOUNT = {
-    "email": "moxxcompany@gmail.com",
-    "password": "Onlygod123@"
+# Test credentials from /app/memory/test_credentials.md
+TEST_USER = "demo@nameword.local"
+TEST_PASS = "Demo@12345"
+
+# ANSI color codes for output
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
+def log_test(name):
+    print(f"\n{BLUE}{'='*80}{RESET}")
+    print(f"{BLUE}TEST: {name}{RESET}")
+    print(f"{BLUE}{'='*80}{RESET}")
+
+def log_pass(msg):
+    print(f"{GREEN}✅ PASS: {msg}{RESET}")
+
+def log_fail(msg):
+    print(f"{RED}❌ FAIL: {msg}{RESET}")
+
+def log_info(msg):
+    print(f"{YELLOW}ℹ️  INFO: {msg}{RESET}")
+
+def log_critical(msg):
+    print(f"{RED}🔴 CRITICAL: {msg}{RESET}")
+
+# Test results tracking
+test_results = {
+    "passed": 0,
+    "failed": 0,
+    "critical_failures": []
 }
 
-REGRESSION_ACCOUNT = {
-    "email": "buyer@nameword.local",
-    "password": "Buyer@12345"
-}
-
-class Colors:
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    RESET = '\033[0m'
-
-def log_test(message: str, status: str = "info"):
-    """Log test messages with color coding"""
-    if status == "pass":
-        print(f"{Colors.GREEN}✅ {message}{Colors.RESET}")
-    elif status == "fail":
-        print(f"{Colors.RED}❌ {message}{Colors.RESET}")
-    elif status == "warn":
-        print(f"{Colors.YELLOW}⚠️  {message}{Colors.RESET}")
-    else:
-        print(f"{Colors.BLUE}ℹ️  {message}{Colors.RESET}")
-
-def login(email: str, password: str) -> Optional[str]:
-    """Login and return JWT token"""
-    log_test(f"Logging in as {email}...")
+def test_1_routes_registered_and_auth_guarded():
+    """
+    TEST 1: Verify routes are registered and auth-guarded
+    - Call both endpoints WITHOUT auth
+    - Expect HTTP 400 (auth/api-key error), NOT 404
+    - Control: GET /api/v1/reseller/pricing-nope should be 404
+    """
+    log_test("1. Routes Registered + Auth-Guarded")
+    
+    # Test 1a: GET /pricing without auth should return 400 (not 404)
+    log_info("Testing GET /api/v1/reseller/pricing without auth...")
     try:
-        response = requests.post(
-            f"{API_BASE}/auth/login",
-            json={"email": email, "password": password},
-            timeout=30
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            token = data.get("token")
-            if token:
-                log_test(f"Login successful for {email}", "pass")
-                return token
-            else:
-                log_test(f"Login response missing token: {data}", "fail")
-                return None
+        resp = requests.get(f"{BASE_URL}/reseller/pricing", timeout=10)
+        if resp.status_code == 400:
+            log_pass(f"GET /pricing without auth returns 400 (auth required)")
+            test_results["passed"] += 1
+        elif resp.status_code == 404:
+            log_fail(f"GET /pricing without auth returns 404 - route NOT registered!")
+            test_results["failed"] += 1
+            test_results["critical_failures"].append("GET /pricing route not registered (404)")
         else:
-            log_test(f"Login failed: {response.status_code} - {response.text}", "fail")
-            return None
+            log_fail(f"GET /pricing without auth returns {resp.status_code} (expected 400)")
+            test_results["failed"] += 1
     except Exception as e:
-        log_test(f"Login exception: {str(e)}", "fail")
-        return None
-
-def test_problem_1_duplicate_hosting_fix():
-    """
-    PROBLEM 1: Duplicate hosting accounts fix
-    Test that moxxcompany@gmail.com sees EXACTLY ONE hosting account
-    """
-    print("\n" + "="*80)
-    print("PROBLEM 1: DUPLICATE HOSTING ACCOUNTS FIX")
-    print("="*80)
+        log_fail(f"GET /pricing without auth failed with exception: {e}")
+        test_results["failed"] += 1
     
-    # Step 1: Login as moxxcompany@gmail.com
-    token = login(PRIMARY_ACCOUNT["email"], PRIMARY_ACCOUNT["password"])
-    if not token:
-        log_test("Cannot proceed with Problem 1 - login failed", "fail")
-        return False
-    
-    # Step 2: GET /api/v1/reseller/hosting
-    log_test("Fetching hosting accounts list...")
+    # Test 1b: POST /domains/:domain/renew without auth should return 400 (not 404)
+    log_info("Testing POST /api/v1/reseller/domains/test.com/renew without auth...")
     try:
-        response = requests.get(
-            f"{API_BASE}/reseller/hosting",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=30
+        resp = requests.post(f"{BASE_URL}/reseller/domains/test.com/renew", json={}, timeout=10)
+        if resp.status_code == 400:
+            log_pass(f"POST /domains/:domain/renew without auth returns 400 (auth required)")
+            test_results["passed"] += 1
+        elif resp.status_code == 404:
+            log_fail(f"POST /domains/:domain/renew without auth returns 404 - route NOT registered!")
+            test_results["failed"] += 1
+            test_results["critical_failures"].append("POST /domains/:domain/renew route not registered (404)")
+        else:
+            log_fail(f"POST /domains/:domain/renew without auth returns {resp.status_code} (expected 400)")
+            test_results["failed"] += 1
+    except Exception as e:
+        log_fail(f"POST /domains/:domain/renew without auth failed with exception: {e}")
+        test_results["failed"] += 1
+    
+    # Test 1c: Control - bogus route should return 404
+    log_info("Testing control: GET /api/v1/reseller/pricing-nope (should be 404)...")
+    try:
+        resp = requests.get(f"{BASE_URL}/reseller/pricing-nope", timeout=10)
+        if resp.status_code == 404:
+            log_pass(f"Control route /pricing-nope returns 404 (proves real routes are registered)")
+            test_results["passed"] += 1
+        else:
+            log_fail(f"Control route /pricing-nope returns {resp.status_code} (expected 404)")
+            test_results["failed"] += 1
+    except Exception as e:
+        log_fail(f"Control route test failed with exception: {e}")
+        test_results["failed"] += 1
+
+def test_2_pricing_endpoint_with_auth():
+    """
+    TEST 2: GET /pricing with auth - KEY SECURITY CHECK
+    - Login as demo@nameword.local / Demo@12345
+    - GET /api/v1/reseller/pricing?region=EU with Authorization: Bearer <token>
+    - Expect HTTP 200 with JSON plan catalog
+    - CRITICAL: Assert wallet_balance_usd is NOT present in response body
+    """
+    log_test("2. GET /pricing with Auth + Security Check (wallet_balance_usd)")
+    
+    # Step 1: Login to get token
+    log_info(f"Logging in as {TEST_USER}...")
+    try:
+        login_resp = requests.post(
+            f"{BASE_URL}/auth/login",
+            json={"email": TEST_USER, "password": TEST_PASS},
+            timeout=10
+        )
+        if login_resp.status_code != 200:
+            log_fail(f"Login failed with status {login_resp.status_code}: {login_resp.text}")
+            test_results["failed"] += 1
+            test_results["critical_failures"].append("Login failed - cannot test authenticated endpoints")
+            return
+        
+        login_data = login_resp.json()
+        token = login_data.get("token")
+        if not token:
+            log_fail(f"Login response missing token: {login_data}")
+            test_results["failed"] += 1
+            test_results["critical_failures"].append("Login token missing")
+            return
+        
+        log_pass(f"Login successful, token obtained")
+        test_results["passed"] += 1
+        
+    except Exception as e:
+        log_fail(f"Login failed with exception: {e}")
+        test_results["failed"] += 1
+        test_results["critical_failures"].append(f"Login exception: {e}")
+        return
+    
+    # Step 2: GET /pricing with auth
+    log_info("Testing GET /api/v1/reseller/pricing?region=EU with auth...")
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        pricing_resp = requests.get(
+            f"{BASE_URL}/reseller/pricing",
+            params={"region": "EU"},
+            headers=headers,
+            timeout=10
         )
         
-        log_test(f"Response status: {response.status_code}")
+        if pricing_resp.status_code != 200:
+            log_fail(f"GET /pricing with auth returned {pricing_resp.status_code}: {pricing_resp.text}")
+            test_results["failed"] += 1
+            return
         
-        if response.status_code != 200:
-            log_test(f"Expected 200, got {response.status_code}: {response.text}", "fail")
-            return False
+        log_pass(f"GET /pricing with auth returns 200")
+        test_results["passed"] += 1
         
-        data = response.json()
-        log_test(f"Response body: {json.dumps(data, indent=2)}")
+        # Parse response body
+        try:
+            pricing_data = pricing_resp.json()
+        except Exception as e:
+            log_fail(f"Failed to parse pricing response as JSON: {e}")
+            test_results["failed"] += 1
+            return
         
-        # Step 3: Verify EXACTLY ONE account
-        accounts = data.get("accounts", [])
-        count = data.get("count", 0)
+        log_info(f"Pricing response keys: {list(pricing_data.keys())}")
         
-        log_test(f"Found {len(accounts)} account(s) in 'accounts' array")
-        log_test(f"Count field: {count}")
+        # CRITICAL SECURITY CHECK: wallet_balance_usd must NOT be present
+        if "wallet_balance_usd" in pricing_data:
+            log_critical("SECURITY ISSUE: wallet_balance_usd is PRESENT in response!")
+            log_critical(f"wallet_balance_usd value: {pricing_data['wallet_balance_usd']}")
+            test_results["failed"] += 1
+            test_results["critical_failures"].append("SECURITY: wallet_balance_usd exposed in /pricing response")
+        else:
+            log_pass("SECURITY CHECK PASSED: wallet_balance_usd is NOT present in response")
+            test_results["passed"] += 1
         
-        if len(accounts) != 1:
-            log_test(f"FAIL: Expected EXACTLY 1 account, found {len(accounts)}", "fail")
-            log_test(f"Accounts: {json.dumps(accounts, indent=2)}", "fail")
-            return False
+        # Verify response contains plan catalog
+        has_catalog = False
+        catalog_keys = ["hosting", "vps", "rdp", "plans"]
+        for key in catalog_keys:
+            if key in pricing_data:
+                has_catalog = True
+                log_info(f"Found catalog key: {key}")
         
-        if count != 1:
-            log_test(f"FAIL: Expected count=1, got count={count}", "fail")
-            return False
+        if has_catalog:
+            log_pass("Response contains plan catalog (hosting/vps/rdp/plans)")
+            test_results["passed"] += 1
+        else:
+            log_fail(f"Response missing plan catalog. Keys: {list(pricing_data.keys())}")
+            test_results["failed"] += 1
         
-        # Step 4: Verify the account details
-        account = accounts[0]
-        username = account.get("username")
-        domain = account.get("domain")
-        status = account.get("status")
-        
-        log_test(f"Account details: username={username}, domain={domain}, status={status}")
-        
-        if username != "namea3a5":
-            log_test(f"FAIL: Expected username='namea3a5', got '{username}'", "fail")
-            return False
-        
-        if domain != "namewords.sbs":
-            log_test(f"FAIL: Expected domain='namewords.sbs', got '{domain}'", "fail")
-            return False
-        
-        if status not in ["active", "not-suspended"]:
-            log_test(f"WARN: Status is '{status}', expected 'active' or 'not-suspended'", "warn")
-        
-        log_test("PROBLEM 1 PASSED: Exactly ONE hosting account found with correct details", "pass")
-        return True
+        # Also check that 'mode' is stripped (per controller code)
+        if "mode" in pricing_data:
+            log_fail("SECURITY ISSUE: 'mode' field is present in response (should be stripped)")
+            test_results["failed"] += 1
+        else:
+            log_pass("SECURITY CHECK PASSED: 'mode' field is NOT present in response")
+            test_results["passed"] += 1
         
     except Exception as e:
-        log_test(f"Exception during hosting list fetch: {str(e)}", "fail")
-        return False
+        log_fail(f"GET /pricing with auth failed with exception: {e}")
+        test_results["failed"] += 1
 
-def test_problem_1_regression():
+def test_3_domain_renew_ownership_guard():
     """
-    PROBLEM 1 REGRESSION: Test buyer account endpoints don't error
+    TEST 3: POST /domains/:domain/renew ownership guard
+    - Use same demo session from test 2
+    - POST /api/v1/reseller/domains/nonexistent-domain-xyz.com/renew (empty JSON body)
+    - Expect HTTP 403 forbidden {success:false, error:"forbidden"}
+    - NOT 404 and NOT 500
     """
-    print("\n" + "="*80)
-    print("PROBLEM 1 REGRESSION: BUYER ACCOUNT ENDPOINTS")
-    print("="*80)
+    log_test("3. POST /domains/:domain/renew Ownership Guard")
     
-    # Login as buyer
-    token = login(REGRESSION_ACCOUNT["email"], REGRESSION_ACCOUNT["password"])
-    if not token:
-        log_test("Cannot proceed with regression - login failed", "fail")
-        return False
+    # Login to get token
+    log_info(f"Logging in as {TEST_USER}...")
+    try:
+        login_resp = requests.post(
+            f"{BASE_URL}/auth/login",
+            json={"email": TEST_USER, "password": TEST_PASS},
+            timeout=10
+        )
+        if login_resp.status_code != 200:
+            log_fail(f"Login failed with status {login_resp.status_code}")
+            test_results["failed"] += 1
+            return
+        
+        token = login_resp.json().get("token")
+        if not token:
+            log_fail("Login token missing")
+            test_results["failed"] += 1
+            return
+        
+        log_pass("Login successful")
+        test_results["passed"] += 1
+        
+    except Exception as e:
+        log_fail(f"Login failed with exception: {e}")
+        test_results["failed"] += 1
+        return
     
-    endpoints = [
-        "/reseller/hosting",
-        "/reseller/domains",
-        "/reseller/vps",
-        "/reseller/rdp"
-    ]
-    
-    all_passed = True
-    for endpoint in endpoints:
-        log_test(f"Testing GET {endpoint}...")
-        try:
-            response = requests.get(
-                f"{API_BASE}{endpoint}",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=30
-            )
+    # Test ownership guard with non-owned domain
+    log_info("Testing POST /api/v1/reseller/domains/nonexistent-domain-xyz.com/renew...")
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        renew_resp = requests.post(
+            f"{BASE_URL}/reseller/domains/nonexistent-domain-xyz.com/renew",
+            json={},
+            headers=headers,
+            timeout=10
+        )
+        
+        if renew_resp.status_code == 403:
+            log_pass("POST /domains/:domain/renew returns 403 (ownership guard working)")
+            test_results["passed"] += 1
             
-            if response.status_code == 200:
-                data = response.json()
-                log_test(f"GET {endpoint}: 200 OK - {json.dumps(data)[:100]}...", "pass")
-            else:
-                log_test(f"GET {endpoint}: {response.status_code} - {response.text[:200]}", "fail")
-                all_passed = False
-        except Exception as e:
-            log_test(f"GET {endpoint}: Exception - {str(e)}", "fail")
-            all_passed = False
-    
-    if all_passed:
-        log_test("REGRESSION PASSED: All buyer endpoints returned 200", "pass")
-    else:
-        log_test("REGRESSION FAILED: Some endpoints returned errors", "fail")
-    
-    return all_passed
+            # Verify response body
+            try:
+                renew_data = renew_resp.json()
+                if renew_data.get("success") == False and renew_data.get("error") == "forbidden":
+                    log_pass("Response body correct: {success:false, error:'forbidden'}")
+                    test_results["passed"] += 1
+                else:
+                    log_fail(f"Response body incorrect: {renew_data}")
+                    test_results["failed"] += 1
+            except Exception as e:
+                log_fail(f"Failed to parse response body: {e}")
+                test_results["failed"] += 1
+                
+        elif renew_resp.status_code == 404:
+            log_fail("POST /domains/:domain/renew returns 404 (should be 403 for ownership guard)")
+            test_results["failed"] += 1
+        elif renew_resp.status_code == 500:
+            log_fail("POST /domains/:domain/renew returns 500 (should be 403 for ownership guard)")
+            test_results["failed"] += 1
+        else:
+            log_fail(f"POST /domains/:domain/renew returns {renew_resp.status_code} (expected 403)")
+            log_info(f"Response: {renew_resp.text}")
+            test_results["failed"] += 1
+            
+    except Exception as e:
+        log_fail(f"POST /domains/:domain/renew failed with exception: {e}")
+        test_results["failed"] += 1
 
-def test_problem_2_file_manager():
+def test_4_no_regression_health_endpoint():
     """
-    PROBLEM 2: cPanel File Manager full lifecycle test
-    Test all 12 file operations on username namea3a5
+    TEST 4: NO REGRESSION - GET /reseller/health
+    - GET /api/v1/reseller/health
+    - Expect HTTP 200 with mode:"live"
     """
-    print("\n" + "="*80)
-    print("PROBLEM 2: CPANEL FILE MANAGER OPERATIONS")
-    print("="*80)
+    log_test("4. NO REGRESSION - GET /reseller/health")
     
-    # Login as moxxcompany@gmail.com (owns namea3a5)
-    token = login(PRIMARY_ACCOUNT["email"], PRIMARY_ACCOUNT["password"])
-    if not token:
-        log_test("Cannot proceed with Problem 2 - login failed", "fail")
-        return False
-    
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    username = "namea3a5"
-    working_dir = "/public_html"
-    
-    results = {}
-    
-    # Step 1: List files in /public_html
-    log_test("STEP 1: GET files list...")
+    log_info("Testing GET /api/v1/reseller/health...")
     try:
-        response = requests.get(
-            f"{API_BASE}/reseller/hosting/{username}/files",
-            params={"dir": working_dir},
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        health_resp = requests.get(f"{BASE_URL}/reseller/health", timeout=10)
         
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1 and isinstance(data.get("data"), list):
-                log_test(f"STEP 1 PASSED: Got file list with {len(data['data'])} items", "pass")
-                results["step1_list"] = True
-            else:
-                log_test(f"STEP 1 FAILED: Unexpected response format: {data}", "fail")
-                results["step1_list"] = False
-        else:
-            log_test(f"STEP 1 FAILED: {response.status_code}", "fail")
-            results["step1_list"] = False
-    except Exception as e:
-        log_test(f"STEP 1 EXCEPTION: {str(e)}", "fail")
-        results["step1_list"] = False
-    
-    # Step 2: Save a text file
-    log_test("STEP 2: POST files/save (create nw_test_readme.txt)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/save",
-            json={
-                "dir": working_dir,
-                "file": "nw_test_readme.txt",
-                "content": "hello from backend test"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        if health_resp.status_code != 200:
+            log_fail(f"GET /reseller/health returns {health_resp.status_code} (expected 200)")
+            test_results["failed"] += 1
+            test_results["critical_failures"].append("Health endpoint regression - not returning 200")
+            return
         
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 2 PASSED: File saved successfully", "pass")
-                results["step2_save"] = True
-            else:
-                log_test(f"STEP 2 FAILED: {data}", "fail")
-                results["step2_save"] = False
-        else:
-            log_test(f"STEP 2 FAILED: {response.status_code}", "fail")
-            results["step2_save"] = False
-    except Exception as e:
-        log_test(f"STEP 2 EXCEPTION: {str(e)}", "fail")
-        results["step2_save"] = False
-    
-    # Step 3: Get file content
-    log_test("STEP 3: GET files/content (read nw_test_readme.txt)...")
-    try:
-        response = requests.get(
-            f"{API_BASE}/reseller/hosting/{username}/files/content",
-            params={"dir": working_dir, "file": "nw_test_readme.txt"},
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
+        log_pass("GET /reseller/health returns 200")
+        test_results["passed"] += 1
         
-        if response.status_code == 200:
-            data = response.json()
-            content = data.get("content", "")
-            if "hello from backend test" in content:
-                log_test("STEP 3 PASSED: File content matches", "pass")
-                results["step3_content"] = True
-            else:
-                log_test(f"STEP 3 FAILED: Content mismatch: {content}", "fail")
-                results["step3_content"] = False
-        else:
-            log_test(f"STEP 3 FAILED: {response.status_code}", "fail")
-            results["step3_content"] = False
-    except Exception as e:
-        log_test(f"STEP 3 EXCEPTION: {str(e)}", "fail")
-        results["step3_content"] = False
-    
-    # Step 4: Upload a file (base64)
-    log_test("STEP 4: POST files/upload (upload nw_test_upload.txt)...")
-    try:
-        upload_content = "uploaded bytes"
-        content_base64 = base64.b64encode(upload_content.encode()).decode()
-        
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/upload",
-            json={
-                "dir": working_dir,
-                "fileName": "nw_test_upload.txt",
-                "content_base64": content_base64
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 4 PASSED: File uploaded successfully", "pass")
-                results["step4_upload"] = True
-            else:
-                log_test(f"STEP 4 FAILED: {data}", "fail")
-                results["step4_upload"] = False
-        else:
-            log_test(f"STEP 4 FAILED: {response.status_code}", "fail")
-            results["step4_upload"] = False
-    except Exception as e:
-        log_test(f"STEP 4 EXCEPTION: {str(e)}", "fail")
-        results["step4_upload"] = False
-    
-    # Step 5: Create directory
-    log_test("STEP 5: POST files/mkdir (create nw_test_dir)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/mkdir",
-            json={
-                "dir": working_dir,
-                "name": "nw_test_dir"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 5 PASSED: Directory created successfully", "pass")
-                results["step5_mkdir"] = True
-            else:
-                log_test(f"STEP 5 FAILED: {data}", "fail")
-                results["step5_mkdir"] = False
-        else:
-            log_test(f"STEP 5 FAILED: {response.status_code}", "fail")
-            results["step5_mkdir"] = False
-    except Exception as e:
-        log_test(f"STEP 5 EXCEPTION: {str(e)}", "fail")
-        results["step5_mkdir"] = False
-    
-    # Step 6: Rename file
-    log_test("STEP 6: POST files/rename (rename nw_test_readme.txt -> nw_test_renamed.txt)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/rename",
-            json={
-                "dir": working_dir,
-                "oldName": "nw_test_readme.txt",
-                "newName": "nw_test_renamed.txt"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 6 PASSED: File renamed successfully", "pass")
-                results["step6_rename"] = True
-            else:
-                log_test(f"STEP 6 FAILED: {data}", "fail")
-                results["step6_rename"] = False
-        else:
-            log_test(f"STEP 6 FAILED: {response.status_code}", "fail")
-            results["step6_rename"] = False
-    except Exception as e:
-        log_test(f"STEP 6 EXCEPTION: {str(e)}", "fail")
-        results["step6_rename"] = False
-    
-    # Step 7: Copy file
-    log_test("STEP 7: POST files/copy (copy nw_test_renamed.txt to nw_test_dir)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/copy",
-            json={
-                "sourceDir": working_dir,
-                "fileName": "nw_test_renamed.txt",
-                "destDir": f"{working_dir}/nw_test_dir"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 7 PASSED: File copied successfully", "pass")
-                results["step7_copy"] = True
-            else:
-                log_test(f"STEP 7 FAILED: {data}", "fail")
-                results["step7_copy"] = False
-        else:
-            log_test(f"STEP 7 FAILED: {response.status_code}", "fail")
-            results["step7_copy"] = False
-    except Exception as e:
-        log_test(f"STEP 7 EXCEPTION: {str(e)}", "fail")
-        results["step7_copy"] = False
-    
-    # Step 8: Move file
-    log_test("STEP 8: POST files/move (move nw_test_upload.txt to nw_test_dir)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/move",
-            json={
-                "sourceDir": working_dir,
-                "fileName": "nw_test_upload.txt",
-                "destDir": f"{working_dir}/nw_test_dir"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 8 PASSED: File moved successfully", "pass")
-                results["step8_move"] = True
-            else:
-                log_test(f"STEP 8 FAILED: {data}", "fail")
-                results["step8_move"] = False
-        else:
-            log_test(f"STEP 8 FAILED: {response.status_code}", "fail")
-            results["step8_move"] = False
-    except Exception as e:
-        log_test(f"STEP 8 EXCEPTION: {str(e)}", "fail")
-        results["step8_move"] = False
-    
-    # Step 9: Compress file
-    log_test("STEP 9: POST files/compress (create nw_test_archive.zip)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/compress",
-            json={
-                "dir": working_dir,
-                "files": ["nw_test_renamed.txt"],
-                "destFile": "nw_test_archive.zip"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 9 PASSED: Archive created successfully", "pass")
-                results["step9_compress"] = True
-            else:
-                log_test(f"STEP 9 FAILED: {data}", "fail")
-                results["step9_compress"] = False
-        else:
-            log_test(f"STEP 9 FAILED: {response.status_code}", "fail")
-            results["step9_compress"] = False
-    except Exception as e:
-        log_test(f"STEP 9 EXCEPTION: {str(e)}", "fail")
-        results["step9_compress"] = False
-    
-    # Step 10: Extract archive
-    log_test("STEP 10: POST files/extract (extract nw_test_archive.zip)...")
-    try:
-        response = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/extract",
-            json={
-                "dir": working_dir,
-                "file": "nw_test_archive.zip"
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Response: {response.status_code} - {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == 1:
-                log_test("STEP 10 PASSED: Archive extracted successfully", "pass")
-                results["step10_extract"] = True
-            else:
-                log_test(f"STEP 10 FAILED: {data}", "fail")
-                results["step10_extract"] = False
-        else:
-            log_test(f"STEP 10 FAILED: {response.status_code}", "fail")
-            results["step10_extract"] = False
-    except Exception as e:
-        log_test(f"STEP 10 EXCEPTION: {str(e)}", "fail")
-        results["step10_extract"] = False
-    
-    # Step 11: Chunked upload
-    log_test("STEP 11: POST files/upload-chunk (2 chunks)...")
-    try:
-        upload_id = "nwtestchunk1"
-        chunk1_content = base64.b64encode(b"chunk part 1 ").decode()
-        chunk2_content = base64.b64encode(b"chunk part 2").decode()
-        
-        # Chunk 0
-        response1 = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/upload-chunk",
-            json={
-                "uploadId": upload_id,
-                "chunkIndex": 0,
-                "totalChunks": 2,
-                "fileName": "nw_chunk.txt",
-                "dir": working_dir,
-                "content_base64": chunk1_content
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Chunk 0 response: {response1.status_code} - {response1.text[:500]}")
-        
-        # Chunk 1
-        response2 = requests.post(
-            f"{API_BASE}/reseller/hosting/{username}/files/upload-chunk",
-            json={
-                "uploadId": upload_id,
-                "chunkIndex": 1,
-                "totalChunks": 2,
-                "fileName": "nw_chunk.txt",
-                "dir": working_dir,
-                "content_base64": chunk2_content
-            },
-            headers=headers,
-            timeout=30
-        )
-        log_test(f"Chunk 1 response: {response2.status_code} - {response2.text[:500]}")
-        
-        if response1.status_code == 200 and response2.status_code == 200:
-            data1 = response1.json()
-            data2 = response2.json()
-            # Chunk 0 should return status:"chunk-received"
-            # Chunk 1 (final) should return status:"complete" with cpanelStatus:1
-            if data1.get("status") == "chunk-received" and (data2.get("status") == "complete" or data2.get("cpanelStatus") == 1):
-                log_test("STEP 11 PASSED: Chunked upload completed successfully", "pass")
-                results["step11_chunked"] = True
-            else:
-                log_test(f"STEP 11 FAILED: Unexpected response: {data1}, {data2}", "fail")
-                results["step11_chunked"] = False
-        else:
-            log_test(f"STEP 11 FAILED: HTTP errors", "fail")
-            results["step11_chunked"] = False
-    except Exception as e:
-        log_test(f"STEP 11 EXCEPTION: {str(e)}", "fail")
-        results["step11_chunked"] = False
-    
-    # Step 12: Cleanup
-    log_test("STEP 12: DELETE files (cleanup)...")
-    cleanup_items = [
-        {"file": "nw_test_renamed.txt", "isDirectory": False},
-        {"file": "nw_test_archive.zip", "isDirectory": False},
-        {"file": "nw_chunk.txt", "isDirectory": False},
-        {"file": "nw_test_dir", "isDirectory": True}
-    ]
-    
-    cleanup_results = []
-    for item in cleanup_items:
+        # Verify response contains mode:"live"
         try:
-            response = requests.delete(
-                f"{API_BASE}/reseller/hosting/{username}/files",
-                json={
-                    "dir": working_dir,
-                    "file": item["file"],
-                    "isDirectory": item.get("isDirectory", False)
-                },
-                headers=headers,
-                timeout=30
-            )
-            if response.status_code == 200:
-                log_test(f"Deleted {item['file']}: OK", "pass")
-                cleanup_results.append(True)
+            health_data = health_resp.json()
+            if health_data.get("mode") == "live":
+                log_pass("Health response contains mode:'live'")
+                test_results["passed"] += 1
             else:
-                log_test(f"Delete {item['file']}: {response.status_code} - {response.text[:200]}", "warn")
-                cleanup_results.append(False)
+                log_fail(f"Health response mode is '{health_data.get('mode')}' (expected 'live')")
+                test_results["failed"] += 1
         except Exception as e:
-            log_test(f"Delete {item['file']}: Exception - {str(e)}", "warn")
-            cleanup_results.append(False)
-    
-    results["step12_cleanup"] = all(cleanup_results)
-    if results["step12_cleanup"]:
-        log_test("STEP 12 PASSED: All cleanup operations succeeded", "pass")
-    else:
-        log_test("STEP 12 PARTIAL: Some cleanup operations failed (best-effort)", "warn")
-    
-    # Summary
-    print("\n" + "="*80)
-    print("PROBLEM 2 SUMMARY")
-    print("="*80)
-    passed = sum(1 for v in results.values() if v)
-    total = len(results)
-    log_test(f"File Manager Operations: {passed}/{total} passed")
-    
-    for step, result in results.items():
-        status = "pass" if result else "fail"
-        log_test(f"{step}: {'PASSED' if result else 'FAILED'}", status)
-    
-    return passed == total
+            log_fail(f"Failed to parse health response: {e}")
+            test_results["failed"] += 1
+            
+    except Exception as e:
+        log_fail(f"GET /reseller/health failed with exception: {e}")
+        test_results["failed"] += 1
+        test_results["critical_failures"].append(f"Health endpoint exception: {e}")
 
-def main():
-    """Run all tests"""
-    print("\n" + "="*80)
-    print("NAMEWORD BACKEND TEST SUITE")
-    print("Testing two backend fixes:")
-    print("1. Duplicate hosting accounts fix (ownership.js)")
-    print("2. cPanel File Manager operations (body-limit + proxy routes)")
-    print("="*80)
+def print_summary():
+    """Print test summary"""
+    print(f"\n{BLUE}{'='*80}{RESET}")
+    print(f"{BLUE}TEST SUMMARY{RESET}")
+    print(f"{BLUE}{'='*80}{RESET}")
     
-    results = {}
+    total = test_results["passed"] + test_results["failed"]
+    pass_rate = (test_results["passed"] / total * 100) if total > 0 else 0
     
-    # Test Problem 1
-    results["problem1_duplicate_fix"] = test_problem_1_duplicate_hosting_fix()
-    results["problem1_regression"] = test_problem_1_regression()
+    print(f"\nTotal Tests: {total}")
+    print(f"{GREEN}Passed: {test_results['passed']}{RESET}")
+    print(f"{RED}Failed: {test_results['failed']}{RESET}")
+    print(f"Pass Rate: {pass_rate:.1f}%")
     
-    # Test Problem 2
-    results["problem2_file_manager"] = test_problem_2_file_manager()
+    if test_results["critical_failures"]:
+        print(f"\n{RED}CRITICAL FAILURES:{RESET}")
+        for failure in test_results["critical_failures"]:
+            print(f"  {RED}• {failure}{RESET}")
     
-    # Final Summary
-    print("\n" + "="*80)
-    print("FINAL TEST SUMMARY")
-    print("="*80)
+    print(f"\n{BLUE}{'='*80}{RESET}\n")
     
-    for test_name, result in results.items():
-        status = "pass" if result else "fail"
-        log_test(f"{test_name}: {'PASSED' if result else 'FAILED'}", status)
-    
-    passed = sum(1 for v in results.values() if v)
-    total = len(results)
-    
-    print("\n" + "="*80)
-    if passed == total:
-        log_test(f"ALL TESTS PASSED ({passed}/{total})", "pass")
-        print("="*80)
-        return 0
-    else:
-        log_test(f"SOME TESTS FAILED ({passed}/{total} passed)", "fail")
-        print("="*80)
-        return 1
+    return test_results["failed"] == 0
 
 if __name__ == "__main__":
-    exit(main())
+    print(f"\n{BLUE}{'='*80}{RESET}")
+    print(f"{BLUE}BACKEND TEST: Reseller Proxy Endpoints (GET /pricing, POST /domains/:domain/renew){RESET}")
+    print(f"{BLUE}{'='*80}{RESET}")
+    print(f"Backend URL: {BASE_URL}")
+    print(f"Test User: {TEST_USER}")
+    
+    # Run all tests
+    test_1_routes_registered_and_auth_guarded()
+    test_2_pricing_endpoint_with_auth()
+    test_3_domain_renew_ownership_guard()
+    test_4_no_regression_health_endpoint()
+    
+    # Print summary and exit
+    success = print_summary()
+    sys.exit(0 if success else 1)
